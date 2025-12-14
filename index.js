@@ -13,7 +13,7 @@ const app = express();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+  limits: { fileSize: 5 * 1024 * 1024 },
 });
 
 app.use(cors());
@@ -55,43 +55,19 @@ GENEL KURALLAR:
 - Her fotoğraftan en az bir simge çıkar
 - Okuyan kişiye kendini özel hissettir
 
-FORMAT KURALLARI (ÇOK ÖNEMLİ):
+FORMAT KURALLARI:
 
 ### PREVIEW
-- Sadece 1 paragraf yaz
-- Sadece 1 ANA simgeden bahset
-- Yorumu bilerek yarım bırak
-- Merak uyandır
-- Net sonuç verme
-- Ton: sevecen, gizemli
-
-Örnek ton:
-“Bak kızım, fincanının üst tarafında ince uzun bir yol izi var.
-Bu yol, kafanı meşgul eden bir meseleye işaret ediyor ama
-yolun sonunda seni bekleyen şey henüz tam açılmamış…”
+- 1 paragraf
+- 1 ana simge
+- Yarım bırak, merak uyandır
 
 ### FULL
-- En az 5 paragraf yaz
-- Fotoğraf sayısı arttıkça paragraf sayısını arttırabilirsin
-- Aşağıdaki sırayı KORU:
-
-1. Genel enerji (fincanın genel havası)
-2. Görülen simgeler (tek tek, gerçekten görmüş gibi)
-3. Aşk / gönül işleri
-4. Para / iş / kısmet
-5. Yakın gelecek ve Arap Bacı’dan küçük bir nasihat
-
-FULL bölümünde:
-- Yol, kuş, kalp, anahtar, göz, dağ, yıldız, kısmet gibi
-  geleneksel simgelerden mutlaka bahset
-- Simgeleri fincanda görüyormuş gibi anlat
-- Samimi, sıcak ve mistik bir dil kullan
-
-ASLA:
-- Tarih verme
-- Kesin hüküm kurma
-- Kısa ve yüzeysel geçme
-
+1. Genel enerji
+2. Görülen simgeler
+3. Aşk
+4. Para / iş
+5. Yakın gelecek ve nasihat
 `;
 
 /* =========================
@@ -110,7 +86,6 @@ app.post("/fal", upload.array("images", 5), async (req, res) => {
       return res.status(400).json({ error: "Fotoğraf gerekli" });
     }
 
-    // OpenAI için input içeriği
     const userContent = [
       {
         type: "input_text",
@@ -127,37 +102,44 @@ app.post("/fal", upload.array("images", 5), async (req, res) => {
     const response = await openai.responses.create({
       model: "gpt-4.1",
       input: [
-        {
-          role: "system",
-          content: ARAP_BACI_PROMPT,
-        },
-        {
-          role: "user",
-          content: userContent,
-        },
+        { role: "system", content: ARAP_BACI_PROMPT },
+        { role: "user", content: userContent },
       ],
     });
 
-    const outputText = response.output_text || "";
+    // ✅ GÜVENLİ TEXT PARSE
+    let text = "";
 
-    const preview = outputText
+    try {
+      text = response.output[0].content
+        .filter((c) => c.type === "output_text")
+        .map((c) => c.text)
+        .join("\n");
+    } catch (e) {
+      console.error("TEXT PARSE ERROR:", e);
+    }
+
+    if (!text) {
+      return res.status(500).json({
+        error: "Fal üretilemedi",
+        detail: "OpenAI boş cevap döndürdü",
+      });
+    }
+
+    const preview = text
       .split("### FULL")[0]
       .replace("### PREVIEW", "")
       .trim();
 
-    const full =
-      outputText.includes("### FULL")
-        ? outputText.split("### FULL")[1].trim()
-        : "";
+    const full = text.includes("### FULL")
+      ? text.split("### FULL")[1].trim()
+      : "";
 
-    return res.json({
-      preview,
-      full,
-    });
+    res.json({ preview, full });
   } catch (err) {
     console.error("OPENAI ERROR 👉", err);
 
-    return res.status(500).json({
+    res.status(500).json({
       error: "Fal üretilemedi",
       detail: err?.message || "Bilinmeyen hata",
     });
@@ -171,4 +153,3 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log("🔮 Backend çalışıyor, port:", PORT);
 });
-
