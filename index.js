@@ -86,6 +86,7 @@ app.post("/fal", upload.array("images", 5), async (req, res) => {
       return res.status(400).json({ error: "Fotoğraf gerekli" });
     }
 
+    // 🔴 MIME TYPE SABİTLENDİ (EN KRİTİK DÜZELTME)
     const userContent = [
       {
         type: "input_text",
@@ -93,9 +94,7 @@ app.post("/fal", upload.array("images", 5), async (req, res) => {
       },
       ...req.files.map((file) => ({
         type: "input_image",
-        image_url: `data:${file.mimetype};base64,${file.buffer.toString(
-          "base64"
-        )}`,
+        image_url: `data:image/jpeg;base64,${file.buffer.toString("base64")}`,
       })),
     ];
 
