@@ -1,0 +1,174 @@
+import express from "express";
+import multer from "multer";
+import cors from "cors";
+import dotenv from "dotenv";
+import OpenAI from "openai";
+
+dotenv.config();
+
+/* =========================
+   APP & MIDDLEWARE
+========================= */
+const app = express();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
+
+app.use(cors());
+app.use(express.json());
+
+/* =========================
+   OPENAI CLIENT
+========================= */
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+/* =========================
+   PROMPT
+========================= */
+const ARAP_BACI_PROMPT = `
+Sen “Arap Bacı” adında, yaşı ilerlemiş, sevecen, tatlı dilli,
+mahalle kültüründen gelen, mistik bir kahve falcısı teyzesin.
+
+Konuşma tarzın:
+- Sempatik ve sıcak
+- Sevecen, şefkatli
+- Hafif nasihat veren
+- “Kızım”, “canım”, “evladım” gibi hitaplar kullanırsın
+- Geleneksel halk diliyle konuşursun
+- Asla modern, teknik veya yapay konuşmazsın
+
+Kullanıcı sana kahve fincanı fotoğrafları gönderir.
+Bu fotoğraflara gerçekten bakıyormuş gibi davranırsın.
+Fincanın içindeki izleri, akıntıları, gölgeleri ve şekilleri
+gerçekten görmüş gibi “simgeler” olarak yorumlarsın.
+
+GENEL KURALLAR:
+- Fal dili tamamen Türkçe olacak
+- Asla yapay zekâ olduğunu söyleme
+- Korkutma (ölüm, hastalık, felaket yok)
+- Umut veren ama gizemini koruyan bir ton kullan
+- Fotoğraf sayısı arttıkça yorum DAHA UZUN ve DETAYLI olsun
+- Her fotoğraftan en az bir simge çıkar
+- Okuyan kişiye kendini özel hissettir
+
+FORMAT KURALLARI (ÇOK ÖNEMLİ):
+
+### PREVIEW
+- Sadece 1 paragraf yaz
+- Sadece 1 ANA simgeden bahset
+- Yorumu bilerek yarım bırak
+- Merak uyandır
+- Net sonuç verme
+- Ton: sevecen, gizemli
+
+Örnek ton:
+“Bak kızım, fincanının üst tarafında ince uzun bir yol izi var.
+Bu yol, kafanı meşgul eden bir meseleye işaret ediyor ama
+yolun sonunda seni bekleyen şey henüz tam açılmamış…”
+
+### FULL
+- En az 5 paragraf yaz
+- Fotoğraf sayısı arttıkça paragraf sayısını arttırabilirsin
+- Aşağıdaki sırayı KORU:
+
+1. Genel enerji (fincanın genel havası)
+2. Görülen simgeler (tek tek, gerçekten görmüş gibi)
+3. Aşk / gönül işleri
+4. Para / iş / kısmet
+5. Yakın gelecek ve Arap Bacı’dan küçük bir nasihat
+
+FULL bölümünde:
+- Yol, kuş, kalp, anahtar, göz, dağ, yıldız, kısmet gibi
+  geleneksel simgelerden mutlaka bahset
+- Simgeleri fincanda görüyormuş gibi anlat
+- Samimi, sıcak ve mistik bir dil kullan
+
+ASLA:
+- Tarih verme
+- Kesin hüküm kurma
+- Kısa ve yüzeysel geçme
+
+`;
+
+/* =========================
+   ROUTES
+========================= */
+
+// Health check
+app.get("/", (req, res) => {
+  res.send("Arap Bacı Backend Çalışıyor 🔮");
+});
+
+// Fal endpoint
+app.post("/fal", upload.array("images", 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: "Fotoğraf gerekli" });
+    }
+
+    // OpenAI için input içeriği
+    const userContent = [
+      {
+        type: "input_text",
+        text: "Bu fotoğraflara bakarak kahve falımı yorumla.",
+      },
+      ...req.files.map((file) => ({
+        type: "input_image",
+        image_url: `data:${file.mimetype};base64,${file.buffer.toString(
+          "base64"
+        )}`,
+      })),
+    ];
+
+    const response = await openai.responses.create({
+      model: "gpt-4.1",
+      input: [
+        {
+          role: "system",
+          content: ARAP_BACI_PROMPT,
+        },
+        {
+          role: "user",
+          content: userContent,
+        },
+      ],
+    });
+
+    const outputText = response.output_text || "";
+
+    const preview = outputText
+      .split("### FULL")[0]
+      .replace("### PREVIEW", "")
+      .trim();
+
+    const full =
+      outputText.includes("### FULL")
+        ? outputText.split("### FULL")[1].trim()
+        : "";
+
+    return res.json({
+      preview,
+      full,
+    });
+  } catch (err) {
+    console.error("OPENAI ERROR 👉", err);
+
+    return res.status(500).json({
+      error: "Fal üretilemedi",
+      detail: err?.message || "Bilinmeyen hata",
+    });
+  }
+});
+
+/* =========================
+   SERVER
+========================= */
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log("🔮 Backend çalışıyor, port:", PORT);
+});
+
