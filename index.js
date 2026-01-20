@@ -4,7 +4,6 @@ import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import OpenAI from "openai";
-import admin from "firebase-admin";
 
 dotenv.config();
 
@@ -13,7 +12,7 @@ dotenv.config();
 ========================= */
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "5mb" }));
 
 /* =========================
    UPLOAD
@@ -31,49 +30,34 @@ const openai = new OpenAI({
 });
 
 /* =========================
-   FIREBASE (OPSİYONEL AMA HAZIR)
+   STORES
 ========================= */
-const firebaseEnabled = !!process.env.FIREBASE_SERVICE_ACCOUNT;
-
-if (firebaseEnabled && !admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(
-      JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-    ),
-  });
-}
+const guestStore = new Map();
+const premiumStore = new Map();
 
 /* =========================
-   TEMP STORE (GUEST)
+   PROMPTS
 ========================= */
-const falStore = new Map();
-
-/* =========================
-   ARAP BACI PROMPT
-========================= */
-const ARAP_BACI_PROMPT = `
-Sen “Arap Bacı” adında, yaşı ilerlemiş, sevecen,
-mahalle kültüründen gelen bir kahve falcısısın.
-
-Kurallar:
-- Türkçe konuş
-- Umut ver
-- Cinsiyet belirtme
-- Korkutma
-- Kesin hükümler verme
+const PREVIEW_PROMPT = `
+Sen “Arap Bacı” adında sevecen bir kahve falcısısın.
+Sadece MERAK uyandır.
 
 FORMAT:
-
 ### PREVIEW
-4 cümle, merak uyandırıcı
+4 kısa cümle.
+`;
 
-### FULL
-1. Genel enerji
+const FULL_PROMPT = `
+Sen “Arap Bacı” adında tecrübeli bir kahve falcısısın.
+Detaylı ve uzun yaz.
+
+BAŞLIKLAR:
+1. Genel Enerji
 2. Simgeler
 3. Geçmiş
 4. Aşk
-5. Para / iş
-6. Yakın gelecek
+5. Para / İş
+6. Yakın Gelecek
 7. Özet
 `;
 
@@ -81,75 +65,105 @@ FORMAT:
    HELPERS
 ========================= */
 function imagesToOpenAI(files) {
-  return files.map((file) => ({
+  return files.map(f => ({
     type: "input_image",
-    image_url: `data:image/jpeg;base64,${file.buffer.toString("base64")}`,
+    image_url: `data:image/jpeg;base64,${f.buffer.toString("base64")}`,
   }));
 }
 
-function extractPreview(text) {
-  const parts = text.split("### FULL");
-  return parts[0].replace("### PREVIEW", "").trim();
+function extractText(r) {
+  if (typeof r?.output_text === "string") return r.output_text.trim();
+  const c = r?.output?.[0]?.content || [];
+  return c.filter(x => x.type === "output_text").map(x => x.text).join("\n").trim();
 }
 
 /* =========================
    ROOT
 ========================= */
 app.get("/", (_, res) => {
-  res.send("🔮 Arap Bacı Backend Çalışıyor");
+  res.send("🔮 Arap Bacı Backend OK");
 });
 
-/* =========================
-   GUEST FAL
-========================= */
-app.post("/fal/guest-start", upload.array("images", 3), async (req, res) => {
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({ error: "Fotoğraf gerekli" });
-  }
+/* =====================================================
+   GUEST
+===================================================== */
+app.post("/fal/start", upload.array("images", 3), async (req, res) => {
+  if (!req.files?.length) return res.status(400).json({ error: "Fotoğraf gerekli" });
 
-  const falId = crypto.randomUUID();
-  falStore.set(falId, { status: "processing" });
-  res.json({ falId });
+  const id = crypto.randomUUID();
+  guestStore.set(id, { status: "processing" });
+  res.json({ falId: id });
 
   (async () => {
     try {
-      const userContent = [
-        { type: "input_text", text: "Bu fincan fotoğraflarına bakarak falımı yorumla." },
-        ...imagesToOpenAI(req.files),
-      ];
-
-      const response = await openai.responses.create({
+      const r = await openai.responses.create({
         model: "gpt-4.1-mini",
         input: [
-          { role: "system", content: ARAP_BACI_PROMPT },
-          { role: "user", content: userContent },
+          { role: "system", content: PREVIEW_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: "Kısa bir fal yorumu yap." },
+              ...imagesToOpenAI(req.files),
+            ],
+          },
         ],
-        max_output_tokens: 450,
+        max_output_tokens: 200,
       });
 
-      const text = (response.output?.[0]?.content || [])
-        .filter((c) => c.type === "output_text")
-        .map((c) => c.text)
-        .join("\n");
-
-      falStore.set(falId, {
-        status: "done",
-        preview: extractPreview(text),
-      });
-    } catch (err) {
-      console.error("GUEST FAL ERROR:", err);
-      falStore.set(falId, { status: "error" });
+      const text = extractText(r);
+      guestStore.set(id, { status: "done", preview: text });
+    } catch {
+      guestStore.set(id, { status: "error" });
     }
   })();
 });
 
-/* =========================
-   GET RESULT (GUEST & PREMIUM)
-========================= */
 app.get("/fal/:id", (req, res) => {
-  const fal = falStore.get(req.params.id);
-  if (!fal) return res.status(404).json({ error: "Fal bulunamadı" });
-  res.json(fal);
+  const f = guestStore.get(req.params.id);
+  if (!f) return res.status(404).json({ error: "Bulunamadı" });
+  res.json(f);
+});
+
+/* =====================================================
+   PREMIUM
+===================================================== */
+app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
+  if (!req.files?.length) return res.status(400).json({ error: "Fotoğraf gerekli" });
+
+  const id = crypto.randomUUID();
+  premiumStore.set(id, { status: "processing" });
+  res.json({ falId: id });
+
+  (async () => {
+    try {
+      const r = await openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          { role: "system", content: FULL_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: "Detaylı kahve falı yorumla." },
+              ...imagesToOpenAI(req.files),
+            ],
+          },
+        ],
+        max_output_tokens: 900,
+      });
+
+      const full = extractText(r);
+      premiumStore.set(id, { status: "done", full });
+    } catch {
+      premiumStore.set(id, { status: "error" });
+    }
+  })();
+});
+
+app.get("/fal/premium/:id", (req, res) => {
+  const f = premiumStore.get(req.params.id);
+  if (!f) return res.status(404).json({ error: "Bulunamadı" });
+  res.json(f);
 });
 
 /* =========================
@@ -157,5 +171,5 @@ app.get("/fal/:id", (req, res) => {
 ========================= */
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("🔮 Arap Bacı backend çalışıyor, port:", PORT);
+  console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
 });
