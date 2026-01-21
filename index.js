@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import crypto from "crypto";
 import OpenAI from "openai";
 import admin from "firebase-admin";
+import cron from "node-cron";
 
 dotenv.config();
 
@@ -44,7 +45,9 @@ const openai = new OpenAI({
 const guestStore = new Map();
 const premiumStore = new Map();
 
-// 🧠 RAM cache (daily horoscope)
+/* =========================
+   RAM CACHE (DAILY)
+========================= */
 const dailyCache = new Map(); // key: YYYY-MM-DD_zodiac
 
 /* =========================
@@ -107,8 +110,20 @@ function extractText(r) {
 }
 
 function todayKey(zodiac) {
-  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const date = new Date().toISOString().slice(0, 10);
   return `${date}_${zodiac}`;
+}
+
+async function logSystemEvent(type, detail = {}) {
+  try {
+    await db.collection("system_logs").add({
+      type,
+      detail,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (e) {
+    console.error("Log yazılamadı:", e);
+  }
 }
 
 /* =========================
@@ -209,7 +224,7 @@ app.get("/fal/premium/:id", (req, res) => {
 });
 
 /* =====================================================
-   DAILY HOROSCOPE (RAM + FIRESTORE CACHE)
+   DAILY HOROSCOPE (RAM + FIRESTORE)
 ===================================================== */
 app.post("/daily-horoscope", async (req, res) => {
   try {
@@ -220,7 +235,7 @@ app.post("/daily-horoscope", async (req, res) => {
 
     const key = todayKey(zodiac);
 
-    // 1️⃣ RAM CACHE
+    // 1️⃣ RAM
     if (dailyCache.has(key)) {
       return res.json({
         zodiac,
@@ -229,7 +244,7 @@ app.post("/daily-horoscope", async (req, res) => {
       });
     }
 
-    // 2️⃣ FIRESTORE CACHE
+    // 2️⃣ FIRESTORE
     const docRef = db.collection("daily_horoscopes").doc(key);
     const snap = await docRef.get();
 
@@ -244,19 +259,14 @@ app.post("/daily-horoscope", async (req, res) => {
       });
     }
 
-    // 3️⃣ OPENAI (İLK KEZ)
+    // 3️⃣ OPENAI
     const r = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
         { role: "system", content: DAILY_HOROSCOPE_PROMPT },
         {
           role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `${zodiac} burcu için bugünün yorumunu yap.`,
-            },
-          ],
+          content: [{ type: "input_text", text: `${zodiac} burcu için bugünü yorumla.` }],
         },
       ],
       max_output_tokens: 250,
@@ -264,7 +274,6 @@ app.post("/daily-horoscope", async (req, res) => {
 
     const comment = extractText(r);
 
-    // cache yaz
     dailyCache.set(key, comment);
     await docRef.set({
       zodiac,
@@ -285,28 +294,26 @@ app.post("/daily-horoscope", async (req, res) => {
 });
 
 /* =========================
-   DAILY CACHE RESET (00:00)
+   CRON: DAILY CACHE RESET
 ========================= */
-function scheduleDailyCacheReset() {
-  function msUntilMidnight() {
-    const now = new Date();
-    const midnight = new Date();
-    midnight.setHours(24, 0, 0, 0);
-    return midnight.getTime() - now.getTime();
-  }
-
-  setTimeout(() => {
+cron.schedule(
+  "0 0 * * *",
+  async () => {
+    const clearedCount = dailyCache.size;
     dailyCache.clear();
-    console.log("🧹 Daily horoscope RAM cache temizlendi");
 
-    setInterval(() => {
-      dailyCache.clear();
-      console.log("🧹 Daily horoscope RAM cache temizlendi");
-    }, 24 * 60 * 60 * 1000);
-  }, msUntilMidnight());
-}
+    console.log(`🧹 [CRON] RAM cache temizlendi (${clearedCount})`);
 
-scheduleDailyCacheReset();
+    await logSystemEvent("cache_reset", {
+      cache: "daily_horoscope",
+      clearedCount,
+      timezone: "Europe/Istanbul",
+    });
+  },
+  {
+    timezone: "Europe/Istanbul",
+  }
+);
 
 /* =========================
    SERVER
