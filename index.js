@@ -4,8 +4,17 @@ import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import OpenAI from "openai";
+import admin from "firebase-admin";
 
 dotenv.config();
+
+/* =========================
+   FIREBASE ADMIN
+========================= */
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+});
+const db = admin.firestore();
 
 /* =========================
    APP
@@ -35,8 +44,8 @@ const openai = new OpenAI({
 const guestStore = new Map();
 const premiumStore = new Map();
 
-// ✅ NEW: daily horoscope cache
-const dailyHoroscopeStore = new Map(); // key: `${zodiac}-${yyyy-mm-dd}`
+// 🧠 RAM cache (daily horoscope)
+const dailyCache = new Map(); // key: YYYY-MM-DD_zodiac
 
 /* =========================
    PROMPTS
@@ -64,7 +73,6 @@ BAŞLIKLAR:
 7. Özet
 `;
 
-// ✅ NEW: Daily horoscope (gender-neutral)
 const DAILY_HOROSCOPE_PROMPT = `
 Sen “Arap Bacı” adında tecrübeli bir falcısın.
 Sana verilen burca göre SADECE bugüne ait yorum yap.
@@ -98,6 +106,11 @@ function extractText(r) {
     .trim();
 }
 
+function todayKey(zodiac) {
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  return `${date}_${zodiac}`;
+}
+
 /* =========================
    ROOT
 ========================= */
@@ -109,7 +122,9 @@ app.get("/", (_, res) => {
    GUEST
 ===================================================== */
 app.post("/fal/start", upload.array("images", 3), async (req, res) => {
-  if (!req.files?.length) return res.status(400).json({ error: "Fotoğraf gerekli" });
+  if (!req.files?.length) {
+    return res.status(400).json({ error: "Fotoğraf gerekli" });
+  }
 
   const id = crypto.randomUUID();
   guestStore.set(id, { status: "processing" });
@@ -132,8 +147,10 @@ app.post("/fal/start", upload.array("images", 3), async (req, res) => {
         max_output_tokens: 200,
       });
 
-      const text = extractText(r);
-      guestStore.set(id, { status: "done", preview: text });
+      guestStore.set(id, {
+        status: "done",
+        preview: extractText(r),
+      });
     } catch {
       guestStore.set(id, { status: "error" });
     }
@@ -150,7 +167,9 @@ app.get("/fal/:id", (req, res) => {
    PREMIUM
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
-  if (!req.files?.length) return res.status(400).json({ error: "Fotoğraf gerekli" });
+  if (!req.files?.length) {
+    return res.status(400).json({ error: "Fotoğraf gerekli" });
+  }
 
   const id = crypto.randomUUID();
   premiumStore.set(id, { status: "processing" });
@@ -173,8 +192,10 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
         max_output_tokens: 900,
       });
 
-      const full = extractText(r);
-      premiumStore.set(id, { status: "done", full });
+      premiumStore.set(id, {
+        status: "done",
+        full: extractText(r),
+      });
     } catch {
       premiumStore.set(id, { status: "error" });
     }
@@ -188,52 +209,104 @@ app.get("/fal/premium/:id", (req, res) => {
 });
 
 /* =====================================================
-   DAILY HOROSCOPE (NEW)
+   DAILY HOROSCOPE (RAM + FIRESTORE CACHE)
 ===================================================== */
 app.post("/daily-horoscope", async (req, res) => {
-  const { zodiac } = req.body;
-
-  if (!zodiac) {
-    return res.status(400).json({ error: "Burç gerekli" });
-  }
-
-  const today = new Date().toISOString().split("T")[0];
-  const key = `${zodiac}-${today}`;
-
-  // cache
-  if (dailyHoroscopeStore.has(key)) {
-    return res.json({
-      zodiac,
-      comment: dailyHoroscopeStore.get(key),
-      cached: true,
-    });
-  }
-
   try {
+    const { zodiac } = req.body;
+    if (!zodiac) {
+      return res.status(400).json({ error: "Burç gerekli" });
+    }
+
+    const key = todayKey(zodiac);
+
+    // 1️⃣ RAM CACHE
+    if (dailyCache.has(key)) {
+      return res.json({
+        zodiac,
+        comment: dailyCache.get(key),
+        source: "memory",
+      });
+    }
+
+    // 2️⃣ FIRESTORE CACHE
+    const docRef = db.collection("daily_horoscopes").doc(key);
+    const snap = await docRef.get();
+
+    if (snap.exists) {
+      const comment = snap.data().comment;
+      dailyCache.set(key, comment);
+
+      return res.json({
+        zodiac,
+        comment,
+        source: "firestore",
+      });
+    }
+
+    // 3️⃣ OPENAI (İLK KEZ)
     const r = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
         { role: "system", content: DAILY_HOROSCOPE_PROMPT },
         {
           role: "user",
-          content: [{ type: "input_text", text: `${zodiac} burcu için bugünün falını yorumla.` }],
+          content: [
+            {
+              type: "input_text",
+              text: `${zodiac} burcu için bugünün yorumunu yap.`,
+            },
+          ],
         },
       ],
       max_output_tokens: 250,
     });
 
-    const text = extractText(r);
-    dailyHoroscopeStore.set(key, text);
+    const comment = extractText(r);
+
+    // cache yaz
+    dailyCache.set(key, comment);
+    await docRef.set({
+      zodiac,
+      date: key.split("_")[0],
+      comment,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
     res.json({
       zodiac,
-      comment: text,
-      cached: false,
+      comment,
+      source: "openai",
     });
   } catch (e) {
+    console.error("daily-horoscope error:", e);
     res.status(500).json({ error: "Burç yorumu alınamadı" });
   }
 });
+
+/* =========================
+   DAILY CACHE RESET (00:00)
+========================= */
+function scheduleDailyCacheReset() {
+  function msUntilMidnight() {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0);
+    return midnight.getTime() - now.getTime();
+  }
+
+  setTimeout(() => {
+    dailyCache.clear();
+    console.log("🧹 Daily horoscope RAM cache temizlendi");
+
+    setInterval(() => {
+      dailyCache.clear();
+      console.log("🧹 Daily horoscope RAM cache temizlendi");
+    }, 24 * 60 * 60 * 1000);
+  }, msUntilMidnight());
+}
+
+scheduleDailyCacheReset();
 
 /* =========================
    SERVER
