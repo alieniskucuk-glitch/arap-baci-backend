@@ -35,6 +35,9 @@ const openai = new OpenAI({
 const guestStore = new Map();
 const premiumStore = new Map();
 
+// ✅ NEW: daily horoscope cache
+const dailyHoroscopeStore = new Map(); // key: `${zodiac}-${yyyy-mm-dd}`
+
 /* =========================
    PROMPTS
 ========================= */
@@ -61,11 +64,25 @@ BAŞLIKLAR:
 7. Özet
 `;
 
+// ✅ NEW: Daily horoscope (gender-neutral)
+const DAILY_HOROSCOPE_PROMPT = `
+Sen “Arap Bacı” adında tecrübeli bir falcısın.
+Sana verilen burca göre SADECE bugüne ait yorum yap.
+
+Kurallar:
+- Tek paragraf
+- 6–8 cümle
+- Aşk, para ve ruh hali mutlaka geçsin
+- Kesin konuşma, ihtimalli anlat
+- Cinsiyet belirten hiçbir ifade kullanma
+- Anaç ama tarafsız, gizemli bir dil kullan
+`;
+
 /* =========================
    HELPERS
 ========================= */
 function imagesToOpenAI(files) {
-  return files.map(f => ({
+  return files.map((f) => ({
     type: "input_image",
     image_url: `data:image/jpeg;base64,${f.buffer.toString("base64")}`,
   }));
@@ -74,7 +91,11 @@ function imagesToOpenAI(files) {
 function extractText(r) {
   if (typeof r?.output_text === "string") return r.output_text.trim();
   const c = r?.output?.[0]?.content || [];
-  return c.filter(x => x.type === "output_text").map(x => x.text).join("\n").trim();
+  return c
+    .filter((x) => x.type === "output_text")
+    .map((x) => x.text)
+    .join("\n")
+    .trim();
 }
 
 /* =========================
@@ -164,6 +185,54 @@ app.get("/fal/premium/:id", (req, res) => {
   const f = premiumStore.get(req.params.id);
   if (!f) return res.status(404).json({ error: "Bulunamadı" });
   res.json(f);
+});
+
+/* =====================================================
+   DAILY HOROSCOPE (NEW)
+===================================================== */
+app.post("/daily-horoscope", async (req, res) => {
+  const { zodiac } = req.body;
+
+  if (!zodiac) {
+    return res.status(400).json({ error: "Burç gerekli" });
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const key = `${zodiac}-${today}`;
+
+  // cache
+  if (dailyHoroscopeStore.has(key)) {
+    return res.json({
+      zodiac,
+      comment: dailyHoroscopeStore.get(key),
+      cached: true,
+    });
+  }
+
+  try {
+    const r = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        { role: "system", content: DAILY_HOROSCOPE_PROMPT },
+        {
+          role: "user",
+          content: [{ type: "input_text", text: `${zodiac} burcu için bugünün falını yorumla.` }],
+        },
+      ],
+      max_output_tokens: 250,
+    });
+
+    const text = extractText(r);
+    dailyHoroscopeStore.set(key, text);
+
+    res.json({
+      zodiac,
+      comment: text,
+      cached: false,
+    });
+  } catch (e) {
+    res.status(500).json({ error: "Burç yorumu alınamadı" });
+  }
 });
 
 /* =========================
