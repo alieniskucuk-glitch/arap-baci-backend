@@ -10,10 +10,14 @@ import cron from "node-cron";
 dotenv.config();
 
 /* =========================
-   FIREBASE ADMIN
+   FIREBASE ADMIN (RENDER UYUMLU)
 ========================= */
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+  }),
 });
 const db = admin.firestore();
 
@@ -162,10 +166,7 @@ app.post("/fal/start", upload.array("images", 3), async (req, res) => {
         max_output_tokens: 200,
       });
 
-      guestStore.set(id, {
-        status: "done",
-        preview: extractText(r),
-      });
+      guestStore.set(id, { status: "done", preview: extractText(r) });
     } catch {
       guestStore.set(id, { status: "error" });
     }
@@ -207,10 +208,7 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
         max_output_tokens: 900,
       });
 
-      premiumStore.set(id, {
-        status: "done",
-        full: extractText(r),
-      });
+      premiumStore.set(id, { status: "done", full: extractText(r) });
     } catch {
       premiumStore.set(id, { status: "error" });
     }
@@ -229,37 +227,26 @@ app.get("/fal/premium/:id", (req, res) => {
 app.post("/daily-horoscope", async (req, res) => {
   try {
     const { zodiac } = req.body;
-    if (!zodiac) {
-      return res.status(400).json({ error: "Burç gerekli" });
-    }
+    if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
 
     const key = todayKey(zodiac);
 
-    // 1️⃣ RAM
+    // 1) RAM
     if (dailyCache.has(key)) {
-      return res.json({
-        zodiac,
-        comment: dailyCache.get(key),
-        source: "memory",
-      });
+      return res.json({ zodiac, comment: dailyCache.get(key), source: "memory" });
     }
 
-    // 2️⃣ FIRESTORE
+    // 2) FIRESTORE
     const docRef = db.collection("daily_horoscopes").doc(key);
     const snap = await docRef.get();
 
     if (snap.exists) {
-      const comment = snap.data().comment;
+      const comment = snap.data()?.comment ?? "";
       dailyCache.set(key, comment);
-
-      return res.json({
-        zodiac,
-        comment,
-        source: "firestore",
-      });
+      return res.json({ zodiac, comment, source: "firestore" });
     }
 
-    // 3️⃣ OPENAI
+    // 3) OPENAI
     const r = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
@@ -282,14 +269,10 @@ app.post("/daily-horoscope", async (req, res) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    res.json({
-      zodiac,
-      comment,
-      source: "openai",
-    });
+    return res.json({ zodiac, comment, source: "openai" });
   } catch (e) {
     console.error("daily-horoscope error:", e);
-    res.status(500).json({ error: "Burç yorumu alınamadı" });
+    return res.status(500).json({ error: "Burç yorumu alınamadı" });
   }
 });
 
@@ -301,7 +284,6 @@ cron.schedule(
   async () => {
     const clearedCount = dailyCache.size;
     dailyCache.clear();
-
     console.log(`🧹 [CRON] RAM cache temizlendi (${clearedCount})`);
 
     await logSystemEvent("cache_reset", {
@@ -310,9 +292,7 @@ cron.schedule(
       timezone: "Europe/Istanbul",
     });
   },
-  {
-    timezone: "Europe/Istanbul",
-  }
+  { timezone: "Europe/Istanbul" }
 );
 
 /* =========================
