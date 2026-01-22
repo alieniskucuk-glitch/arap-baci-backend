@@ -11,12 +11,21 @@ dotenv.config();
 
 /* =========================
    FIREBASE ADMIN (RENDER UYUMLU)
+   - ENV eksikse anında net hata versin
 ========================= */
+if (
+  !process.env.FIREBASE_PROJECT_ID ||
+  !process.env.FIREBASE_CLIENT_EMAIL ||
+  !process.env.FIREBASE_PRIVATE_KEY
+) {
+  throw new Error("❌ Firebase ENV eksik (PROJECT_ID / CLIENT_EMAIL / PRIVATE_KEY)");
+}
+
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: process.env.FIREBASE_PROJECT_ID,
     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
   }),
 });
 const db = admin.firestore();
@@ -39,6 +48,10 @@ const upload = multer({
 /* =========================
    OPENAI
 ========================= */
+if (!process.env.OPENAI_API_KEY) {
+  throw new Error("❌ OPENAI_API_KEY eksik");
+}
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -223,17 +236,28 @@ app.get("/fal/premium/:id", (req, res) => {
 
 /* =====================================================
    DAILY HOROSCOPE (RAM + FIRESTORE)
+   - req.body log (sorun buradaysa net gör)
 ===================================================== */
 app.post("/daily-horoscope", async (req, res) => {
   try {
-    const { zodiac } = req.body;
-    if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
+    console.log("DAILY HOROSCOPE BODY:", req.body);
+
+    const zodiacRaw = req.body?.zodiac;
+    const zodiac = typeof zodiacRaw === "string" ? zodiacRaw.trim() : "";
+
+    if (!zodiac) {
+      return res.status(400).json({ error: "Burç gerekli" });
+    }
 
     const key = todayKey(zodiac);
 
     // 1) RAM
     if (dailyCache.has(key)) {
-      return res.json({ zodiac, comment: dailyCache.get(key), source: "memory" });
+      return res.json({
+        zodiac,
+        comment: dailyCache.get(key),
+        source: "memory",
+      });
     }
 
     // 2) FIRESTORE
@@ -243,7 +267,11 @@ app.post("/daily-horoscope", async (req, res) => {
     if (snap.exists) {
       const comment = snap.data()?.comment ?? "";
       dailyCache.set(key, comment);
-      return res.json({ zodiac, comment, source: "firestore" });
+      return res.json({
+        zodiac,
+        comment,
+        source: "firestore",
+      });
     }
 
     // 3) OPENAI
@@ -253,7 +281,9 @@ app.post("/daily-horoscope", async (req, res) => {
         { role: "system", content: DAILY_HOROSCOPE_PROMPT },
         {
           role: "user",
-          content: [{ type: "input_text", text: `${zodiac} burcu için bugünü yorumla.` }],
+          content: [
+            { type: "input_text", text: `${zodiac} burcu için bugünü yorumla.` },
+          ],
         },
       ],
       max_output_tokens: 250,
@@ -269,9 +299,13 @@ app.post("/daily-horoscope", async (req, res) => {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    return res.json({ zodiac, comment, source: "openai" });
+    return res.json({
+      zodiac,
+      comment,
+      source: "openai",
+    });
   } catch (e) {
-    console.error("daily-horoscope error:", e);
+    console.error("daily-horoscope error:", e?.message || e);
     return res.status(500).json({ error: "Burç yorumu alınamadı" });
   }
 });
