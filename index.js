@@ -34,24 +34,23 @@ const openai = new OpenAI({
 ========================= */
 const guestStore = new Map();
 const premiumStore = new Map();
-
-// ✅ NEW: daily horoscope cache
-const dailyHoroscopeStore = new Map(); // key: `${zodiac}-${yyyy-mm-dd}`
+const dailyHoroscopeStore = new Map();
 
 /* =========================
    PROMPTS
 ========================= */
 const PREVIEW_PROMPT = `
 Sen “Arap Bacı” adında sevecen bir kahve falcısısın.
-Sadece MERAK uyandır.
+Sadece MERAK uyandır."falın devamında aşk ve para ile ilgili öemli gelişmeler var gibi...", "findanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi..."
+"falın çok ilginç devam ediyor..." "ooo neler görüyorum..." gibi cümleler üretip preview i öyle bitir.
 
 FORMAT:
 ### PREVIEW
-4 kısa cümle.
+5 kısa cümle.
 `;
 
 const FULL_PROMPT = `
-Sen “Arap Bacı” adında tecrübeli bir kahve falcısısın.
+Sen “Arap Bacı” adında tecrübeli bir kahve falcısın.
 Detaylı ve uzun yaz.
 
 BAŞLIKLAR:
@@ -62,16 +61,16 @@ BAŞLIKLAR:
 5. Para / İş
 6. Yakın Gelecek
 7. Özet
+ama başlıkları tazmadan paragraf paragraf anlat.
 `;
 
-// ✅ NEW: Daily horoscope (gender-neutral)
 const DAILY_HOROSCOPE_PROMPT = `
 Sen “Arap Bacı” adında tecrübeli bir falcısın.
 Sana verilen burca göre SADECE bugüne ait yorum yap.
 
 Kurallar:
 - Tek paragraf
-- 6–8 cümle
+- 8-9 cümle
 - Aşk, para ve ruh hali mutlaka geçsin
 - Kesin konuşma, ihtimalli anlat
 - Cinsiyet belirten hiçbir ifade kullanma
@@ -106,10 +105,12 @@ app.get("/", (_, res) => {
 });
 
 /* =====================================================
-   GUEST
+   GUEST PREVIEW
 ===================================================== */
 app.post("/fal/start", upload.array("images", 3), async (req, res) => {
-  if (!req.files?.length) return res.status(400).json({ error: "Fotoğraf gerekli" });
+  if (!req.files?.length) {
+    return res.status(400).json({ error: "Fotoğraf gerekli" });
+  }
 
   const id = crypto.randomUUID();
   guestStore.set(id, { status: "processing" });
@@ -132,8 +133,8 @@ app.post("/fal/start", upload.array("images", 3), async (req, res) => {
         max_output_tokens: 200,
       });
 
-      const text = extractText(r);
-      guestStore.set(id, { status: "done", preview: text });
+      const preview = extractText(r);
+      guestStore.set(id, { status: "done", preview });
     } catch {
       guestStore.set(id, { status: "error" });
     }
@@ -147,10 +148,56 @@ app.get("/fal/:id", (req, res) => {
 });
 
 /* =====================================================
-   PREMIUM
+   ✅ GUEST FULL (19 TL ÖDEYENLER İÇİN)
+===================================================== */
+app.post("/fal/complete/:id", async (req, res) => {
+  const id = req.params.id;
+  const f = guestStore.get(id);
+
+  if (!f || f.status !== "done" || !f.preview) {
+    return res.status(404).json({ error: "Fal bulunamadı" });
+  }
+
+  // Daha önce üretildiyse tekrar üretme
+  if (f.full) {
+    return res.json({ full: f.full });
+  }
+
+  try {
+    const r = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        { role: "system", content: FULL_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text:
+                "Aşağıdaki falın detaylı yorumunu yap:\n\n" + f.preview,
+            },
+          ],
+        },
+      ],
+      max_output_tokens: 900,
+    });
+
+    const full = extractText(r);
+    guestStore.set(id, { ...f, full });
+
+    res.json({ full });
+  } catch {
+    res.status(500).json({ error: "Fal tamamlanamadı" });
+  }
+});
+
+/* =====================================================
+   PREMIUM (AYNEN KALDI)
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
-  if (!req.files?.length) return res.status(400).json({ error: "Fotoğraf gerekli" });
+  if (!req.files?.length) {
+    return res.status(400).json({ error: "Fotoğraf gerekli" });
+  }
 
   const id = crypto.randomUUID();
   premiumStore.set(id, { status: "processing" });
@@ -188,19 +235,15 @@ app.get("/fal/premium/:id", (req, res) => {
 });
 
 /* =====================================================
-   DAILY HOROSCOPE (NEW)
+   DAILY HOROSCOPE (AYNEN KALDI)
 ===================================================== */
 app.post("/daily-horoscope", async (req, res) => {
   const { zodiac } = req.body;
-
-  if (!zodiac) {
-    return res.status(400).json({ error: "Burç gerekli" });
-  }
+  if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
 
   const today = new Date().toISOString().split("T")[0];
   const key = `${zodiac}-${today}`;
 
-  // cache
   if (dailyHoroscopeStore.has(key)) {
     return res.json({
       zodiac,
@@ -216,7 +259,12 @@ app.post("/daily-horoscope", async (req, res) => {
         { role: "system", content: DAILY_HOROSCOPE_PROMPT },
         {
           role: "user",
-          content: [{ type: "input_text", text: `${zodiac} burcu için bugünün falını yorumla.` }],
+          content: [
+            {
+              type: "input_text",
+              text: `${zodiac} burcu için bugünün falını yorumla.`,
+            },
+          ],
         },
       ],
       max_output_tokens: 250,
@@ -230,7 +278,7 @@ app.post("/daily-horoscope", async (req, res) => {
       comment: text,
       cached: false,
     });
-  } catch (e) {
+  } catch {
     res.status(500).json({ error: "Burç yorumu alınamadı" });
   }
 });
