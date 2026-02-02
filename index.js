@@ -46,12 +46,16 @@ const premiumStore = new Map();
 const dailyHoroscopeStore = new Map();
 
 /* =========================
-   PROMPTS  (BİREBİR)
+   PROMPTS (BİREBİR)
 ========================= */
 const PREVIEW_PROMPT = `
 Sen “Arap Bacı” adında sevecen bir kahve falcısısın.
-fincandaki bir görselden bahsederek yorum yap ve MERAK uyandır.“falın devamında aşk ve para ile ilgili öemli gelişmeler var gibi...”, “findanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi...”
-“falın çok ilginç devam ediyor...” “ooo neler görüyorum...” gibi cümleler üretip preview i öyle bitir.
+fincandaki bir görselden bahsederek yorum yap ve MERAK uyandır.
+“falın devamında aşk ve para ile ilgili önemli gelişmeler var gibi...”
+“fincanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi...”
+“falın çok ilginç devam ediyor...”
+“ooo neler görüyorum...”
+gibi cümlelerle preview’i bitir.
 
 FORMAT:
 ### PREVIEW
@@ -60,8 +64,9 @@ FORMAT:
 
 const FULL_PROMPT = `
 Sen “Arap Bacı” adında tecrübeli ve sevecen bir kahve falcısısın.
-fincandaki imgelere göre Detaylı ve uzun bir fal yaz.sevimli tonton bir dil kullan ama kesinlikle cinsiyet belirten ifadelerden kaçın.
-falı yorumlarken gördüğün imgelerden de bahset.
+Fincandaki imgelere göre detaylı ve uzun bir fal yaz.
+Sevimli tonton bir dil kullan ama cinsiyet belirten ifadelerden kaçın.
+Gördüğün imgelerden bahset.
 
 BAŞLIKLAR:
 1. Genel Enerji
@@ -71,7 +76,7 @@ BAŞLIKLAR:
 5. Para / İş
 6. Yakın Gelecek
 7. Özet
-ama başlıkları yazmadan paragraf paragraf anlat.
+Ama başlık yazmadan paragraf paragraf anlat.
 `;
 
 const DAILY_HOROSCOPE_PROMPT = `
@@ -83,8 +88,8 @@ Kurallar:
 - 8-9 cümle
 - Aşk, para ve ruh hali mutlaka geçsin
 - Kesin konuşma, ihtimalli anlat
-- Cinsiyet belirten hiçbir ifade kullanma
-- Anaç ama tarafsız, gizemli bir dil kullan
+- Cinsiyet belirten ifade kullanma
+- Gizemli ama anaç bir dil
 `;
 
 /* =========================
@@ -111,15 +116,6 @@ function todayKey() {
   return new Date().toISOString().split("T")[0];
 }
 
-function normQuota(q) {
-  return {
-    packRemaining: Number(q?.packRemaining || 0),
-    dailyRemaining: Number(q?.dailyRemaining || 0),
-    dailyLastDay: (q?.dailyLastDay || "").toString(),
-    totalUsed: Number(q?.totalUsed || 0),
-  };
-}
-
 /* =========================
    ROOT
 ========================= */
@@ -128,7 +124,7 @@ app.get("/", (_, res) => {
 });
 
 /* =====================================================
-   USER QUOTA  ✅ (SORUN BURADAYDI)
+   USER QUOTA (TEK RESET NOKTASI)
 ===================================================== */
 app.get("/user/quota", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -139,8 +135,8 @@ app.get("/user/quota", async (req, res) => {
 
   if (!snap.exists) {
     return res.json({
-      packRemaining: 0,
       dailyRemaining: 0,
+      packRemaining: 0,
       totalUsed: 0,
       remaining: 0,
     });
@@ -149,35 +145,40 @@ app.get("/user/quota", async (req, res) => {
   const data = snap.data();
   const isPremium = data?.isPremium === true;
 
-  const q = normQuota(data?.quota);
+  let {
+    dailyLastDay = "",
+    dailyRemaining = 0,
+    packRemaining = 0,
+    totalUsed = 0,
+  } = data.quota || {};
+
   const today = todayKey();
 
-  // daily reset
-  if (q.dailyLastDay !== today) {
-    q.dailyLastDay = today;
-    q.dailyRemaining = isPremium ? 1 : 0;
+  // ✅ DAILY RESET SADECE BURADA
+  if (dailyLastDay !== today) {
+    dailyLastDay = today;
+    dailyRemaining = isPremium ? 1 : 0;
 
     await ref.set(
       {
         quota: {
           ...data.quota,
-          dailyLastDay: q.dailyLastDay,
-          dailyRemaining: q.dailyRemaining,
-          packRemaining: q.packRemaining,
-          totalUsed: q.totalUsed,
+          dailyLastDay,
+          dailyRemaining,
+          packRemaining,
+          totalUsed,
         },
       },
       { merge: true }
     );
   }
 
-  // 🔑 GERİYE UYUMLULUK
-  const remaining = isPremium ? q.dailyRemaining : q.packRemaining;
+  const remaining = isPremium ? dailyRemaining : packRemaining;
 
   res.json({
-    packRemaining: q.packRemaining,
-    dailyRemaining: q.dailyRemaining,
-    totalUsed: q.totalUsed,
+    dailyRemaining,
+    packRemaining,
+    totalUsed,
     remaining,
   });
 });
@@ -202,18 +203,17 @@ app.post("/payment/package-success", async (req, res) => {
 
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("user yok");
+
     const data = snap.data();
-    const q = normQuota(data?.quota);
+    const q = data.quota || {};
 
     tx.set(
       ref,
       {
         quota: {
-          ...data.quota,
-          packRemaining: q.packRemaining + add,
-          dailyRemaining: q.dailyRemaining,
-          dailyLastDay: q.dailyLastDay,
-          totalUsed: q.totalUsed,
+          ...q,
+          packRemaining: (q.packRemaining || 0) + add,
         },
       },
       { merge: true }
@@ -224,7 +224,7 @@ app.post("/payment/package-success", async (req, res) => {
 });
 
 /* =====================================================
-   QUOTA USE
+   QUOTA USE (RESULT AÇILINCA)
 ===================================================== */
 app.post("/quota/use", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -232,51 +232,44 @@ app.post("/quota/use", async (req, res) => {
 
   const ref = db.collection("users").doc(uid);
 
-  try {
-    const out = await db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      const data = snap.data();
-      const isPremium = data?.isPremium === true;
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("user yok");
 
-      const today = todayKey();
-      const q = normQuota(data?.quota);
+    const data = snap.data();
+    const isPremium = data.isPremium === true;
 
-      if (q.dailyLastDay !== today) {
-        q.dailyLastDay = today;
-        q.dailyRemaining = isPremium ? 1 : 0;
-      }
+    let {
+      dailyRemaining = 0,
+      packRemaining = 0,
+      totalUsed = 0,
+    } = data.quota || {};
 
-      if (isPremium && q.dailyRemaining > 0) {
-        q.dailyRemaining -= 1;
-      } else if (q.packRemaining > 0) {
-        q.packRemaining -= 1;
-      } else {
-        return { code: 403, body: { error: "Hak yok" } };
-      }
+    if (isPremium && dailyRemaining > 0) {
+      dailyRemaining -= 1;
+    } else if (packRemaining > 0) {
+      packRemaining -= 1;
+    } else {
+      throw new Error("hak yok");
+    }
 
-      q.totalUsed += 1;
+    totalUsed += 1;
 
-      tx.set(
-        ref,
-        {
-          quota: {
-            ...data.quota,
-            packRemaining: q.packRemaining,
-            dailyRemaining: q.dailyRemaining,
-            dailyLastDay: q.dailyLastDay,
-            totalUsed: q.totalUsed,
-          },
+    tx.set(
+      ref,
+      {
+        quota: {
+          ...data.quota,
+          dailyRemaining,
+          packRemaining,
+          totalUsed,
         },
-        { merge: true }
-      );
+      },
+      { merge: true }
+    );
+  });
 
-      return { code: 200, body: { ok: true } };
-    });
-
-    res.status(out.code).json(out.body);
-  } catch {
-    res.status(500).json({ error: "quota failed" });
-  }
+  res.json({ ok: true });
 });
 
 /* =====================================================
@@ -348,7 +341,7 @@ app.post("/fal/complete/:id", async (req, res) => {
 });
 
 /* =====================================================
-   PREMIUM START
+   PREMIUM START (HAK DÜŞMEZ)
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -356,14 +349,16 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
 
   const ref = db.collection("users").doc(uid);
   const snap = await ref.get();
-  if (!snap.exists || snap.data()?.isPremium !== true)
+
+  if (!snap.exists || snap.data()?.isPremium !== true) {
     return res.status(403).json({ error: "Premium değil" });
+  }
 
-  const q = normQuota(snap.data()?.quota);
-  const today = todayKey();
+  const { dailyRemaining = 0 } = snap.data().quota || {};
 
-  if (q.dailyLastDay !== today && q.dailyRemaining <= 0)
+  if (dailyRemaining <= 0) {
     return res.status(403).json({ error: "Bugünlük hak bitti" });
+  }
 
   if (!req.files?.length)
     return res.status(400).json({ error: "Fotoğraf gerekli" });
@@ -402,9 +397,9 @@ app.get("/fal/premium/:id", (req, res) => {
   res.json(f);
 });
 
-/* =====================================================
+/* =========================
    SERVER
-===================================================== */
+========================= */
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
