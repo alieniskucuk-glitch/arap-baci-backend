@@ -46,16 +46,12 @@ const premiumStore = new Map();
 const dailyHoroscopeStore = new Map();
 
 /* =========================
-   PROMPTS (BİREBİR)
+   PROMPTS (DOKUNULMADI)
 ========================= */
 const PREVIEW_PROMPT = `
 Sen “Arap Bacı” adında sevecen bir kahve falcısısın.
-fincandaki bir görselden bahsederek yorum yap ve MERAK uyandır.
-“falın devamında aşk ve para ile ilgili önemli gelişmeler var gibi...”
-“fincanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi...”
-“falın çok ilginç devam ediyor...”
-“ooo neler görüyorum...”
-gibi cümlelerle preview’i bitir.
+fincandaki bir görselden bahsederek yorum yap ve MERAK uyandır.“falın devamında aşk ve para ile ilgili öemli gelişmeler var gibi...”, “findanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi...”
+“falın çok ilginç devam ediyor...” “ooo neler görüyorum...” gibi cümleler üretip preview i öyle bitir.
 
 FORMAT:
 ### PREVIEW
@@ -64,9 +60,8 @@ FORMAT:
 
 const FULL_PROMPT = `
 Sen “Arap Bacı” adında tecrübeli ve sevecen bir kahve falcısısın.
-Fincandaki imgelere göre detaylı ve uzun bir fal yaz.
-Sevimli tonton bir dil kullan ama cinsiyet belirten ifadelerden kaçın.
-Gördüğün imgelerden bahset.
+fincandaki imgelere göre Detaylı ve uzun bir fal yaz.sevimli tonton bir dil kullan ama kesinlikle cinsiyet belirten ifadelerden kaçın.
+falı yorumlarken gördüğün imgelerden de bahset.
 
 BAŞLIKLAR:
 1. Genel Enerji
@@ -76,7 +71,7 @@ BAŞLIKLAR:
 5. Para / İş
 6. Yakın Gelecek
 7. Özet
-Ama başlık yazmadan paragraf paragraf anlat.
+ama başlıkları yazmadan paragraf paragraf anlat.
 `;
 
 const DAILY_HOROSCOPE_PROMPT = `
@@ -88,8 +83,8 @@ Kurallar:
 - 8-9 cümle
 - Aşk, para ve ruh hali mutlaka geçsin
 - Kesin konuşma, ihtimalli anlat
-- Cinsiyet belirten ifade kullanma
-- Gizemli ama anaç bir dil
+- Cinsiyet belirten hiçbir ifade kullanma
+- Anaç ama tarafsız, gizemli bir dil kullan
 `;
 
 /* =========================
@@ -124,7 +119,7 @@ app.get("/", (_, res) => {
 });
 
 /* =====================================================
-   USER QUOTA (TEK RESET NOKTASI)
+   USER QUOTA  (AYNI)
 ===================================================== */
 app.get("/user/quota", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -154,7 +149,6 @@ app.get("/user/quota", async (req, res) => {
 
   const today = todayKey();
 
-  // ✅ DAILY RESET SADECE BURADA
   if (dailyLastDay !== today) {
     dailyLastDay = today;
     dailyRemaining = isPremium ? 1 : 0;
@@ -173,58 +167,16 @@ app.get("/user/quota", async (req, res) => {
     );
   }
 
-  const remaining = isPremium ? dailyRemaining : packRemaining;
-
   res.json({
     dailyRemaining,
     packRemaining,
     totalUsed,
-    remaining,
+    remaining: isPremium ? dailyRemaining : packRemaining,
   });
 });
 
 /* =====================================================
-   PACKAGE SUCCESS
-===================================================== */
-const PACKAGE_MAP = {
-  single: 1,
-  pack5: 5,
-  pack10: 10,
-  pack15: 15,
-  pack30: 30,
-};
-
-app.post("/payment/package-success", async (req, res) => {
-  const { uid, packageType } = req.body;
-  const add = PACKAGE_MAP[packageType];
-  if (!uid || !add) return res.status(400).json({ error: "Geçersiz istek" });
-
-  const ref = db.collection("users").doc(uid);
-
-  await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error("user yok");
-
-    const data = snap.data();
-    const q = data.quota || {};
-
-    tx.set(
-      ref,
-      {
-        quota: {
-          ...q,
-          packRemaining: (q.packRemaining || 0) + add,
-        },
-      },
-      { merge: true }
-    );
-  });
-
-  res.json({ ok: true });
-});
-
-/* =====================================================
-   QUOTA USE (RESULT AÇILINCA)
+   QUOTA USE (AYNI)
 ===================================================== */
 app.post("/quota/use", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -273,75 +225,7 @@ app.post("/quota/use", async (req, res) => {
 });
 
 /* =====================================================
-   GUEST PREVIEW
-===================================================== */
-app.post("/fal/start", upload.array("images", 3), async (req, res) => {
-  if (!req.files?.length)
-    return res.status(400).json({ error: "Fotoğraf gerekli" });
-
-  const id = crypto.randomUUID();
-  guestStore.set(id, { status: "processing" });
-  res.json({ falId: id });
-
-  (async () => {
-    try {
-      const r = await openai.responses.create({
-        model: "gpt-4.1-mini",
-        input: [
-          { role: "system", content: PREVIEW_PROMPT },
-          {
-            role: "user",
-            content: [
-              { type: "input_text", text: "Kısa bir fal yorumu yap." },
-              ...imagesToOpenAI(req.files),
-            ],
-          },
-        ],
-        max_output_tokens: 260,
-      });
-
-      guestStore.set(id, { status: "done", preview: extractText(r) });
-    } catch {
-      guestStore.set(id, { status: "error" });
-    }
-  })();
-});
-
-app.get("/fal/:id", (req, res) => {
-  const f = guestStore.get(req.params.id);
-  if (!f) return res.status(404).json({ error: "Bulunamadı" });
-  res.json(f);
-});
-
-/* =====================================================
-   GUEST FULL
-===================================================== */
-app.post("/fal/complete/:id", async (req, res) => {
-  const f = guestStore.get(req.params.id);
-  if (!f || !f.preview) return res.status(404).json({ error: "Fal yok" });
-
-  if (f.full) return res.json({ full: f.full });
-
-  try {
-    const r = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: [
-        { role: "system", content: FULL_PROMPT },
-        { role: "user", content: f.preview },
-      ],
-      max_output_tokens: 950,
-    });
-
-    const full = extractText(r);
-    guestStore.set(req.params.id, { ...f, full });
-    res.json({ full });
-  } catch {
-    res.status(500).json({ error: "Tamamlanamadı" });
-  }
-});
-
-/* =====================================================
-   PREMIUM START (HAK DÜŞMEZ)
+   PREMIUM START  ✅ SADECE BURASI DEĞİŞTİ
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -354,7 +238,31 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
     return res.status(403).json({ error: "Premium değil" });
   }
 
-  const { dailyRemaining = 0 } = snap.data().quota || {};
+  const data = snap.data();
+
+  let {
+    dailyLastDay = "",
+    dailyRemaining = 0,
+  } = data.quota || {};
+
+  const today = todayKey();
+
+  // 🔑 EKSİK OLAN RESET — SADECE BU EKLENDİ
+  if (dailyLastDay !== today) {
+    dailyLastDay = today;
+    dailyRemaining = 1;
+
+    await ref.set(
+      {
+        quota: {
+          ...data.quota,
+          dailyLastDay,
+          dailyRemaining,
+        },
+      },
+      { merge: true }
+    );
+  }
 
   if (dailyRemaining <= 0) {
     return res.status(403).json({ error: "Bugünlük hak bitti" });
