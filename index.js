@@ -119,7 +119,7 @@ app.get("/", (_, res) => {
 });
 
 /* =====================================================
-   USER QUOTA  (AYNI)
+   USER QUOTA  ✅ DÜZELTİLDİ: SADECE OKUR, ASLA RESET/WRITE YAPMAZ
 ===================================================== */
 app.get("/user/quota", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -140,92 +140,98 @@ app.get("/user/quota", async (req, res) => {
   const data = snap.data();
   const isPremium = data?.isPremium === true;
 
-  let {
-    dailyLastDay = "",
-    dailyRemaining = 0,
-    packRemaining = 0,
-    totalUsed = 0,
-  } = data.quota || {};
+  const q = data.quota || {};
+  const dailyRemaining = Number(q.dailyRemaining || 0);
+  const packRemaining = Number(q.packRemaining || 0);
+  const totalUsed = Number(q.totalUsed || 0);
 
-  const today = todayKey();
+  // 🔑 Premium ekranda toplam gösteriyorsun: daily + pack
+  // Normal kullanıcıda da istersen aynı kalabilir; front zaten ayrı hesaplıyor.
+  const remaining = isPremium ? (dailyRemaining + packRemaining) : packRemaining;
 
-  if (dailyLastDay !== today) {
-    dailyLastDay = today;
-    dailyRemaining = isPremium ? 1 : 0;
-
-    await ref.set(
-      {
-        quota: {
-          ...data.quota,
-          dailyLastDay,
-          dailyRemaining,
-          packRemaining,
-          totalUsed,
-        },
-      },
-      { merge: true }
-    );
-  }
-
-  res.json({
+  return res.json({
     dailyRemaining,
     packRemaining,
     totalUsed,
-    remaining: isPremium ? dailyRemaining : packRemaining,
+    remaining,
   });
 });
 
 /* =====================================================
-   QUOTA USE (AYNI)
+   QUOTA USE ✅ DÜZELTİLDİ: Gün değiştiyse burada güvenli reset yapar + 1 düşer
 ===================================================== */
 app.post("/quota/use", async (req, res) => {
   const uid = req.headers["x-uid"];
   if (!uid) return res.status(401).json({ error: "uid yok" });
 
   const ref = db.collection("users").doc(uid);
+  const today = todayKey();
 
-  await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error("user yok");
+  try {
+    const out = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return { code: 404, body: { error: "user yok" } };
 
-    const data = snap.data();
-    const isPremium = data.isPremium === true;
+      const data = snap.data();
+      const isPremium = data?.isPremium === true;
 
-    let {
-      dailyRemaining = 0,
-      packRemaining = 0,
-      totalUsed = 0,
-    } = data.quota || {};
+      let {
+        dailyLastDay = "",
+        dailyRemaining = 0,
+        packRemaining = 0,
+        totalUsed = 0,
+      } = data.quota || {};
 
-    if (isPremium && dailyRemaining > 0) {
-      dailyRemaining -= 1;
-    } else if (packRemaining > 0) {
-      packRemaining -= 1;
-    } else {
-      throw new Error("hak yok");
-    }
+      // ✅ Gün değiştiyse daily reset burada (tek transaction içinde)
+      if (dailyLastDay !== today) {
+        dailyLastDay = today;
+        dailyRemaining = isPremium ? 1 : 0;
+      }
 
-    totalUsed += 1;
+      // ✅ Harca (ÖNCE premium daily, yoksa pack)
+      if (isPremium && dailyRemaining > 0) {
+        dailyRemaining -= 1;
+      } else if (packRemaining > 0) {
+        packRemaining -= 1;
+      } else {
+        return { code: 403, body: { error: "hak yok" } };
+      }
 
-    tx.set(
-      ref,
-      {
-        quota: {
-          ...data.quota,
+      totalUsed += 1;
+
+      tx.set(
+        ref,
+        {
+          quota: {
+            ...data.quota,
+            dailyLastDay,
+            dailyRemaining,
+            packRemaining,
+            totalUsed,
+          },
+        },
+        { merge: true }
+      );
+
+      return {
+        code: 200,
+        body: {
+          ok: true,
           dailyRemaining,
           packRemaining,
           totalUsed,
         },
-      },
-      { merge: true }
-    );
-  });
+      };
+    });
 
-  res.json({ ok: true });
+    return res.status(out.code).json(out.body);
+  } catch (_) {
+    return res.status(500).json({ error: "quota failed" });
+  }
 });
 
 /* =====================================================
-   PREMIUM START  ✅ SADECE BURASI DEĞİŞTİ
+   PREMIUM START  ✅ (SENİN KODUN: RESET BURADA VAR, HAK DÜŞMEZ)
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -240,14 +246,10 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
 
   const data = snap.data();
 
-  let {
-    dailyLastDay = "",
-    dailyRemaining = 0,
-  } = data.quota || {};
-
+  let { dailyLastDay = "", dailyRemaining = 0 } = data.quota || {};
   const today = todayKey();
 
-  // 🔑 EKSİK OLAN RESET — SADECE BU EKLENDİ
+  // 🔑 RESET SADECE BURADA (başlatırken)
   if (dailyLastDay !== today) {
     dailyLastDay = today;
     dailyRemaining = 1;
