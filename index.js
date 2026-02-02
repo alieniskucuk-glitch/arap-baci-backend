@@ -128,7 +128,7 @@ app.get("/", (_, res) => {
 });
 
 /* =====================================================
-   QUOTA READ (PREMIUM DAILY RESET + PACK)
+   USER QUOTA  ✅ (SORUN BURADAYDI)
 ===================================================== */
 app.get("/user/quota", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -136,7 +136,15 @@ app.get("/user/quota", async (req, res) => {
 
   const ref = db.collection("users").doc(uid);
   const snap = await ref.get();
-  if (!snap.exists) return res.json({ packRemaining: 0, dailyRemaining: 0 });
+
+  if (!snap.exists) {
+    return res.json({
+      packRemaining: 0,
+      dailyRemaining: 0,
+      totalUsed: 0,
+      remaining: 0,
+    });
+  }
 
   const data = snap.data();
   const isPremium = data?.isPremium === true;
@@ -163,15 +171,19 @@ app.get("/user/quota", async (req, res) => {
     );
   }
 
+  // 🔑 GERİYE UYUMLULUK
+  const remaining = isPremium ? q.dailyRemaining : q.packRemaining;
+
   res.json({
     packRemaining: q.packRemaining,
     dailyRemaining: q.dailyRemaining,
     totalUsed: q.totalUsed,
+    remaining,
   });
 });
 
 /* =====================================================
-   PACKAGE SUCCESS (PACK HAK EKLE)
+   PACKAGE SUCCESS
 ===================================================== */
 const PACKAGE_MAP = {
   single: 1,
@@ -184,15 +196,12 @@ const PACKAGE_MAP = {
 app.post("/payment/package-success", async (req, res) => {
   const { uid, packageType } = req.body;
   const add = PACKAGE_MAP[packageType];
-
   if (!uid || !add) return res.status(400).json({ error: "Geçersiz istek" });
 
   const ref = db.collection("users").doc(uid);
 
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists) throw new Error("user yok");
-
     const data = snap.data();
     const q = normQuota(data?.quota);
 
@@ -215,9 +224,7 @@ app.post("/payment/package-success", async (req, res) => {
 });
 
 /* =====================================================
-   QUOTA USE (RESULT AÇILINCA DÜŞER)
-   - önce premium daily kullanır
-   - daily yoksa pack kullanır
+   QUOTA USE
 ===================================================== */
 app.post("/quota/use", async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -228,22 +235,17 @@ app.post("/quota/use", async (req, res) => {
   try {
     const out = await db.runTransaction(async (tx) => {
       const snap = await tx.get(ref);
-      if (!snap.exists) return { code: 404, body: { error: "user yok" } };
-
       const data = snap.data();
       const isPremium = data?.isPremium === true;
 
       const today = todayKey();
-      const q0 = normQuota(data?.quota);
-      let q = { ...q0 };
+      const q = normQuota(data?.quota);
 
-      // daily reset
       if (q.dailyLastDay !== today) {
         q.dailyLastDay = today;
         q.dailyRemaining = isPremium ? 1 : 0;
       }
 
-      // spend
       if (isPremium && q.dailyRemaining > 0) {
         q.dailyRemaining -= 1;
       } else if (q.packRemaining > 0) {
@@ -268,20 +270,12 @@ app.post("/quota/use", async (req, res) => {
         { merge: true }
       );
 
-      return {
-        code: 200,
-        body: {
-          ok: true,
-          packRemaining: q.packRemaining,
-          dailyRemaining: q.dailyRemaining,
-          totalUsed: q.totalUsed,
-        },
-      };
+      return { code: 200, body: { ok: true } };
     });
 
-    return res.status(out.code).json(out.body);
+    res.status(out.code).json(out.body);
   } catch {
-    return res.status(500).json({ error: "quota failed" });
+    res.status(500).json({ error: "quota failed" });
   }
 });
 
@@ -289,9 +283,8 @@ app.post("/quota/use", async (req, res) => {
    GUEST PREVIEW
 ===================================================== */
 app.post("/fal/start", upload.array("images", 3), async (req, res) => {
-  if (!req.files?.length) {
+  if (!req.files?.length)
     return res.status(400).json({ error: "Fotoğraf gerekli" });
-  }
 
   const id = crypto.randomUUID();
   guestStore.set(id, { status: "processing" });
@@ -314,8 +307,7 @@ app.post("/fal/start", upload.array("images", 3), async (req, res) => {
         max_output_tokens: 260,
       });
 
-      const preview = extractText(r);
-      guestStore.set(id, { status: "done", preview });
+      guestStore.set(id, { status: "done", preview: extractText(r) });
     } catch {
       guestStore.set(id, { status: "error" });
     }
@@ -356,9 +348,7 @@ app.post("/fal/complete/:id", async (req, res) => {
 });
 
 /* =====================================================
-   PREMIUM START (HAK DÜŞMEZ)
-   - sadece premium kullanıcı
-   - hak kontrol eder (dailyRemaining reset + check)
+   PREMIUM START
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
   const uid = req.headers["x-uid"];
@@ -366,43 +356,17 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
 
   const ref = db.collection("users").doc(uid);
   const snap = await ref.get();
-  if (!snap.exists || snap.data()?.isPremium !== true) {
+  if (!snap.exists || snap.data()?.isPremium !== true)
     return res.status(403).json({ error: "Premium değil" });
-  }
 
-  const data = snap.data();
-  const q = normQuota(data?.quota);
+  const q = normQuota(snap.data()?.quota);
   const today = todayKey();
 
-  // daily reset
-  let dailyRemaining = q.dailyRemaining;
-  let dailyLastDay = q.dailyLastDay;
-
-  if (dailyLastDay !== today) {
-    dailyLastDay = today;
-    dailyRemaining = 1;
-
-    await ref.set(
-      {
-        quota: {
-          ...data.quota,
-          dailyLastDay,
-          dailyRemaining,
-          packRemaining: q.packRemaining,
-          totalUsed: q.totalUsed,
-        },
-      },
-      { merge: true }
-    );
-  }
-
-  if (dailyRemaining <= 0) {
+  if (q.dailyLastDay !== today && q.dailyRemaining <= 0)
     return res.status(403).json({ error: "Bugünlük hak bitti" });
-  }
 
-  if (!req.files?.length) {
+  if (!req.files?.length)
     return res.status(400).json({ error: "Fotoğraf gerekli" });
-  }
 
   const id = crypto.randomUUID();
   premiumStore.set(id, { status: "processing" });
@@ -425,8 +389,7 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
         max_output_tokens: 950,
       });
 
-      const full = extractText(r);
-      premiumStore.set(id, { status: "done", full });
+      premiumStore.set(id, { status: "done", full: extractText(r) });
     } catch {
       premiumStore.set(id, { status: "error" });
     }
@@ -440,57 +403,8 @@ app.get("/fal/premium/:id", (req, res) => {
 });
 
 /* =====================================================
-   DAILY HOROSCOPE (cache)
-===================================================== */
-app.post("/daily-horoscope", async (req, res) => {
-  const { zodiac } = req.body;
-  if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
-
-  const today = todayKey();
-  const key = `${zodiac}-${today}`;
-
-  if (dailyHoroscopeStore.has(key)) {
-    return res.json({
-      zodiac,
-      comment: dailyHoroscopeStore.get(key),
-      cached: true,
-    });
-  }
-
-  try {
-    const r = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: [
-        { role: "system", content: DAILY_HOROSCOPE_PROMPT },
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: `${zodiac} burcu için bugünün falını yorumla.`,
-            },
-          ],
-        },
-      ],
-      max_output_tokens: 260,
-    });
-
-    const text = extractText(r);
-    dailyHoroscopeStore.set(key, text);
-
-    res.json({
-      zodiac,
-      comment: text,
-      cached: false,
-    });
-  } catch {
-    res.status(500).json({ error: "Burç yorumu alınamadı" });
-  }
-});
-
-/* =========================
    SERVER
-========================= */
+===================================================== */
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
