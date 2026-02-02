@@ -4,8 +4,17 @@ import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import OpenAI from "openai";
+import admin from "firebase-admin";
 
 dotenv.config();
+
+/* =========================
+   FIREBASE
+========================= */
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(),
+});
+const db = admin.firestore();
 
 /* =========================
    APP
@@ -37,21 +46,22 @@ const premiumStore = new Map();
 const dailyHoroscopeStore = new Map();
 
 /* =========================
-   PROMPTS
+   PROMPTS  (BİREBİR)
 ========================= */
 const PREVIEW_PROMPT = `
 Sen “Arap Bacı” adında sevecen bir kahve falcısısın.
-Sadece MERAK uyandır.“falın devamında aşk ve para ile ilgili öemli gelişmeler var gibi...”, “findanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi...”
+fincandaki bir görselden bahsederek yorum yap ve MERAK uyandır.“falın devamında aşk ve para ile ilgili öemli gelişmeler var gibi...”, “findanın derinliklerinde henüz açılmamış çok önemli işaretler var gibi...”
 “falın çok ilginç devam ediyor...” “ooo neler görüyorum...” gibi cümleler üretip preview i öyle bitir.
 
 FORMAT:
 ### PREVIEW
-5 kısa cümle.
+5-6 cümle.
 `;
 
 const FULL_PROMPT = `
-Sen “Arap Bacı” adında tecrübeli bir kahve falcısın.
-Detaylı ve uzun yaz.
+Sen “Arap Bacı” adında tecrübeli ve sevecen bir kahve falcısısın.
+fincandaki imgelere göre Detaylı ve uzun bir fal yaz.sevimli tonton bir dil kullan ama kesinlikle cinsiyet belirten ifadelerden kaçın.
+falı yorumlarken gördüğün imgelerden de bahset.
 
 BAŞLIKLAR:
 1. Genel Enerji
@@ -61,7 +71,7 @@ BAŞLIKLAR:
 5. Para / İş
 6. Yakın Gelecek
 7. Özet
-ama başlıkları tazmadan paragraf paragraf anlat.
+ama başlıkları yazmadan paragraf paragraf anlat.
 `;
 
 const DAILY_HOROSCOPE_PROMPT = `
@@ -97,11 +107,182 @@ function extractText(r) {
     .trim();
 }
 
+function todayKey() {
+  return new Date().toISOString().split("T")[0];
+}
+
+function normQuota(q) {
+  return {
+    packRemaining: Number(q?.packRemaining || 0),
+    dailyRemaining: Number(q?.dailyRemaining || 0),
+    dailyLastDay: (q?.dailyLastDay || "").toString(),
+    totalUsed: Number(q?.totalUsed || 0),
+  };
+}
+
 /* =========================
    ROOT
 ========================= */
 app.get("/", (_, res) => {
   res.send("🔮 Arap Bacı Backend OK");
+});
+
+/* =====================================================
+   QUOTA READ (PREMIUM DAILY RESET + PACK)
+===================================================== */
+app.get("/user/quota", async (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ error: "uid yok" });
+
+  const ref = db.collection("users").doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists) return res.json({ packRemaining: 0, dailyRemaining: 0 });
+
+  const data = snap.data();
+  const isPremium = data?.isPremium === true;
+
+  const q = normQuota(data?.quota);
+  const today = todayKey();
+
+  // daily reset
+  if (q.dailyLastDay !== today) {
+    q.dailyLastDay = today;
+    q.dailyRemaining = isPremium ? 1 : 0;
+
+    await ref.set(
+      {
+        quota: {
+          ...data.quota,
+          dailyLastDay: q.dailyLastDay,
+          dailyRemaining: q.dailyRemaining,
+          packRemaining: q.packRemaining,
+          totalUsed: q.totalUsed,
+        },
+      },
+      { merge: true }
+    );
+  }
+
+  res.json({
+    packRemaining: q.packRemaining,
+    dailyRemaining: q.dailyRemaining,
+    totalUsed: q.totalUsed,
+  });
+});
+
+/* =====================================================
+   PACKAGE SUCCESS (PACK HAK EKLE)
+===================================================== */
+const PACKAGE_MAP = {
+  single: 1,
+  pack5: 5,
+  pack10: 10,
+  pack15: 15,
+  pack30: 30,
+};
+
+app.post("/payment/package-success", async (req, res) => {
+  const { uid, packageType } = req.body;
+  const add = PACKAGE_MAP[packageType];
+
+  if (!uid || !add) return res.status(400).json({ error: "Geçersiz istek" });
+
+  const ref = db.collection("users").doc(uid);
+
+  await db.runTransaction(async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists) throw new Error("user yok");
+
+    const data = snap.data();
+    const q = normQuota(data?.quota);
+
+    tx.set(
+      ref,
+      {
+        quota: {
+          ...data.quota,
+          packRemaining: q.packRemaining + add,
+          dailyRemaining: q.dailyRemaining,
+          dailyLastDay: q.dailyLastDay,
+          totalUsed: q.totalUsed,
+        },
+      },
+      { merge: true }
+    );
+  });
+
+  res.json({ ok: true });
+});
+
+/* =====================================================
+   QUOTA USE (RESULT AÇILINCA DÜŞER)
+   - önce premium daily kullanır
+   - daily yoksa pack kullanır
+===================================================== */
+app.post("/quota/use", async (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ error: "uid yok" });
+
+  const ref = db.collection("users").doc(uid);
+
+  try {
+    const out = await db.runTransaction(async (tx) => {
+      const snap = await tx.get(ref);
+      if (!snap.exists) return { code: 404, body: { error: "user yok" } };
+
+      const data = snap.data();
+      const isPremium = data?.isPremium === true;
+
+      const today = todayKey();
+      const q0 = normQuota(data?.quota);
+      let q = { ...q0 };
+
+      // daily reset
+      if (q.dailyLastDay !== today) {
+        q.dailyLastDay = today;
+        q.dailyRemaining = isPremium ? 1 : 0;
+      }
+
+      // spend
+      if (isPremium && q.dailyRemaining > 0) {
+        q.dailyRemaining -= 1;
+      } else if (q.packRemaining > 0) {
+        q.packRemaining -= 1;
+      } else {
+        return { code: 403, body: { error: "Hak yok" } };
+      }
+
+      q.totalUsed += 1;
+
+      tx.set(
+        ref,
+        {
+          quota: {
+            ...data.quota,
+            packRemaining: q.packRemaining,
+            dailyRemaining: q.dailyRemaining,
+            dailyLastDay: q.dailyLastDay,
+            totalUsed: q.totalUsed,
+          },
+        },
+        { merge: true }
+      );
+
+      return {
+        code: 200,
+        body: {
+          ok: true,
+          packRemaining: q.packRemaining,
+          dailyRemaining: q.dailyRemaining,
+          totalUsed: q.totalUsed,
+        },
+      };
+    });
+
+    return res.status(out.code).json(out.body);
+  } catch {
+    return res.status(500).json({ error: "quota failed" });
+  }
 });
 
 /* =====================================================
@@ -130,7 +311,7 @@ app.post("/fal/start", upload.array("images", 3), async (req, res) => {
             ],
           },
         ],
-        max_output_tokens: 200,
+        max_output_tokens: 260,
       });
 
       const preview = extractText(r);
@@ -148,53 +329,77 @@ app.get("/fal/:id", (req, res) => {
 });
 
 /* =====================================================
-   ✅ GUEST FULL (19 TL ÖDEYENLER İÇİN)
+   GUEST FULL
 ===================================================== */
 app.post("/fal/complete/:id", async (req, res) => {
-  const id = req.params.id;
-  const f = guestStore.get(id);
+  const f = guestStore.get(req.params.id);
+  if (!f || !f.preview) return res.status(404).json({ error: "Fal yok" });
 
-  if (!f || f.status !== "done" || !f.preview) {
-    return res.status(404).json({ error: "Fal bulunamadı" });
-  }
-
-  // Daha önce üretildiyse tekrar üretme
-  if (f.full) {
-    return res.json({ full: f.full });
-  }
+  if (f.full) return res.json({ full: f.full });
 
   try {
     const r = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
         { role: "system", content: FULL_PROMPT },
-        {
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text:
-                "Aşağıdaki falın detaylı yorumunu yap:\n\n" + f.preview,
-            },
-          ],
-        },
+        { role: "user", content: f.preview },
       ],
-      max_output_tokens: 900,
+      max_output_tokens: 950,
     });
 
     const full = extractText(r);
-    guestStore.set(id, { ...f, full });
-
+    guestStore.set(req.params.id, { ...f, full });
     res.json({ full });
   } catch {
-    res.status(500).json({ error: "Fal tamamlanamadı" });
+    res.status(500).json({ error: "Tamamlanamadı" });
   }
 });
 
 /* =====================================================
-   PREMIUM (AYNEN KALDI)
+   PREMIUM START (HAK DÜŞMEZ)
+   - sadece premium kullanıcı
+   - hak kontrol eder (dailyRemaining reset + check)
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
+  const uid = req.headers["x-uid"];
+  if (!uid) return res.status(401).json({ error: "uid yok" });
+
+  const ref = db.collection("users").doc(uid);
+  const snap = await ref.get();
+  if (!snap.exists || snap.data()?.isPremium !== true) {
+    return res.status(403).json({ error: "Premium değil" });
+  }
+
+  const data = snap.data();
+  const q = normQuota(data?.quota);
+  const today = todayKey();
+
+  // daily reset
+  let dailyRemaining = q.dailyRemaining;
+  let dailyLastDay = q.dailyLastDay;
+
+  if (dailyLastDay !== today) {
+    dailyLastDay = today;
+    dailyRemaining = 1;
+
+    await ref.set(
+      {
+        quota: {
+          ...data.quota,
+          dailyLastDay,
+          dailyRemaining,
+          packRemaining: q.packRemaining,
+          totalUsed: q.totalUsed,
+        },
+      },
+      { merge: true }
+    );
+  }
+
+  if (dailyRemaining <= 0) {
+    return res.status(403).json({ error: "Bugünlük hak bitti" });
+  }
+
   if (!req.files?.length) {
     return res.status(400).json({ error: "Fotoğraf gerekli" });
   }
@@ -212,12 +417,12 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
           {
             role: "user",
             content: [
-              { type: "input_text", text: "Detaylı kahve falı yorumla." },
+              { type: "input_text", text: "Detaylı fal yorumu." },
               ...imagesToOpenAI(req.files),
             ],
           },
         ],
-        max_output_tokens: 900,
+        max_output_tokens: 950,
       });
 
       const full = extractText(r);
@@ -235,13 +440,13 @@ app.get("/fal/premium/:id", (req, res) => {
 });
 
 /* =====================================================
-   DAILY HOROSCOPE (AYNEN KALDI)
+   DAILY HOROSCOPE (cache)
 ===================================================== */
 app.post("/daily-horoscope", async (req, res) => {
   const { zodiac } = req.body;
   if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = todayKey();
   const key = `${zodiac}-${today}`;
 
   if (dailyHoroscopeStore.has(key)) {
@@ -267,7 +472,7 @@ app.post("/daily-horoscope", async (req, res) => {
           ],
         },
       ],
-      max_output_tokens: 250,
+      max_output_tokens: 260,
     });
 
     const text = extractText(r);
