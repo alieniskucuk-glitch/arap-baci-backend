@@ -4,17 +4,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import crypto from "crypto";
 import OpenAI from "openai";
-import admin from "firebase-admin";
 
 dotenv.config();
-
-/* =========================
-   FIREBASE
-========================= */
-admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
-});
-const db = admin.firestore();
 
 /* =========================
    APP
@@ -46,7 +37,7 @@ const premiumStore = new Map();
 const dailyHoroscopeStore = new Map();
 
 /* =========================
-   PROMPTS (DOKUNULMADI)
+   PROMPTS
 ========================= */
 const PREVIEW_PROMPT = `
 Sen “Arap Bacı” adında sevecen bir kahve falcısısın.
@@ -107,10 +98,6 @@ function extractText(r) {
     .trim();
 }
 
-function todayKey() {
-  return new Date().toISOString().split("T")[0];
-}
-
 /* =========================
    ROOT
 ========================= */
@@ -119,159 +106,99 @@ app.get("/", (_, res) => {
 });
 
 /* =====================================================
-   USER QUOTA  ✅ DÜZELTİLDİ: SADECE OKUR, ASLA RESET/WRITE YAPMAZ
+   GUEST PREVIEW
 ===================================================== */
-app.get("/user/quota", async (req, res) => {
-  const uid = req.headers["x-uid"];
-  if (!uid) return res.status(401).json({ error: "uid yok" });
-
-  const ref = db.collection("users").doc(uid);
-  const snap = await ref.get();
-
-  if (!snap.exists) {
-    return res.json({
-      dailyRemaining: 0,
-      packRemaining: 0,
-      totalUsed: 0,
-      remaining: 0,
-    });
+app.post("/fal/start", upload.array("images", 3), async (req, res) => {
+  if (!req.files?.length) {
+    return res.status(400).json({ error: "Fotoğraf gerekli" });
   }
 
-  const data = snap.data();
-  const isPremium = data?.isPremium === true;
+  const id = crypto.randomUUID();
+  guestStore.set(id, { status: "processing" });
+  res.json({ falId: id });
 
-  const q = data.quota || {};
-  const dailyRemaining = Number(q.dailyRemaining || 0);
-  const packRemaining = Number(q.packRemaining || 0);
-  const totalUsed = Number(q.totalUsed || 0);
+  (async () => {
+    try {
+      const r = await openai.responses.create({
+        model: "gpt-4.1-mini",
+        input: [
+          { role: "system", content: PREVIEW_PROMPT },
+          {
+            role: "user",
+            content: [
+              { type: "input_text", text: "Kısa bir fal yorumu yap." },
+              ...imagesToOpenAI(req.files),
+            ],
+          },
+        ],
+        max_output_tokens: 200,
+      });
 
-  // 🔑 Premium ekranda toplam gösteriyorsun: daily + pack
-  // Normal kullanıcıda da istersen aynı kalabilir; front zaten ayrı hesaplıyor.
-  const remaining = isPremium ? (dailyRemaining + packRemaining) : packRemaining;
+      const preview = extractText(r);
+      guestStore.set(id, { status: "done", preview });
+    } catch {
+      guestStore.set(id, { status: "error" });
+    }
+  })();
+});
 
-  return res.json({
-    dailyRemaining,
-    packRemaining,
-    totalUsed,
-    remaining,
-  });
+app.get("/fal/:id", (req, res) => {
+  const f = guestStore.get(req.params.id);
+  if (!f) return res.status(404).json({ error: "Bulunamadı" });
+  res.json(f);
 });
 
 /* =====================================================
-   QUOTA USE ✅ DÜZELTİLDİ: Gün değiştiyse burada güvenli reset yapar + 1 düşer
+   ✅ GUEST FULL (19 TL ÖDEYENLER İÇİN)
 ===================================================== */
-app.post("/quota/use", async (req, res) => {
-  const uid = req.headers["x-uid"];
-  if (!uid) return res.status(401).json({ error: "uid yok" });
+app.post("/fal/complete/:id", async (req, res) => {
+  const id = req.params.id;
+  const f = guestStore.get(id);
 
-  const ref = db.collection("users").doc(uid);
-  const today = todayKey();
+  if (!f || f.status !== "done" || !f.preview) {
+    return res.status(404).json({ error: "Fal bulunamadı" });
+  }
+
+  // Daha önce üretildiyse tekrar üretme
+  if (f.full) {
+    return res.json({ full: f.full });
+  }
 
   try {
-    const out = await db.runTransaction(async (tx) => {
-      const snap = await tx.get(ref);
-      if (!snap.exists) return { code: 404, body: { error: "user yok" } };
-
-      const data = snap.data();
-      const isPremium = data?.isPremium === true;
-
-      let {
-        dailyLastDay = "",
-        dailyRemaining = 0,
-        packRemaining = 0,
-        totalUsed = 0,
-      } = data.quota || {};
-
-      // ✅ Gün değiştiyse daily reset burada (tek transaction içinde)
-      if (dailyLastDay !== today) {
-        dailyLastDay = today;
-        dailyRemaining = isPremium ? 1 : 0;
-      }
-
-      // ✅ Harca (ÖNCE premium daily, yoksa pack)
-      if (isPremium && dailyRemaining > 0) {
-        dailyRemaining -= 1;
-      } else if (packRemaining > 0) {
-        packRemaining -= 1;
-      } else {
-        return { code: 403, body: { error: "hak yok" } };
-      }
-
-      totalUsed += 1;
-
-      tx.set(
-        ref,
+    const r = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        { role: "system", content: FULL_PROMPT },
         {
-          quota: {
-            ...data.quota,
-            dailyLastDay,
-            dailyRemaining,
-            packRemaining,
-            totalUsed,
-          },
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text:
+                "Aşağıdaki falın detaylı yorumunu yap:\n\n" + f.preview,
+            },
+          ],
         },
-        { merge: true }
-      );
-
-      return {
-        code: 200,
-        body: {
-          ok: true,
-          dailyRemaining,
-          packRemaining,
-          totalUsed,
-        },
-      };
+      ],
+      max_output_tokens: 900,
     });
 
-    return res.status(out.code).json(out.body);
-  } catch (_) {
-    return res.status(500).json({ error: "quota failed" });
+    const full = extractText(r);
+    guestStore.set(id, { ...f, full });
+
+    res.json({ full });
+  } catch {
+    res.status(500).json({ error: "Fal tamamlanamadı" });
   }
 });
 
 /* =====================================================
-   PREMIUM START  ✅ (SENİN KODUN: RESET BURADA VAR, HAK DÜŞMEZ)
+   PREMIUM (AYNEN KALDI)
 ===================================================== */
 app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
-  const uid = req.headers["x-uid"];
-  if (!uid) return res.status(401).json({ error: "uid yok" });
-
-  const ref = db.collection("users").doc(uid);
-  const snap = await ref.get();
-
-  if (!snap.exists || snap.data()?.isPremium !== true) {
-    return res.status(403).json({ error: "Premium değil" });
-  }
-
-  const data = snap.data();
-
-  let { dailyLastDay = "", dailyRemaining = 0 } = data.quota || {};
-  const today = todayKey();
-
-  // 🔑 RESET SADECE BURADA (başlatırken)
-  if (dailyLastDay !== today) {
-    dailyLastDay = today;
-    dailyRemaining = 1;
-
-    await ref.set(
-      {
-        quota: {
-          ...data.quota,
-          dailyLastDay,
-          dailyRemaining,
-        },
-      },
-      { merge: true }
-    );
-  }
-
-  if (dailyRemaining <= 0) {
-    return res.status(403).json({ error: "Bugünlük hak bitti" });
-  }
-
-  if (!req.files?.length)
+  if (!req.files?.length) {
     return res.status(400).json({ error: "Fotoğraf gerekli" });
+  }
 
   const id = crypto.randomUUID();
   premiumStore.set(id, { status: "processing" });
@@ -286,15 +213,16 @@ app.post("/fal/premium-start", upload.array("images", 5), async (req, res) => {
           {
             role: "user",
             content: [
-              { type: "input_text", text: "Detaylı fal yorumu." },
+              { type: "input_text", text: "Detaylı kahve falı yorumla." },
               ...imagesToOpenAI(req.files),
             ],
           },
         ],
-        max_output_tokens: 950,
+        max_output_tokens: 900,
       });
 
-      premiumStore.set(id, { status: "done", full: extractText(r) });
+      const full = extractText(r);
+      premiumStore.set(id, { status: "done", full });
     } catch {
       premiumStore.set(id, { status: "error" });
     }
@@ -305,6 +233,55 @@ app.get("/fal/premium/:id", (req, res) => {
   const f = premiumStore.get(req.params.id);
   if (!f) return res.status(404).json({ error: "Bulunamadı" });
   res.json(f);
+});
+
+/* =====================================================
+   DAILY HOROSCOPE (AYNEN KALDI)
+===================================================== */
+app.post("/daily-horoscope", async (req, res) => {
+  const { zodiac } = req.body;
+  if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
+
+  const today = new Date().toISOString().split("T")[0];
+  const key = `${zodiac}-${today}`;
+
+  if (dailyHoroscopeStore.has(key)) {
+    return res.json({
+      zodiac,
+      comment: dailyHoroscopeStore.get(key),
+      cached: true,
+    });
+  }
+
+  try {
+    const r = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        { role: "system", content: DAILY_HOROSCOPE_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `${zodiac} burcu için bugünün falını yorumla.`,
+            },
+          ],
+        },
+      ],
+      max_output_tokens: 250,
+    });
+
+    const text = extractText(r);
+    dailyHoroscopeStore.set(key, text);
+
+    res.json({
+      zodiac,
+      comment: text,
+      cached: false,
+    });
+  } catch {
+    res.status(500).json({ error: "Burç yorumu alınamadı" });
+  }
 });
 
 /* =========================
