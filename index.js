@@ -6,6 +6,12 @@ import cors from "cors";
 
 import falRoutes from "./routes/fal.js";
 import horoscopeRoutes from "./routes/horoscope.js";
+import elFalRoutes from "./routes/elFal.js";
+import tarotRoutes from "./routes/tarot.js";
+import ruyaRoutes from "./routes/ruya.js";
+import melekRoutes from "./routes/melek.js";
+import askRoutes from "./routes/ask.js";
+import coinRoutes from "./routes/coin.js";
 
 const app = express();
 
@@ -27,6 +33,13 @@ app.get("/", (_, res) => {
 ========================= */
 app.use("/fal", falRoutes);
 app.use("/daily-horoscope", horoscopeRoutes);
+
+app.use("/el-fali", elFalRoutes);
+app.use("/tarot", tarotRoutes);
+app.use("/ruya", ruyaRoutes);
+app.use("/melek", melekRoutes);
+app.use("/ask", askRoutes);
+app.use("/coin", coinRoutes);
 
 /* =========================
    SERVER

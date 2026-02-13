@@ -18,11 +18,19 @@ function transactionRef(uid) {
  * meta: { falId, tarotId vs }
  */
 export async function decreaseCoin(uid, price, type, meta = {}) {
+  if (!uid) throw new Error("UID gerekli");
+  if (!price || price <= 0) throw new Error("Geçersiz price");
+
   const ref = userRef(uid);
   const txRef = transactionRef(uid);
 
   await db.runTransaction(async (tx) => {
     const snap = await tx.get(ref);
+
+    if (!snap.exists) {
+      throw new Error("Kullanıcı bulunamadı");
+    }
+
     const user = snap.data() || {};
 
     let dailyCoin = Number(user.dailyCoin || 0);
@@ -54,8 +62,8 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
       remaining = 0;
     }
 
-    const afterDaily = dailyCoin;
-    const afterAb = abCoin;
+    const afterDaily = Math.max(0, dailyCoin);
+    const afterAb = Math.max(0, abCoin);
 
     /* =========================
        Update user coinleri
