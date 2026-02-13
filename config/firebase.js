@@ -3,6 +3,8 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+console.log("🔥 FIREBASE INIT PROJECT:", process.env.FIREBASE_PROJECT_ID);
+
 admin.initializeApp({
   credential: admin.credential.cert({
     projectId: process.env.FIREBASE_PROJECT_ID,
