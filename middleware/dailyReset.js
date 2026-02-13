@@ -1,4 +1,4 @@
-import { admin, db } from "../config/firebase.js";
+import { db } from "../config/firebase.js";
 
 function startOfToday() {
   const now = new Date();
@@ -12,17 +12,24 @@ export default async function dailyReset(req, res, next) {
 
     const userRef = db.collection("users").doc(uid);
     const snap = await userRef.get();
+
+    if (!snap.exists) return next();
+
     const user = snap.data();
 
-    if (!user) return next();
-
     // Premium değilse geç
-    if (!user.isPremium) return next();
+    if (!user?.isPremium) return next();
 
     const today = startOfToday();
-    const lastReset = user.lastDailyReset?.toDate?.();
 
-    // Eğer hiç reset yapılmamışsa
+    let lastReset = null;
+
+    // 🔥 Güvenli tarih parse
+    if (user.lastDailyReset && typeof user.lastDailyReset.toDate === "function") {
+      lastReset = user.lastDailyReset.toDate();
+    }
+
+    // İlk reset
     if (!lastReset) {
       await userRef.update({
         dailyCoin: 8,
@@ -31,7 +38,6 @@ export default async function dailyReset(req, res, next) {
       return next();
     }
 
-    // Gün değişmiş mi kontrol
     const lastResetDay = new Date(
       lastReset.getFullYear(),
       lastReset.getMonth(),
@@ -46,8 +52,9 @@ export default async function dailyReset(req, res, next) {
     }
 
     next();
+
   } catch (err) {
     console.error("DAILY RESET ERROR:", err);
-    next();
+    next(); // zinciri kırma
   }
 }

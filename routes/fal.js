@@ -80,42 +80,46 @@ router.post("/complete/:id", async (req, res) => {
 
 /* =========================
    /fal/premium-start
-   🔥 SADECE MIDDLEWARE SIRASI DÜZELTİLDİ
 ========================= */
 router.post(
   "/premium-start",
   auth,
-  upload.array("images", 5), // ✅ ÖNE ALINDI
+  upload.array("images", 5),   // 🔥 Upload auth’tan sonra
   dailyReset,
   coinCheck("FAL"),
   async (req, res) => {
+
+    if (!req.files?.length) {
+      return res.status(400).json({ error: "Fotoğraf gerekli" });
+    }
+
+    const uid = req.user.uid;
+    const price = req.coinPrice;
+
+    const id = crypto.randomUUID();
+
+    // 🔥 Önce store’a yaz
+    premiumStore.set(id, { status: "processing" });
+
+    // 🔥 200 response'u hemen garanti gönder
+    res.status(200).json({ falId: id });
+
     try {
-      if (!req.files?.length) {
-        return res.status(400).json({ error: "Fotoğraf gerekli" });
+      const full = await generatePremium(req.files);
+
+      if (!full) {
+        throw new Error("Fal boş geldi");
       }
 
-      const uid = req.user.uid;
-      const price = req.coinPrice;
+      await decreaseCoin(uid, price, "FAL", {
+        falId: id,
+      });
 
-      const id = crypto.randomUUID();
-      premiumStore.set(id, { status: "processing" });
-      res.json({ falId: id });
+      premiumStore.set(id, { status: "done", full });
 
-      try {
-        const full = await generatePremium(req.files);
-        if (!full) throw new Error("Fal boş geldi");
-
-        await decreaseCoin(uid, price, "FAL", {
-          falId: id,
-        });
-
-        premiumStore.set(id, { status: "done", full });
-      } catch (err) {
-        console.error("PREMIUM ERROR:", err);
-        premiumStore.set(id, { status: "error" });
-      }
     } catch (err) {
-      res.status(400).json({ error: err.message });
+      console.error("PREMIUM ERROR:", err);
+      premiumStore.set(id, { status: "error" });
     }
   }
 );

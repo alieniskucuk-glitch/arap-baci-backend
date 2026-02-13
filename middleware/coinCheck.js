@@ -1,15 +1,6 @@
 import { PRICING } from "../utils/pricing.js";
 import { db } from "../config/firebase.js";
 
-/**
- * type:
- *  "FAL"
- *  "RUYA"
- *  "EL_FALI"
- *  "TAROT"
- *  "MELEK"
- *  "UYUM"
- */
 export default function coinCheck(type) {
   return async (req, res, next) => {
     try {
@@ -18,20 +9,20 @@ export default function coinCheck(type) {
         return res.status(401).json({ error: "Token gerekli" });
       }
 
-      let price = 0;
+      let price;
 
       /* =========================
          SABİT FİYATLAR
       ========================= */
       if (["FAL", "RUYA", "EL_FALI"].includes(type)) {
-        price = PRICING[type];
+        price = PRICING?.[type];
       }
 
       /* =========================
          TAROT / MELEK
       ========================= */
       if (type === "TAROT" || type === "MELEK") {
-        const config = PRICING[type];
+        const config = PRICING?.[type];
         const cardCount = Number(req.body.cardCount);
 
         if (!cardCount || cardCount < 1) {
@@ -64,19 +55,25 @@ export default function coinCheck(type) {
         }
       }
 
-      if (typeof price !== "number" || price <= 0) {
+      if (!price || typeof price !== "number") {
+        console.error("PRICE ERROR:", type, PRICING);
         return res.status(500).json({ error: "Fiyat hesaplanamadı" });
       }
 
       /* =========================
-         COIN KONTROL (daily + abCoin)
+         COIN KONTROL
       ========================= */
 
       const userSnap = await db.collection("users").doc(uid).get();
-      const user = userSnap.data() || {};
 
-      const dailyCoin = Number(user.dailyCoin || 0);
-      const abCoin = Number(user.abCoin || 0);
+      if (!userSnap.exists) {
+        return res.status(400).json({ error: "Kullanıcı bulunamadı" });
+      }
+
+      const user = userSnap.data();
+
+      const dailyCoin = Number(user.dailyCoin ?? 0) || 0;
+      const abCoin = Number(user.abCoin ?? 0) || 0;
 
       const totalCoin = dailyCoin + abCoin;
 
