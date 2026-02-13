@@ -17,12 +17,12 @@ export const elFal = async (req, res) => {
     const base64Image = req.file.buffer.toString("base64");
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4.1-mini",
       messages: [
         {
           role: "system",
           content:
-            "Sen Arap Bacısın. Samimi, gizemli ve sıcak bir dille konuş.",
+            "Sen Arap Bacı adında mistik bir falcısın. Samimi, gizemli ve sıcak bir dille konuş.",
         },
         {
           role: "user",
@@ -30,7 +30,7 @@ export const elFal = async (req, res) => {
             {
               type: "text",
               text:
-                "Bu bir el falı. Avuç içindeki çizgilere bakarak kişilik, aşk, para ve yakın gelecek hakkında yorum yap.",
+                "Bu bir el falı. Avuç içindeki çizgilere bakarak kişilik, aşk, para ve yakın gelecek hakkında yorum yap.Yorum yaparken eldeki çizgilerden, uzunluğundan, kısalığından falan bahsedebilirsin.",
             },
             {
               type: "image_url",

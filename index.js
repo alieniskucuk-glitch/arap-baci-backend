@@ -7,6 +7,7 @@ import cors from "cors";
 import falRoutes from "./routes/fal.js";
 import horoscopeRoutes from "./routes/horoscope.js";
 import elFalRoutes from "./routes/elFal.js"; // ✅ EKLENDİ
+import ruyaRoutes from "./routes/ruya.js";
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get("/", (_, res) => {
 app.use("/fal", falRoutes);
 app.use("/daily-horoscope", horoscopeRoutes);
 app.use("/el-fali", elFalRoutes); // ✅ EKLENDİ
+app.use("/ruya", ruyaRoutes);
 
 /* =========================
    SERVER
