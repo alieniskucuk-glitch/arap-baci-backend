@@ -4,14 +4,12 @@ import crypto from "crypto";
 
 import {
   generatePreview,
-  generateFullFromPreview,
-  generatePremium
+  generateFullFromPreview
 } from "../services/falService.js";
 
 import auth from "../middleware/auth.js";
 import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
-import { decreaseCoin } from "../utils/coinManager.js";
 
 const router = express.Router();
 
@@ -80,11 +78,12 @@ router.post("/complete/:id", async (req, res) => {
 
 /* =========================
    /fal/premium-start
+   🔥 OPENAI DEVRE DIŞI TEST VERSİYON
 ========================= */
 router.post(
   "/premium-start",
   auth,
-  upload.array("images", 5),   // 🔥 Upload auth’tan sonra
+  upload.array("images", 5),
   dailyReset,
   coinCheck("FAL"),
   async (req, res) => {
@@ -93,34 +92,20 @@ router.post(
       return res.status(400).json({ error: "Fotoğraf gerekli" });
     }
 
-    const uid = req.user.uid;
-    const price = req.coinPrice;
-
     const id = crypto.randomUUID();
 
-    // 🔥 Önce store’a yaz
     premiumStore.set(id, { status: "processing" });
 
-    // 🔥 200 response'u hemen garanti gönder
+    // 200 hemen dön
     res.status(200).json({ falId: id });
 
-    try {
-      const full = await generatePremium(req.files);
-
-      if (!full) {
-        throw new Error("Fal boş geldi");
-      }
-
-      await decreaseCoin(uid, price, "FAL", {
-        falId: id,
+    // 🔥 TEST: 3 saniye sonra done yap
+    setTimeout(() => {
+      premiumStore.set(id, {
+        status: "done",
+        full: "TEST FALI ÇALIŞTI ✅"
       });
-
-      premiumStore.set(id, { status: "done", full });
-
-    } catch (err) {
-      console.error("PREMIUM ERROR:", err);
-      premiumStore.set(id, { status: "error" });
-    }
+    }, 3000);
   }
 );
 
