@@ -16,38 +16,40 @@ export const elFal = async (req, res) => {
 
     const base64Image = req.file.buffer.toString("base64");
 
-    const prompt = `
-Sen Arap Bacısın.
-Bu bir el falı.
-Avuç içindeki çizgilere bakarak
-kişilik, aşk, para ve yakın gelecek hakkında yorum yap.
-Samimi, gizemli ve sıcak bir dil kullan.
-    `;
-
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: [
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Sen Arap Bacısın. Samimi, gizemli ve sıcak bir dille konuş.",
+        },
         {
           role: "user",
           content: [
-            { type: "input_text", text: prompt },
             {
-              type: "input_image",
-              image_base64: base64Image,
+              type: "text",
+              text:
+                "Bu bir el falı. Avuç içindeki çizgilere bakarak kişilik, aşk, para ve yakın gelecek hakkında yorum yap.",
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${base64Image}`,
+              },
             },
           ],
         },
       ],
+      max_tokens: 600,
     });
 
     const result =
-      response.output_text || "Elinde güçlü bir enerji hissediyorum…";
+      completion.choices[0]?.message?.content ||
+      "Elinde güçlü bir enerji hissediyorum…";
 
     const docId = `${req.user.uid}_el_${Date.now()}`;
 
-    /* =========================
-       1️⃣ Fal kaydı
-    ========================= */
     await db.collection("el_fallari").doc(docId).set({
       userId: req.user.uid,
       text: result,
@@ -55,9 +57,6 @@ Samimi, gizemli ve sıcak bir dil kullan.
       type: "EL_FALI",
     });
 
-    /* =========================
-       2️⃣ Coin düş (MERKEZİ)
-    ========================= */
     await decreaseCoin(
       req.user.uid,
       req.coinPrice,
@@ -65,9 +64,6 @@ Samimi, gizemli ve sıcak bir dil kullan.
       { falId: docId }
     );
 
-    /* =========================
-       3️⃣ Response
-    ========================= */
     res.json({
       success: true,
       result,
@@ -75,11 +71,6 @@ Samimi, gizemli ve sıcak bir dil kullan.
 
   } catch (err) {
     console.error("EL FALI HATA:", err);
-
-    if (err.message === "Yetersiz coin") {
-      return res.status(400).json({ error: "Yetersiz coin" });
-    }
-
     res.status(500).json({ error: "El falı yorumlanamadı" });
   }
 };

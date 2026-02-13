@@ -5,7 +5,8 @@ import express from "express";
 import cors from "cors";
 
 import falRoutes from "./routes/fal.js";
-import elFalRoutes from "./routes/elFal.js";
+import horoscopeRoutes from "./routes/horoscope.js";
+import elFalRoutes from "./routes/elFal.js"; // ✅ EKLENDİ
 
 const app = express();
 
@@ -26,7 +27,8 @@ app.get("/", (_, res) => {
    ROUTES
 ========================= */
 app.use("/fal", falRoutes);
-app.use("/el-fali", elFalRoutes);
+app.use("/daily-horoscope", horoscopeRoutes);
+app.use("/el-fali", elFalRoutes); // ✅ EKLENDİ
 
 /* =========================
    SERVER
@@ -35,4 +37,11 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
+
+  // DEBUG (geçici kontrol için)
+  console.log("ENV CHECK:");
+  console.log("OPENAI:", !!process.env.OPENAI_API_KEY);
+  console.log("FIREBASE_PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID);
+  console.log("FIREBASE_CLIENT_EMAIL:", !!process.env.FIREBASE_CLIENT_EMAIL);
+  console.log("FIREBASE_PRIVATE_KEY:", !!process.env.FIREBASE_PRIVATE_KEY);
 });
