@@ -5,13 +5,7 @@ import express from "express";
 import cors from "cors";
 
 import falRoutes from "./routes/fal.js";
-import horoscopeRoutes from "./routes/horoscope.js";
 import elFalRoutes from "./routes/elFal.js";
-import tarotRoutes from "./routes/tarot.js";
-import ruyaRoutes from "./routes/ruya.js";
-import melekRoutes from "./routes/melek.js";
-import askRoutes from "./routes/ask.js";
-import coinRoutes from "./routes/coin.js";
 
 const app = express();
 
@@ -32,14 +26,7 @@ app.get("/", (_, res) => {
    ROUTES
 ========================= */
 app.use("/fal", falRoutes);
-app.use("/daily-horoscope", horoscopeRoutes);
-
 app.use("/el-fali", elFalRoutes);
-app.use("/tarot", tarotRoutes);
-app.use("/ruya", ruyaRoutes);
-app.use("/melek", melekRoutes);
-app.use("/ask", askRoutes);
-app.use("/coin", coinRoutes);
 
 /* =========================
    SERVER
@@ -48,11 +35,4 @@ const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
-
-  // DEBUG (geçici kontrol için)
-  console.log("ENV CHECK:");
-  console.log("OPENAI:", !!process.env.OPENAI_API_KEY);
-  console.log("FIREBASE_PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID);
-  console.log("FIREBASE_CLIENT_EMAIL:", !!process.env.FIREBASE_CLIENT_EMAIL);
-  console.log("FIREBASE_PRIVATE_KEY:", !!process.env.FIREBASE_PRIVATE_KEY);
 });
