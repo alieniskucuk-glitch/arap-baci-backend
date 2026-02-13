@@ -9,7 +9,7 @@ import {
 } from "../services/falService.js";
 
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";   // 🔥 EKLENDİ
+import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 
@@ -80,13 +80,14 @@ router.post("/complete/:id", async (req, res) => {
 
 /* =========================
    /fal/premium-start
+   🔥 SADECE MIDDLEWARE SIRASI DÜZELTİLDİ
 ========================= */
 router.post(
   "/premium-start",
   auth,
-  dailyReset,            // 🔥 GÜNLÜK 8 COIN RESET
-  coinCheck("FAL"),      // 🔥 daily + abCoin toplam kontrol
-  upload.array("images", 5),
+  upload.array("images", 5), // ✅ ÖNE ALINDI
+  dailyReset,
+  coinCheck("FAL"),
   async (req, res) => {
     try {
       if (!req.files?.length) {
@@ -104,7 +105,6 @@ router.post(
         const full = await generatePremium(req.files);
         if (!full) throw new Error("Fal boş geldi");
 
-        // 🔥 Önce dailyCoin sonra abCoin düşer
         await decreaseCoin(uid, price, "FAL", {
           falId: id,
         });
