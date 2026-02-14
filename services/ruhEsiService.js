@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-import { db } from "../config/firebase.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 
 const openai = new OpenAI({
@@ -8,15 +7,18 @@ const openai = new OpenAI({
 
 export const ruhEsi = async (req, res) => {
   try {
-    const { option, name, birth } = req.body;
+    const option = Number(req.body.option);
 
     if (!option) {
       return res.status(400).json({ error: "Analiz türü seçilmedi" });
     }
 
+    // Flutter field isimleri
+    const { p1Name, p1Birth, p2Name, p2Birth } = req.body;
+
     let prompt = `
 Sen mistik bir ruh uyumu analiz uzmanısın.
-sinastri analizi yaparak, isimlerin numerolojik analizini yaparak ve el çizgilerinin analizini yaparak iki kişinin ruhsal uyumunu değerlendiriyorsun.
+Sinastri analizi yaparak, isimlerin numerolojik analizini yaparak ve el çizgilerinin analizini yaparak iki kişinin ruhsal uyumunu değerlendiriyorsun.
 0 ile 100 arasında bir uyum yüzdesi üret.
 Ardından detaylı ama büyüleyici bir yorum yaz.
 Cevabı JSON formatında ver:
@@ -26,28 +28,61 @@ Cevabı JSON formatında ver:
 }
 `;
 
-    if (option == 1) {
-      if (!name || !birth) {
-        return res.status(400).json({ error: "İsim ve doğum tarihi gerekli" });
+    // ================= OPTION 1 =================
+    if (option === 1) {
+      if (!p1Name || !p1Birth || !p2Name || !p2Birth) {
+        return res.status(400).json({ error: "İsim ve doğum tarihleri gerekli" });
       }
 
       prompt += `
-İsim: ${name}
-Doğum Tarihi: ${birth}
+1. Kişi:
+İsim: ${p1Name}
+Doğum Tarihi: ${p1Birth}
+
+2. Kişi:
+İsim: ${p2Name}
+Doğum Tarihi: ${p2Birth}
 `;
     }
 
-    if (option == 2) {
+    // ================= OPTION 2 =================
+    if (option === 2) {
+      if (!req.files?.p1Hand || !req.files?.p2Hand) {
+        return res.status(400).json({ error: "İki el fotoğrafı gerekli" });
+      }
+
       prompt += `
 Enerji çizgilerine dayalı ruhsal eşleşme analizi yap.
+El çizgilerinin uyumuna odaklan.
 `;
     }
 
-    if (option == 3) {
+    // ================= OPTION 3 =================
+    if (option === 3) {
+      if (!p1Name || !p1Birth || !p2Name || !p2Birth) {
+        return res.status(400).json({ error: "İsim ve doğum tarihleri gerekli" });
+      }
+
+      if (!req.files?.p1Hand || !req.files?.p2Hand) {
+        return res.status(400).json({ error: "İki el fotoğrafı gerekli" });
+      }
+
       prompt += `
-Derin ruhsal bağ analizi yap. Daha güçlü ve etkileyici yorum yaz.
+1. Kişi:
+İsim: ${p1Name}
+Doğum Tarihi: ${p1Birth}
+
+2. Kişi:
+İsim: ${p2Name}
+Doğum Tarihi: ${p2Birth}
+
+El çizgileri + numeroloji + sinastri kombinasyonu ile
+derin ruhsal bağ analizi yap.
+Daha güçlü ve etkileyici yorum yaz.
 `;
     }
+
+    // ================= OPENAI =================
 
     const response = await openai.chat.completions.create({
       model: "gpt-4.1-mini",
@@ -55,7 +90,7 @@ Derin ruhsal bağ analizi yap. Daha güçlü ve etkileyici yorum yaz.
       temperature: 0.9,
     });
 
-    const raw = response.choices[0].message.content;
+    const raw = response.choices?.[0]?.message?.content || "";
 
     let parsed;
 
@@ -68,7 +103,7 @@ Derin ruhsal bağ analizi yap. Daha güçlü ve etkileyici yorum yaz.
       };
     }
 
-    const percent = Math.min(100, Math.max(0, parsed.percent));
+    const percent = Math.min(100, Math.max(0, Number(parsed.percent) || 0));
 
     // 🔥 Coin düş
     await decreaseCoin(
@@ -78,7 +113,7 @@ Derin ruhsal bağ analizi yap. Daha güçlü ve etkileyici yorum yaz.
       { percent }
     );
 
-    return res.json({
+    return res.status(200).json({
       percent,
       result: parsed.result,
     });
