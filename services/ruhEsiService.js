@@ -7,13 +7,13 @@ const openai = new OpenAI({
 
 export const ruhEsi = async (req, res) => {
   try {
-    const option = Number(req.body.option);
+    // 🔥 OPTION FIX
+    const option = parseInt(req.body.option, 10);
 
-    if (!option) {
-      return res.status(400).json({ error: "Analiz türü seçilmedi" });
+    if (![1, 2, 3].includes(option)) {
+      return res.status(400).json({ error: "Uyum türü belirlenemedi" });
     }
 
-    // Flutter field isimleri
     const { p1Name, p1Birth, p2Name, p2Birth } = req.body;
 
     let prompt = `

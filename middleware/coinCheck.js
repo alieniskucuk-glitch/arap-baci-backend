@@ -5,6 +5,7 @@ export default function coinCheck(type) {
   return async (req, res, next) => {
     try {
       const uid = req.user?.uid;
+
       if (!uid) {
         return res.status(401).json({ error: "Token gerekli" });
       }
@@ -15,15 +16,15 @@ export default function coinCheck(type) {
          SABİT FİYATLAR
       ========================= */
       if (["FAL", "RUYA", "EL_FALI"].includes(type)) {
-        price = PRICING?.[type];
+        price = PRICING[type];
       }
 
       /* =========================
          TAROT / MELEK
       ========================= */
       if (type === "TAROT" || type === "MELEK") {
-        const config = PRICING?.[type];
-        const cardCount = Number(req.body.cardCount);
+        const config = PRICING[type];
+        const cardCount = parseInt(req.body.cardCount, 10);
 
         if (!cardCount || cardCount < 1) {
           return res.status(400).json({ error: "Geçersiz kart sayısı" });
@@ -39,22 +40,31 @@ export default function coinCheck(type) {
       }
 
       /* =========================
-         UYUM
+         UYUM (Flutter option uyumlu)
       ========================= */
       if (type === "UYUM") {
-        const { nameBirth, handPhoto } = req.body;
+        const option = parseInt(req.body.option, 10);
 
-        if (nameBirth && handPhoto) {
-          price = PRICING.UYUM.BOTH;
-        } else if (nameBirth) {
+        if (![1, 2, 3].includes(option)) {
+          return res.status(400).json({ error: "Uyum türü belirlenemedi" });
+        }
+
+        if (option === 1) {
           price = PRICING.UYUM.NAME_BIRTH;
-        } else if (handPhoto) {
+        }
+
+        if (option === 2) {
           price = PRICING.UYUM.HAND_PHOTO;
-        } else {
-          return res.status(400).json({ error: "Uyum türü belirtilmedi" });
+        }
+
+        if (option === 3) {
+          price = PRICING.UYUM.BOTH;
         }
       }
 
+      /* =========================
+         FİYAT KONTROL
+      ========================= */
       if (!price || typeof price !== "number") {
         console.error("PRICE ERROR:", type, PRICING);
         return res.status(500).json({ error: "Fiyat hesaplanamadı" });
@@ -84,7 +94,7 @@ export default function coinCheck(type) {
       req.coinPrice = price;
       req.userCoins = {
         dailyCoin,
-        abCoin
+        abCoin,
       };
 
       next();
