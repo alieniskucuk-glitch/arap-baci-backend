@@ -1,8 +1,36 @@
+import admin from "firebase-admin";
 import { db } from "../config/firebase.js";
 
-function startOfToday() {
+const TZ = "Europe/Istanbul";
+
+function startOfTodayInTZ(timeZone) {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // O timezone’daki Y-M-D’yi al
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const y = parts.find(p => p.type === "year")?.value;
+  const m = parts.find(p => p.type === "month")?.value;
+  const d = parts.find(p => p.type === "day")?.value;
+
+  // Bu tarih stringini Date’e çeviriyoruz (00:00) — karşılaştırma için yeterli
+  return new Date(`${y}-${m}-${d}T00:00:00`);
+}
+
+function toDateSafe(v) {
+  if (!v) return null;
+  if (v instanceof Date) return v;
+  if (typeof v?.toDate === "function") return v.toDate(); // Firestore Timestamp
+  if (typeof v === "string") {
+    const dt = new Date(v);
+    return isNaN(dt.getTime()) ? null : dt;
+  }
+  return null;
 }
 
 export default async function dailyReset(req, res, next) {
@@ -12,7 +40,6 @@ export default async function dailyReset(req, res, next) {
 
     const userRef = db.collection("users").doc(uid);
     const snap = await userRef.get();
-
     if (!snap.exists) return next();
 
     const user = snap.data();
@@ -20,41 +47,35 @@ export default async function dailyReset(req, res, next) {
     // Premium değilse geç
     if (!user?.isPremium) return next();
 
-    const today = startOfToday();
+    const today = startOfTodayInTZ(TZ);
 
-    let lastReset = null;
-
-    // 🔥 Güvenli tarih parse
-    if (user.lastDailyReset && typeof user.lastDailyReset.toDate === "function") {
-      lastReset = user.lastDailyReset.toDate();
-    }
+    const lastReset = toDateSafe(user.lastDailyReset);
 
     // İlk reset
     if (!lastReset) {
       await userRef.update({
         dailyCoin: 8,
-        lastDailyReset: today,
+        lastDailyReset: admin.firestore.Timestamp.fromDate(today),
       });
       return next();
     }
 
-    const lastResetDay = new Date(
-      lastReset.getFullYear(),
-      lastReset.getMonth(),
-      lastReset.getDate()
+    const lastResetDay = startOfTodayInTZ(TZ);
+    // lastReset’i de aynı mantığa çekelim:
+    const last = new Date(
+      new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(lastReset) + "T00:00:00"
     );
 
-    if (today.getTime() > lastResetDay.getTime()) {
+    if (today.getTime() > last.getTime()) {
       await userRef.update({
         dailyCoin: 8,
-        lastDailyReset: today,
+        lastDailyReset: admin.firestore.Timestamp.fromDate(today),
       });
     }
 
-    next();
-
+    return next();
   } catch (err) {
     console.error("DAILY RESET ERROR:", err);
-    next(); // zinciri kırma
+    return next();
   }
 }
