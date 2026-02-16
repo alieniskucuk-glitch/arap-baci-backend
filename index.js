@@ -9,6 +9,7 @@ import horoscopeRoutes from "./routes/horoscope.js";
 import elFalRoutes from "./routes/elFal.js"; // ✅ EKLENDİ
 import ruyaRoutes from "./routes/ruya.js";
 import ruhEsiRoutes from "./routes/ruhEsi.js";
+import melekRoutes from "./routes/melek.js";   // 👈 EKLENDİ
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/daily-horoscope", horoscopeRoutes);
 app.use("/el-fali", elFalRoutes); // ✅ EKLENDİ
 app.use("/ruya", ruyaRoutes);
 app.use("/ruh-esi", ruhEsiRoutes);
+app.use("/melek", melekRoutes);   // 👈 EKLENDİ
 
 /* =========================
    SERVER

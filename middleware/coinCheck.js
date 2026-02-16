@@ -20,9 +20,9 @@ export default function coinCheck(type) {
       }
 
       /* =========================
-         TAROT / MELEK
+         TAROT
       ========================= */
-      if (type === "TAROT" || type === "MELEK") {
+      if (type === "TAROT") {
         const config = PRICING[type];
         const cardCount = parseInt(req.body.cardCount, 10);
 
@@ -37,6 +37,29 @@ export default function coinCheck(type) {
         if (cardCount === 1) price = config.ONE_CARD;
         if (cardCount === 2) price = config.TWO_CARD;
         if (cardCount === 3) price = config.THREE_CARD;
+      }
+
+      /* =========================
+         👼 MELEK
+      ========================= */
+      if (type === "MELEK") {
+        const mode = req.body.mode;
+
+        if (!["standard", "deep", "zaman"].includes(mode)) {
+          return res.status(400).json({ error: "Melek modu belirlenemedi" });
+        }
+
+        if (mode === "standard") {
+          price = PRICING.MELEK.ONE_CARD;
+        }
+
+        if (mode === "deep") {
+          price = PRICING.MELEK.TWO_CARD;
+        }
+
+        if (mode === "zaman") {
+          price = PRICING.MELEK.THREE_CARD;
+        }
       }
 
       /* =========================
