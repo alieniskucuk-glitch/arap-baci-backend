@@ -37,7 +37,7 @@ ama başlıkları yazmadan paragraf paragraf anlat.
 
 export async function generatePreview(files) {
   const r = await openai.responses.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o",
     input: [
       { role: "system", content: PREVIEW_PROMPT },
       {
@@ -56,7 +56,7 @@ export async function generatePreview(files) {
 
 export async function generateFullFromPreview(preview) {
   const r = await openai.responses.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o",
     input: [
       { role: "system", content: FULL_PROMPT },
       {
@@ -77,7 +77,7 @@ export async function generateFullFromPreview(preview) {
 
 export async function generatePremium(files) {
   const r = await openai.responses.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o",
     input: [
       { role: "system", content: FULL_PROMPT },
       {

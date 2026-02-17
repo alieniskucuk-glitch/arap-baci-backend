@@ -15,7 +15,7 @@ Kurallar:
 
 export async function generateDailyHoroscope(zodiac) {
   const r = await openai.responses.create({
-    model: "gpt-4.1-mini",
+    model: "gpt-4o",
     input: [
       { role: "system", content: DAILY_HOROSCOPE_PROMPT },
       {

@@ -18,7 +18,7 @@ export const elFal = async (req, res) => {
 
     // 🔥 GÜÇLÜ PROMPT
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-4o",
       input: [
         {
           role: "system",

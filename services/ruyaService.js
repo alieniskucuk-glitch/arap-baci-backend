@@ -32,7 +32,7 @@ Samimi, sıcak ve gizemli bir dil kullan.
     `;
 
     const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
+      model: "gpt-4o",
       input: prompt,
     });
 
