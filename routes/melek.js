@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { MELEK_DECK } from "../utils/melekDeck.js";
 
 const sessionStore = new Map();
+const SESSION_TTL = 1000 * 60 * 10; // 10 dakika
 
 /* =========================
    UTIL
@@ -24,9 +25,8 @@ function buildCardsByMode(mode) {
   const cards = [];
 
   if (mode === "standard") {
-    const c1 = randomFromRange(34, 54, used);
-    used.add(c1.id);
-    cards.push(c1);
+    const c = randomFromRange(34, 54, used);
+    cards.push(c);
   }
 
   if (mode === "deep") {
@@ -34,8 +34,6 @@ function buildCardsByMode(mode) {
     used.add(c1.id);
 
     const c2 = randomFromRange(1, 33, used);
-    used.add(c2.id);
-
     cards.push(c1, c2);
   }
 
@@ -51,10 +49,17 @@ function buildCardsByMode(mode) {
 }
 
 function getCardCount(mode) {
+  if (!["standard", "deep", "zaman"].includes(mode)) {
+    throw new Error("Geçersiz melek modu");
+  }
+
   if (mode === "standard") return 1;
   if (mode === "deep") return 2;
-  if (mode === "zaman") return 3;
-  throw new Error("Geçersiz melek modu");
+  return 3;
+}
+
+function isExpired(session) {
+  return Date.now() - session.createdAt > SESSION_TTL;
 }
 
 /* =========================
@@ -63,10 +68,6 @@ function getCardCount(mode) {
 
 export async function startMelek(uid, body) {
   const { mode, question } = body;
-
-  if (!["standard", "deep", "zaman"].includes(mode)) {
-    throw new Error("Geçersiz melek modu");
-  }
 
   const cardCount = getCardCount(mode);
   const cards = buildCardsByMode(mode);
@@ -89,11 +90,19 @@ export async function startMelek(uid, body) {
 }
 
 /* =========================
-   SESSION HELPERS
+   SESSION MANAGEMENT
 ========================= */
 
 export function getMelekSession(sessionId) {
-  return sessionStore.get(sessionId);
+  const session = sessionStore.get(sessionId);
+  if (!session) return null;
+
+  if (isExpired(session)) {
+    sessionStore.delete(sessionId);
+    return null;
+  }
+
+  return session;
 }
 
 export function deleteMelekSession(sessionId) {
