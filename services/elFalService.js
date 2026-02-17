@@ -16,40 +16,54 @@ export const elFal = async (req, res) => {
 
     const base64Image = req.file.buffer.toString("base64");
 
-    const completion = await openai.chat.completions.create({
+    // 🔥 GÜÇLÜ PROMPT
+    const response = await openai.responses.create({
       model: "gpt-4.1-mini",
-      messages: [
+      input: [
         {
           role: "system",
-          content:
-            "Sen Arap Bacı adında mistik bir cingene el falcısısın. Samimi, gizemli ve sıcak bir dille konuş.",
+          content: `
+Sen “Arap Bacı” adında deneyimli, çingene, mistik ve sezgileri güçlü bir el falcısısın.
+Kullanıcının avuç içi çizgilerini gerçekten analiz ediyormuş gibi yorum yap.
+
+Mutlaka şunlara değin:
+- Hayat çizgisinin uzunluğu veya kırılmaları
+- Kalp çizgisinin şekli ve derinliği
+- Kader çizgisi var mı yok mu
+- Avuç ortasındaki enerji
+- Elin genel yapısı (çizgiler belirgin mi, karmaşık mı)
+
+Cinsiyet belirtme.
+Sıcak, mistik ve samimi konuş.
+Başlık yazma.
+Paragraf paragraf uzun yaz.
+`
         },
         {
           role: "user",
           content: [
             {
-              type: "text",
+              type: "input_text",
               text:
-                "Bu bir el falı. Avuç içindeki çizgilere bakarak kişilik, aşk, para ve yakın gelecek hakkında yorum yap.Yorum yaparken eldeki çizgilerden, uzunluğundan, kısalığından falan bahsedebilirsin.",
+                "Bu el fotoğrafını detaylı incele ve el falı yorumu yap.",
             },
             {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${base64Image}`,
-              },
+              type: "input_image",
+              image_url: `data:image/jpeg;base64,${base64Image}`,
             },
           ],
         },
       ],
-      max_tokens: 600,
+      max_output_tokens: 800,
     });
 
     const result =
-      completion.choices[0]?.message?.content ||
+      response.output_text ||
       "Elinde güçlü bir enerji hissediyorum…";
 
     const docId = `${req.user.uid}_el_${Date.now()}`;
 
+    // 🔥 Firestore kayıt
     await db.collection("el_fallari").doc(docId).set({
       userId: req.user.uid,
       text: result,
@@ -57,6 +71,7 @@ export const elFal = async (req, res) => {
       type: "EL_FALI",
     });
 
+    // 🔥 Coin düş
     await decreaseCoin(
       req.user.uid,
       req.coinPrice,
@@ -64,13 +79,16 @@ export const elFal = async (req, res) => {
       { falId: docId }
     );
 
-    res.json({
+    return res.json({
       success: true,
       result,
+      remainingCoin: req.remainingCoin ?? null,
     });
 
   } catch (err) {
     console.error("EL FALI HATA:", err);
-    res.status(500).json({ error: "El falı yorumlanamadı" });
+    return res.status(500).json({
+      error: "El falı yorumlanamadı",
+    });
   }
 };

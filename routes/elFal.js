@@ -13,7 +13,7 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB üst limit
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
 });
 
 /* =========================
@@ -23,24 +23,26 @@ const upload = multer({
 router.post(
   "/",
   auth,
-  coinCheck("EL_FALI"),
-  upload.single("image"),
+  upload.single("image"),       // 🔥 1️⃣ Önce multer
+  coinCheck("EL_FALI"),         // 🔥 2️⃣ Sonra coin kontrol
   async (req, res, next) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "Görsel gerekli" });
       }
 
-      // 🔥 1MB'a optimize et
+      // 🔥 Sharp güvenli kullanım
       const optimizedBuffer = await sharp(req.file.buffer)
-        .resize({ width: 1200 }) // aşırı büyükleri küçült
-        .jpeg({ quality: 75 })   // kalite düşür
+        .rotate() // EXIF orientation fix
+        .resize({ width: 1200 })
+        .jpeg({ quality: 75, mozjpeg: true })
         .toBuffer();
 
       req.file.buffer = optimizedBuffer;
 
       next();
     } catch (err) {
+      console.error("SHARP ERROR:", err);
       return res.status(500).json({ error: "Görsel işlenemedi" });
     }
   },
@@ -52,14 +54,16 @@ router.post(
 ========================= */
 
 router.use((err, req, res, next) => {
+  console.error("UPLOAD ERROR:", err);
+
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
-      error: "Fotoğraf çok büyük. Maksimum 15MB yükleyebilirsiniz."
+      error: "Fotoğraf çok büyük. Maksimum 15MB yükleyebilirsiniz.",
     });
   }
 
   return res.status(500).json({
-    error: "Dosya yükleme hatası."
+    error: "Dosya yükleme hatası.",
   });
 });
 
