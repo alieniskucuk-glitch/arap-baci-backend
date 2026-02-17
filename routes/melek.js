@@ -7,7 +7,13 @@ const router = express.Router();
 
 router.post("/start", auth, coinCheck("MELEK"), async (req, res) => {
   try {
-    const result = await startMelek(req.user.uid, req.body);
+    const result = await startMelek(
+      req.user.uid,
+      req.body,
+      req.coinPrice,
+      req.userCoins
+    );
+
     res.json(result);
   } catch (err) {
     console.error(err);
