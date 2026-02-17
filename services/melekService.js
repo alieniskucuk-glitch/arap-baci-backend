@@ -1,67 +1,195 @@
-import { MELEK_DECK } from "../utils/melekDeck.js";
+import crypto from "crypto";
 import OpenAI from "openai";
+import { db } from "../config/firebase.js";
+import { MELEK_DECK } from "../utils/melekDeck.js";
+import { PRICING } from "../utils/pricing.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-function randomFromRange(min, max, excludeIds = new Set()) {
-  const filtered = MELEK_DECK.filter(
-    (c) => c.id >= min && c.id <= max && !excludeIds.has(c.id)
+const sessionStore = new Map();
+const SESSION_TTL = 1000 * 60 * 10; // 10 dakika
+
+/* =========================
+   UTIL
+========================= */
+
+function randomFromRange(min, max, exclude = new Set()) {
+  const pool = MELEK_DECK.filter(
+    (c) => c.id >= min && c.id <= max && !exclude.has(c.id)
   );
-  if (!filtered.length) throw new Error("Kart bulunamadı (range/exclude)");
-  return filtered[Math.floor(Math.random() * filtered.length)];
+  if (!pool.length) throw new Error("Kart bulunamadı");
+  return pool[Math.floor(Math.random() * pool.length)];
 }
+
+function getCardCount(mode) {
+  if (!["standard", "deep", "zaman"].includes(mode)) {
+    throw new Error("Geçersiz melek modu");
+  }
+  if (mode === "standard") return 1;
+  if (mode === "deep") return 2;
+  return 3;
+}
+
+function getMelekPrice(mode) {
+  if (mode === "standard") return PRICING.MELEK.ONE_CARD;
+  if (mode === "deep") return PRICING.MELEK.TWO_CARD;
+  if (mode === "zaman") return PRICING.MELEK.THREE_CARD;
+  throw new Error("Fiyat hesaplanamadı");
+}
+
+function isExpired(session) {
+  return Date.now() - session.createdAt > SESSION_TTL;
+}
+
+/* =========================
+   START
+========================= */
 
 export async function startMelek(uid, body) {
   const { mode, question } = body;
 
-  let cards = [];
+  const cardCount = getCardCount(mode);
+
   const used = new Set();
+  const cards = [];
 
   if (mode === "standard") {
-    // 1 kart → 34-54
-    const c1 = randomFromRange(34, 54, used);
-    used.add(c1.id);
-    cards.push(c1);
+    const c = randomFromRange(34, 54, used);
+    cards.push(c);
   }
 
   if (mode === "deep") {
-    // 2 kart → 1. kart 34-54, 2. kart 1-33
     const c1 = randomFromRange(34, 54, used);
     used.add(c1.id);
     const c2 = randomFromRange(1, 33, used);
-    used.add(c2.id);
-
     cards.push(c1, c2);
   }
 
   if (mode === "zaman") {
-    // 3 kart → 1-54 (3'ü de), aynı kart asla yok
-    const c1 = randomFromRange(1, 54, used);
-    used.add(c1.id);
-    const c2 = randomFromRange(1, 54, used);
-    used.add(c2.id);
-    const c3 = randomFromRange(1, 54, used);
-    used.add(c3.id);
-
-    cards.push(c1, c2, c3);
+    for (let i = 0; i < 3; i++) {
+      const c = randomFromRange(1, 54, used);
+      used.add(c.id);
+      cards.push(c);
+    }
   }
 
-  const interpretation = await generateInterpretation(mode, question, cards);
+  const sessionId = crypto.randomUUID();
 
-  // ✅ Coin kuralın: Result GELMEDEN coin düşmez.
-  // Coin düşürme işlemini interpretation başarılı olduktan SONRA yapmalısın.
-  // (coinManager entegrasyonunu senin mevcut yapına göre birazdan koyarız.)
+  sessionStore.set(sessionId, {
+    uid,
+    mode,
+    question: question || null,
+    cards,
+    revealed: [],
+    createdAt: Date.now(),
+  });
+
+  return { sessionId, cardCount };
+}
+
+/* =========================
+   REVEAL
+========================= */
+
+export async function revealMelek(uid, body) {
+  const { sessionId } = body;
+
+  const session = sessionStore.get(sessionId);
+  if (!session) throw new Error("Session bulunamadı");
+
+  if (session.uid !== uid)
+    throw new Error("Yetkisiz erişim");
+
+  if (isExpired(session)) {
+    sessionStore.delete(sessionId);
+    throw new Error("Session süresi doldu");
+  }
+
+  const nextIndex = session.revealed.length;
+  if (nextIndex >= session.cards.length)
+    throw new Error("Tüm kartlar açıldı");
+
+  const card = session.cards[nextIndex];
+  session.revealed.push(card);
+
+  const picked = session.revealed.map((c) => ({
+    title: c.title,
+    image: c.image,
+  }));
+
+  /* =========================
+     FINAL STEP
+  ========================= */
+
+  if (session.revealed.length === session.cards.length) {
+    let interpretation;
+
+    try {
+      interpretation = await generateInterpretation(
+        session.mode,
+        session.question,
+        session.cards
+      );
+    } catch (err) {
+      sessionStore.delete(sessionId);
+      throw new Error("Yorum üretilemedi");
+    }
+
+    const price = getMelekPrice(session.mode);
+    const userRef = db.collection("users").doc(uid);
+
+    let remainingCoin = 0;
+
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(userRef);
+      if (!snap.exists) throw new Error("Kullanıcı bulunamadı");
+
+      const user = snap.data();
+      let dailyCoin = Number(user.dailyCoin ?? 0);
+      let abCoin = Number(user.abCoin ?? 0);
+
+      let remaining = price;
+
+      if (dailyCoin >= remaining) {
+        dailyCoin -= remaining;
+        remaining = 0;
+      } else {
+        remaining -= dailyCoin;
+        dailyCoin = 0;
+      }
+
+      if (remaining > 0) {
+        if (abCoin < remaining)
+          throw new Error("Yetersiz coin");
+        abCoin -= remaining;
+      }
+
+      remainingCoin = dailyCoin + abCoin;
+
+      tx.update(userRef, { dailyCoin, abCoin });
+    });
+
+    sessionStore.delete(sessionId);
+
+    return {
+      picked,
+      interpretation,
+      remainingCoin,
+    };
+  }
 
   return {
-    cards: cards.map((c) => ({
-      title: c.title,
-      image: c.image,
-    })),
-    interpretation,
+    picked,
+    interpretation: null,
+    remainingCoin: null,
   };
 }
+
+/* =========================
+   GPT
+========================= */
 
 async function generateInterpretation(mode, question, cards) {
   const cardNames = cards.map((c) => c.title).join(", ");
