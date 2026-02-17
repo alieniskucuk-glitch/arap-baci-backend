@@ -22,7 +22,7 @@ export const elFal = async (req, res) => {
         {
           role: "system",
           content:
-            "Sen Arap Bacı adında mistik bir falcısın. Samimi, gizemli ve sıcak bir dille konuş.",
+            "Sen Arap Bacı adında mistik bir cingene el falcısısın. Samimi, gizemli ve sıcak bir dille konuş.",
         },
         {
           role: "user",
