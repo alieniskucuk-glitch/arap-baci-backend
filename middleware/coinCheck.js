@@ -1,27 +1,69 @@
+import admin from "firebase-admin";
 import { PRICING } from "../utils/pricing.js";
 import { db } from "../config/firebase.js";
+
+const TZ = "Europe/Istanbul";
+const DAILY_PREMIUM_COIN = 8;
+
+function getTodayKey(timeZone) {
+  const now = new Date();
+
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+
+  const y = parts.find(p => p.type === "year")?.value;
+  const m = parts.find(p => p.type === "month")?.value;
+  const d = parts.find(p => p.type === "day")?.value;
+
+  return `${y}-${m}-${d}`;
+}
 
 export default function coinCheck(type) {
   return async (req, res, next) => {
     try {
       const uid = req.user?.uid;
-
       if (!uid) {
         return res.status(401).json({ error: "Token gerekli" });
       }
 
-      let price;
+      const userRef = db.collection("users").doc(uid);
 
       /* =========================
-         SABİT FİYATLAR
+         🔥 DAILY RESET (PRO)
       ========================= */
+      await db.runTransaction(async (tx) => {
+        const snap = await tx.get(userRef);
+        if (!snap.exists) return;
+
+        const user = snap.data();
+        if (!user?.isPremium) return;
+
+        const todayKey = getTodayKey(TZ);
+        const lastKey = user.lastDailyResetKey || null;
+
+        if (lastKey === todayKey) return;
+
+        tx.update(userRef, {
+          dailyCoin: DAILY_PREMIUM_COIN,
+          lastDailyResetKey: todayKey,
+          lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      });
+
+      /* =========================
+         FİYAT HESAPLAMA
+      ========================= */
+
+      let price;
+
       if (["FAL", "RUYA", "EL_FALI"].includes(type)) {
         price = PRICING[type];
       }
 
-      /* =========================
-         TAROT
-      ========================= */
       if (type === "TAROT") {
         const config = PRICING[type];
         const cardCount = parseInt(req.body.cardCount, 10);
@@ -39,9 +81,6 @@ export default function coinCheck(type) {
         if (cardCount === 3) price = config.THREE_CARD;
       }
 
-      /* =========================
-         👼 MELEK
-      ========================= */
       if (type === "MELEK") {
         const mode = req.body.mode;
 
@@ -49,22 +88,11 @@ export default function coinCheck(type) {
           return res.status(400).json({ error: "Melek modu belirlenemedi" });
         }
 
-        if (mode === "standard") {
-          price = PRICING.MELEK.ONE_CARD;
-        }
-
-        if (mode === "deep") {
-          price = PRICING.MELEK.TWO_CARD;
-        }
-
-        if (mode === "zaman") {
-          price = PRICING.MELEK.THREE_CARD;
-        }
+        if (mode === "standard") price = PRICING.MELEK.ONE_CARD;
+        if (mode === "deep") price = PRICING.MELEK.TWO_CARD;
+        if (mode === "zaman") price = PRICING.MELEK.THREE_CARD;
       }
 
-      /* =========================
-         UYUM (Flutter option uyumlu)
-      ========================= */
       if (type === "UYUM") {
         const option = parseInt(req.body.option, 10);
 
@@ -72,24 +100,12 @@ export default function coinCheck(type) {
           return res.status(400).json({ error: "Uyum türü belirlenemedi" });
         }
 
-        if (option === 1) {
-          price = PRICING.UYUM.NAME_BIRTH;
-        }
-
-        if (option === 2) {
-          price = PRICING.UYUM.HAND_PHOTO;
-        }
-
-        if (option === 3) {
-          price = PRICING.UYUM.BOTH;
-        }
+        if (option === 1) price = PRICING.UYUM.NAME_BIRTH;
+        if (option === 2) price = PRICING.UYUM.HAND_PHOTO;
+        if (option === 3) price = PRICING.UYUM.BOTH;
       }
 
-      /* =========================
-         FİYAT KONTROL
-      ========================= */
       if (!price || typeof price !== "number") {
-        console.error("PRICE ERROR:", type, PRICING);
         return res.status(500).json({ error: "Fiyat hesaplanamadı" });
       }
 
@@ -97,8 +113,7 @@ export default function coinCheck(type) {
          COIN KONTROL
       ========================= */
 
-      const userSnap = await db.collection("users").doc(uid).get();
-
+      const userSnap = await userRef.get();
       if (!userSnap.exists) {
         return res.status(400).json({ error: "Kullanıcı bulunamadı" });
       }
@@ -121,7 +136,6 @@ export default function coinCheck(type) {
       };
 
       next();
-
     } catch (err) {
       console.error("COIN CHECK ERROR:", err);
       return res.status(500).json({ error: "Coin kontrol hatası" });

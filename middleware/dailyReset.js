@@ -2,11 +2,11 @@ import admin from "firebase-admin";
 import { db } from "../config/firebase.js";
 
 const TZ = "Europe/Istanbul";
+const DAILY_PREMIUM_COIN = 8;
 
-function startOfTodayInTZ(timeZone) {
+function getTodayKey(timeZone) {
   const now = new Date();
 
-  // O timezone’daki Y-M-D’yi al
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -18,19 +18,7 @@ function startOfTodayInTZ(timeZone) {
   const m = parts.find(p => p.type === "month")?.value;
   const d = parts.find(p => p.type === "day")?.value;
 
-  // Bu tarih stringini Date’e çeviriyoruz (00:00) — karşılaştırma için yeterli
-  return new Date(`${y}-${m}-${d}T00:00:00`);
-}
-
-function toDateSafe(v) {
-  if (!v) return null;
-  if (v instanceof Date) return v;
-  if (typeof v?.toDate === "function") return v.toDate(); // Firestore Timestamp
-  if (typeof v === "string") {
-    const dt = new Date(v);
-    return isNaN(dt.getTime()) ? null : dt;
-  }
-  return null;
+  return `${y}-${m}-${d}`;
 }
 
 export default async function dailyReset(req, res, next) {
@@ -39,39 +27,25 @@ export default async function dailyReset(req, res, next) {
     if (!uid) return next();
 
     const userRef = db.collection("users").doc(uid);
-    const snap = await userRef.get();
-    if (!snap.exists) return next();
 
-    const user = snap.data();
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(userRef);
+      if (!snap.exists) return;
 
-    // Premium değilse geç
-    if (!user?.isPremium) return next();
+      const user = snap.data();
+      if (!user?.isPremium) return;
 
-    const today = startOfTodayInTZ(TZ);
+      const todayKey = getTodayKey(TZ);
+      const lastKey = user.lastDailyResetKey || null;
 
-    const lastReset = toDateSafe(user.lastDailyReset);
+      if (lastKey === todayKey) return;
 
-    // İlk reset
-    if (!lastReset) {
-      await userRef.update({
-        dailyCoin: 8,
-        lastDailyReset: admin.firestore.Timestamp.fromDate(today),
+      tx.update(userRef, {
+        dailyCoin: DAILY_PREMIUM_COIN,
+        lastDailyResetKey: todayKey,
+        lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-      return next();
-    }
-
-    const lastResetDay = startOfTodayInTZ(TZ);
-    // lastReset’i de aynı mantığa çekelim:
-    const last = new Date(
-      new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(lastReset) + "T00:00:00"
-    );
-
-    if (today.getTime() > last.getTime()) {
-      await userRef.update({
-        dailyCoin: 8,
-        lastDailyReset: admin.firestore.Timestamp.fromDate(today),
-      });
-    }
+    });
 
     return next();
   } catch (err) {
