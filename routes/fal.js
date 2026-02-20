@@ -9,7 +9,6 @@ import {
 } from "../services/falService.js";
 
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 
@@ -86,7 +85,6 @@ router.post(
   "/premium-start",
   auth,
   upload.array("images", 5),
-  dailyReset,
   coinCheck("FAL"),
   async (req, res) => {
 
