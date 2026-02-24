@@ -48,7 +48,7 @@ function isExpired(session) {
 }
 
 /* =========================
-   START
+   START (GPT PRELOAD)
 ========================= */
 
 export async function startMelek(uid, body) {
@@ -60,21 +60,20 @@ export async function startMelek(uid, body) {
   const cards = [];
 
   if (mode === "standard") {
-    const c = randomFromRange(34, 54, used);
+    const c = randomFromRange(33, 53, used);
     cards.push(c);
   }
 
   if (mode === "deep") {
-    const c1 = randomFromRange(34, 54, used);
+    const c1 = randomFromRange(33, 53, used);
     used.add(c1.id);
-
-    const c2 = randomFromRange(1, 33, used);
+    const c2 = randomFromRange(0, 32, used);
     cards.push(c1, c2);
   }
 
   if (mode === "zaman") {
     for (let i = 0; i < 3; i++) {
-      const c = randomFromRange(1, 54, used);
+      const c = randomFromRange(0, 53, used);
       used.add(c.id);
       cards.push(c);
     }
@@ -82,12 +81,23 @@ export async function startMelek(uid, body) {
 
   const sessionId = crypto.randomUUID();
 
+  // 🔥 GPT PRELOAD BAŞLIYOR
+  const interpretationPromise = generateInterpretation(
+    mode,
+    question,
+    cards
+  ).catch((err) => {
+    console.error("PRELOAD GPT ERROR:", err);
+    return null;
+  });
+
   sessionStore.set(sessionId, {
     uid,
     mode,
     question: question || null,
     cards,
     revealed: [],
+    interpretationPromise, // preload burada saklanıyor
     createdAt: Date.now(),
   });
 
@@ -134,11 +144,11 @@ export async function revealMelek(uid, body) {
     let interpretation;
 
     try {
-      interpretation = await generateInterpretation(
-        session.mode,
-        session.question,
-        session.cards
-      );
+      interpretation = await session.interpretationPromise;
+
+      if (!interpretation)
+        throw new Error("Yorum üretilemedi");
+
     } catch (err) {
       sessionStore.delete(sessionId);
       throw new Error("Yorum üretilemedi");
@@ -197,7 +207,7 @@ export async function revealMelek(uid, body) {
 }
 
 /* =========================
-   GPT – MODE AKILLI
+   GPT
 ========================= */
 
 async function generateInterpretation(mode, question, cards) {
