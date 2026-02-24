@@ -81,15 +81,12 @@ export async function startMelek(uid, body) {
 
   const sessionId = crypto.randomUUID();
 
-  // 🔥 GPT PRELOAD BAŞLIYOR
+  // GPT preload
   const interpretationPromise = generateInterpretation(
     mode,
     question,
     cards
-  ).catch((err) => {
-    console.error("PRELOAD GPT ERROR:", err);
-    return null;
-  });
+  ).catch(() => null);
 
   sessionStore.set(sessionId, {
     uid,
@@ -97,7 +94,7 @@ export async function startMelek(uid, body) {
     question: question || null,
     cards,
     revealed: [],
-    interpretationPromise, // preload burada saklanıyor
+    interpretationPromise,
     createdAt: Date.now(),
   });
 
@@ -105,7 +102,7 @@ export async function startMelek(uid, body) {
 }
 
 /* =========================
-   REVEAL
+   REVEAL (NON-BLOCKING)
 ========================= */
 
 export async function revealMelek(uid, body) {
@@ -113,9 +110,7 @@ export async function revealMelek(uid, body) {
 
   const session = sessionStore.get(sessionId);
   if (!session) throw new Error("Session bulunamadı");
-
-  if (session.uid !== uid)
-    throw new Error("Yetkisiz erişim");
+  if (session.uid !== uid) throw new Error("Yetkisiz erişim");
 
   if (isExpired(session)) {
     sessionStore.delete(sessionId);
@@ -123,7 +118,6 @@ export async function revealMelek(uid, body) {
   }
 
   const nextIndex = session.revealed.length;
-
   if (nextIndex >= session.cards.length)
     throw new Error("Tüm kartlar açıldı");
 
@@ -135,25 +129,25 @@ export async function revealMelek(uid, body) {
     image: c.image,
   }));
 
-  /* =========================
-     FINAL STEP
-  ========================= */
-
+  // 🔥 SON KART
   if (session.revealed.length === session.cards.length) {
+    // GPT hazır mı? BEKLEME YOK
+    const interpretation = await Promise.race([
+      session.interpretationPromise,
+      new Promise((resolve) => setTimeout(() => resolve(null), 30)),
+    ]);
 
-    let interpretation;
-
-    try {
-      interpretation = await session.interpretationPromise;
-
-      if (!interpretation)
-        throw new Error("Yorum üretilemedi");
-
-    } catch (err) {
-      sessionStore.delete(sessionId);
-      throw new Error("Yorum üretilemedi");
+    // GPT henüz bitmediyse -> Flutter tekrar çağırır
+    if (!interpretation) {
+      return {
+        picked,
+        interpretation: null,
+        remainingCoin: null,
+        pending: true,
+      };
     }
 
+    // Coin düş
     const price = getMelekPrice(session.mode);
     const userRef = db.collection("users").doc(uid);
 
@@ -161,8 +155,7 @@ export async function revealMelek(uid, body) {
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(userRef);
-      if (!snap.exists)
-        throw new Error("Kullanıcı bulunamadı");
+      if (!snap.exists) throw new Error("Kullanıcı bulunamadı");
 
       const user = snap.data();
 
@@ -180,13 +173,11 @@ export async function revealMelek(uid, body) {
       }
 
       if (remaining > 0) {
-        if (abCoin < remaining)
-          throw new Error("Yetersiz coin");
+        if (abCoin < remaining) throw new Error("Yetersiz coin");
         abCoin -= remaining;
       }
 
       remainingCoin = dailyCoin + abCoin;
-
       tx.update(userRef, { dailyCoin, abCoin });
     });
 
@@ -199,6 +190,7 @@ export async function revealMelek(uid, body) {
     };
   }
 
+  // ara kart
   return {
     picked,
     interpretation: null,
@@ -211,44 +203,34 @@ export async function revealMelek(uid, body) {
 ========================= */
 
 async function generateInterpretation(mode, question, cards) {
-
   let formattedCards = "";
   let structureInstruction = "";
 
   if (mode === "standard") {
-    formattedCards = `
-Kart: ${cards[0].title}
-`;
+    formattedCards = `Kart: ${cards[0].title}`;
     structureInstruction = `
 Bu kartın ana mesajını açık ve güçlü şekilde yorumla.
-Kartın enerjisini net biçimde açıkla.
-Sonunda kısa bir yönlendirme cümlesi yaz.
 `;
   }
 
   if (mode === "deep") {
     formattedCards = `
-1. Kart (Mevcut Enerji): ${cards[0].title}
-2. Kart (İlahi Rehberlik): ${cards[1].title}
+1. Kart: ${cards[0].title}
+2. Kart: ${cards[1].title}
 `;
     structureInstruction = `
-Önce 1. kartı detaylı yorumla. net cevap seklinde olsun.
-Sonra 2. kartı çözüm ve rehberlik olarak açıkla.
-En sonda iki kartın birleşik mesajını yaz.
+Kartları ayrı ayrı yorumla ve sonunda birleşik mesaj ver.
 `;
   }
 
   if (mode === "zaman") {
     formattedCards = `
-1. Kart (Geçmiş Enerjisi): ${cards[0].title}
-2. Kart (Şu Anki Enerji): ${cards[1].title}
-3. Kart (Gelecek Enerjisi): ${cards[2].title}
+Geçmiş: ${cards[0].title}
+Şimdi: ${cards[1].title}
+Gelecek: ${cards[2].title}
 `;
     structureInstruction = `
-Her kartı kendi zaman dilimine göre ayrı ayrı yorumla.
-Geçmişin bugüne etkisini açıkla.
-Geleceğin nasıl şekillenebileceğini belirt.
-En sonda genel bir kapanış paragrafı yaz.
+Zaman akışına göre yorumla.
 `;
   }
 
@@ -257,15 +239,9 @@ Sen Arap Bacı uygulamasında ilahi rehberlik sunan mistik bir melek kartları y
 
 Soru: ${question || "Genel rehberlik"}
 
-Açılan Kartlar:
 ${formattedCards}
 
 ${structureInstruction}
-
-Spiritüel ama net ol.
-Abartılı dramatik olma.
-Gerçekçi ama umut verici ol.
-Paragrafları düzenli yaz.
 `;
 
   const completion = await openai.chat.completions.create({

@@ -27,6 +27,13 @@ app.get("/", (_, res) => {
 });
 
 /* =========================
+   WARMUP PING (COLD START FIX)
+========================= */
+app.get("/ping", (_, res) => {
+  res.status(200).json({ ok: true });
+});
+
+/* =========================
    ROUTES
 ========================= */
 app.use("/fal", falRoutes);
