@@ -230,7 +230,7 @@ Geçmiş: ${cards[0].title}
 Gelecek: ${cards[2].title}
 `;
     structureInstruction = `
-Zaman akışına göre yorumla.
+Zaman akışına göre yorumla. Detaylı ve uzun olsun. 
 `;
   }
 
