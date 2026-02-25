@@ -102,7 +102,7 @@ export async function startMelek(uid, body) {
 }
 
 /* =========================
-   REVEAL (NON-BLOCKING)
+   REVEAL
 ========================= */
 
 export async function revealMelek(uid, body) {
@@ -131,20 +131,12 @@ export async function revealMelek(uid, body) {
 
   // 🔥 SON KART
   if (session.revealed.length === session.cards.length) {
-    // GPT hazır mı? BEKLEME YOK
-    const interpretation = await Promise.race([
-      session.interpretationPromise,
-      new Promise((resolve) => setTimeout(() => resolve(null), 30)),
-    ]);
+    // ✅ GPT'Yİ GERÇEKTEN BEKLE (30ms race kaldırıldı)
+    const interpretation = await session.interpretationPromise;
 
-    // GPT henüz bitmediyse -> Flutter tekrar çağırır
     if (!interpretation) {
-      return {
-        picked,
-        interpretation: null,
-        remainingCoin: null,
-        pending: true,
-      };
+      // GPT hata verdiyse veya null döndüyse
+      throw new Error("Yorum üretilemedi");
     }
 
     // Coin düş
