@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
-
+import tarotRoutes from "./routes/tarot.js";
 import falRoutes from "./routes/fal.js";
 import horoscopeRoutes from "./routes/horoscope.js";
 import elFalRoutes from "./routes/elFal.js"; // ✅ EKLENDİ
@@ -42,6 +42,7 @@ app.use("/el-fali", elFalRoutes); // ✅ EKLENDİ
 app.use("/ruya", ruyaRoutes);
 app.use("/ruh-esi", ruhEsiRoutes);
 app.use("/melek", melekRoutes);   // 👈 EKLENDİ
+app.use("/tarot", tarotRoutes);
 
 /* =========================
    SERVER

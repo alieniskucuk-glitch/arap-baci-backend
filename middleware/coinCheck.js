@@ -23,19 +23,17 @@ export default function coinCheck(type) {
 
       if (type === "TAROT") {
         const config = PRICING[type];
-        const cardCount = parseInt(req.body.cardCount, 10);
+        const mode = req.body.mode;
 
-        if (!cardCount || cardCount < 1) {
-          return res.status(400).json({ error: "Geçersiz kart sayısı" });
+        if (!["one", "two", "three", "five", "celtic"].includes(mode)) {
+          return res.status(400).json({ error: "Geçersiz tarot mode" });
         }
 
-        if (cardCount > config.MAX_CARD) {
-          return res.status(400).json({ error: "Kart limiti aşıldı" });
-        }
-
-        if (cardCount === 1) price = config.ONE_CARD;
-        if (cardCount === 2) price = config.TWO_CARD;
-        if (cardCount === 3) price = config.THREE_CARD;
+        if (mode === "one") price = config.ONE_CARD;
+        if (mode === "two") price = config.TWO_CARD;
+        if (mode === "three") price = config.THREE_CARD;
+        if (mode === "five") price = config.FIVE_CARD;
+        if (mode === "celtic") price = config.CELTIC_CROSS;
       }
 
       if (type === "MELEK") {

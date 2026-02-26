@@ -14,7 +14,9 @@ export const PRICING = {
     ONE_CARD: 1,
     TWO_CARD: 2,
     THREE_CARD: 3,
-    MAX_CARD: 3
+    FIVE_CARD: 4,
+    CELTIC_CROSS: 7,
+    MAX_CARD: 10
   },
 
   // 👼 Melek Kartı (kart başına)
