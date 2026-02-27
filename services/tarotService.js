@@ -2,7 +2,7 @@ import { db } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { PRICING } from "../utils/pricing.js";
-import openai from "../config/openai.js"; // senin openai config
+import openai from "../config/openai.js";
 
 // ================= HELPERS =================
 
@@ -28,7 +28,6 @@ function resolveCost(mode) {
   }
 }
 
-// 0-77 arası unique kart seç
 function pickCards(count) {
   const all = Array.from({ length: 78 }, (_, i) => i);
   for (let i = all.length - 1; i > 0; i--) {
@@ -55,6 +54,7 @@ export async function startTarot(uid, { mode, subType, question }) {
     cardCount,
     selectedCards,
     revealedCount: 0,
+    completed: false, // 🔥 önemli
     createdAt: FieldValue.serverTimestamp(),
   });
 
@@ -69,48 +69,53 @@ export async function startTarot(uid, { mode, subType, question }) {
 export async function revealTarot(uid, { sessionId }) {
 
   const sessionRef = db.collection("tarotSessions").doc(sessionId);
-  const snap = await sessionRef.get();
 
-  if (!snap.exists) throw new Error("Session bulunamadı");
+  return await db.runTransaction(async (tx) => {
 
-  const session = snap.data();
+    const snap = await tx.get(sessionRef);
+    if (!snap.exists) throw new Error("Session bulunamadı");
 
-  if (session.uid !== uid) throw new Error("Yetkisiz erişim");
+    const session = snap.data();
 
-  if (session.revealedCount >= session.cardCount) {
-    throw new Error("Tüm kartlar açıldı");
-  }
+    if (session.uid !== uid)
+      throw new Error("Yetkisiz erişim");
 
-  const nextRevealed = session.revealedCount + 1;
+    if (session.completed)
+      throw new Error("Fal zaten tamamlandı");
 
-  await sessionRef.update({
-    revealedCount: nextRevealed,
-  });
+    if (session.revealedCount >= session.cardCount)
+      throw new Error("Tüm kartlar açıldı");
 
-  const picked = session.selectedCards
-    .slice(0, nextRevealed)
-    .map(id => ({
-      id,
-      image: `${id}.webp`
-    }));
+    const nextRevealed = session.revealedCount + 1;
 
-  const isLast = nextRevealed === session.cardCount;
+    tx.update(sessionRef, {
+      revealedCount: nextRevealed,
+    });
 
-  if (!isLast) {
-    return { picked };
-  }
+    const picked = session.selectedCards
+      .slice(0, nextRevealed)
+      .map(id => ({
+        id,
+        image: `${id}.webp`
+      }));
 
-  // ================= GPT PROMPT =================
+    const isLast = nextRevealed === session.cardCount;
 
-  const spreadDescription = {
-    one: "Tek kart ilahi mesaj",
-    two: "Durum ve karşıt enerji",
-    three: "Geçmiş - Şimdi - Gelecek",
-    five: "Detaylı rehberlik açılımı",
-    celtic: "Kelt Haçı kapsamlı kader analizi"
-  }[session.mode];
+    if (!isLast) {
+      return { picked };
+    }
 
-  const prompt = `
+    // ================= GPT =================
+
+    const spreadDescription = {
+      one: "Tek kart ilahi mesaj",
+      two: "Durum ve karşıt enerji",
+      three: "Geçmiş - Şimdi - Gelecek",
+      five: "Detaylı rehberlik açılımı",
+      celtic: "Kelt Haçı kapsamlı kader analizi"
+    }[session.mode];
+
+    const prompt = `
 Sen deneyimli, mistik bir tarot yorumcususun.
 
 Açılım Türü: ${spreadDescription}
@@ -125,31 +130,35 @@ Kurallar:
 - Sonunda kısa bir rehber paragraf ekle.
 `;
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      { role: "system", content: "Sen güçlü bir tarot rehberisin." },
-      { role: "user", content: prompt }
-    ],
-    temperature: 0.8,
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: "Sen güçlü bir tarot rehberisin." },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.8,
+    });
+
+    const interpretation = completion.choices[0].message.content;
+
+    // ================= COIN DÜŞ =================
+
+    const cost = resolveCost(session.mode);
+    const remainingCoin = await decreaseCoin(uid, cost, "TAROT", {
+      sessionId
+    });
+
+    tx.update(sessionRef, {
+      interpretation,
+      cost,
+      completed: true, // 🔥 tekrar reveal engeli
+      completedAt: FieldValue.serverTimestamp(),
+    });
+
+    return {
+      picked,
+      interpretation,
+      remainingCoin,
+    };
   });
-
-  const interpretation = completion.choices[0].message.content;
-
-  // ================= COIN DÜŞ =================
-
-  const cost = resolveCost(session.mode);
-  const remainingCoin = await decreaseCoin(uid, cost);
-
-  await sessionRef.update({
-    interpretation,
-    cost,
-    completedAt: FieldValue.serverTimestamp(),
-  });
-
-  return {
-    picked,
-    interpretation,
-    remainingCoin,
-  };
 }

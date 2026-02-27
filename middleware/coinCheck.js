@@ -15,15 +15,17 @@ export default function coinCheck(type) {
          FİYAT HESAPLAMA
       ========================= */
 
-      let price;
+      let price = null;
 
+      // FAL / RUYA / EL_FALI
       if (["FAL", "RUYA", "EL_FALI"].includes(type)) {
         price = PRICING[type];
       }
 
-      if (type === "TAROT") {
-        const config = PRICING[type];
-        const mode = req.body.mode;
+      // TAROT
+      else if (type === "TAROT") {
+        const config = PRICING.TAROT ?? PRICING[type];
+        const mode = req.body?.mode;
 
         if (!["one", "two", "three", "five", "celtic"].includes(mode)) {
           return res.status(400).json({ error: "Geçersiz tarot mode" });
@@ -36,8 +38,9 @@ export default function coinCheck(type) {
         if (mode === "celtic") price = config.CELTIC_CROSS;
       }
 
-      if (type === "MELEK") {
-        const mode = req.body.mode;
+      // MELEK
+      else if (type === "MELEK") {
+        const mode = req.body?.mode;
 
         if (!["standard", "deep", "zaman"].includes(mode)) {
           return res.status(400).json({ error: "Melek modu belirlenemedi" });
@@ -48,10 +51,11 @@ export default function coinCheck(type) {
         if (mode === "zaman") price = PRICING.MELEK.THREE_CARD;
       }
 
-      if (type === "UYUM") {
-        const option = parseInt(req.body.option, 10);
+      // UYUM
+      else if (type === "UYUM") {
+        const option = Number.parseInt(req.body?.option, 10);
 
-        if (![1, 2, 3].includes(option)) {
+        if (!Number.isFinite(option) || ![1, 2, 3].includes(option)) {
           return res.status(400).json({ error: "Uyum türü belirlenemedi" });
         }
 
@@ -60,7 +64,13 @@ export default function coinCheck(type) {
         if (option === 3) price = PRICING.UYUM.BOTH;
       }
 
-      if (!price || typeof price !== "number") {
+      // type tanımsızsa
+      else {
+        return res.status(400).json({ error: "Geçersiz işlem tipi" });
+      }
+
+      // fiyat doğrula
+      if (!Number.isFinite(price) || price <= 0) {
         return res.status(500).json({ error: "Fiyat hesaplanamadı" });
       }
 
@@ -73,7 +83,7 @@ export default function coinCheck(type) {
         return res.status(400).json({ error: "Kullanıcı bulunamadı" });
       }
 
-      const user = userSnap.data();
+      const user = userSnap.data() || {};
 
       const dailyCoin = Number(user.dailyCoin ?? 0) || 0;
       const abCoin = Number(user.abCoin ?? 0) || 0;
@@ -85,10 +95,7 @@ export default function coinCheck(type) {
       }
 
       req.coinPrice = price;
-      req.userCoins = {
-        dailyCoin,
-        abCoin,
-      };
+      req.userCoins = { dailyCoin, abCoin };
 
       next();
     } catch (err) {

@@ -1,12 +1,14 @@
 import express from "express";
 import auth from "../middleware/auth.js";
+import coinCheck from "../middleware/coinCheck.js"; // ✅ EKLENDİ
 import { startTarot, revealTarot } from "../services/tarotService.js";
 
 const router = express.Router();
 
-router.post("/start", auth, async (req, res) => {
+// ✅ START → auth + coinCheck
+router.post("/start", auth, coinCheck("TAROT"), async (req, res) => {
   try {
-    const uid = req.user?.uid;   // ✅ DOĞRU
+    const uid = req.user?.uid;
 
     if (!uid) {
       return res.status(401).json({ error: "Token gerekli" });
@@ -20,9 +22,10 @@ router.post("/start", auth, async (req, res) => {
   }
 });
 
+// REVEAL → sadece auth (coin düşme zaten service içinde)
 router.post("/reveal", auth, async (req, res) => {
   try {
-    const uid = req.user?.uid;   // ✅ DOĞRU
+    const uid = req.user?.uid;
 
     if (!uid) {
       return res.status(401).json({ error: "Token gerekli" });
