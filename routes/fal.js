@@ -9,6 +9,7 @@ import {
 } from "../services/falService.js";
 
 import auth from "../middleware/auth.js";
+import dailyReset from "../middleware/dailyReset.js";   // ← EKLENDİ
 import coinCheck from "../middleware/coinCheck.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 
@@ -79,11 +80,11 @@ router.post("/complete/:id", async (req, res) => {
 
 /* =========================
    /fal/premium-start
-   ✅ GERÇEK OPENAI VERSİYON
 ========================= */
 router.post(
   "/premium-start",
   auth,
+  dailyReset,                      // ← SADECE BUNU EKLEDİK
   upload.array("images", 5),
   coinCheck("FAL"),
   async (req, res) => {
@@ -99,7 +100,6 @@ router.post(
 
     premiumStore.set(id, { status: "processing" });
 
-    // 200 hemen dön (polling başlayacak)
     res.status(200).json({ falId: id });
 
     try {

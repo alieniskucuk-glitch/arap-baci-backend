@@ -10,6 +10,7 @@ import elFalRoutes from "./routes/elFal.js"; // ✅ EKLENDİ
 import ruyaRoutes from "./routes/ruya.js";
 import ruhEsiRoutes from "./routes/ruhEsi.js";
 import melekRoutes from "./routes/melek.js";   // 👈 EKLENDİ
+import userRoutes from "./routes/user.js";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/ruya", ruyaRoutes);
 app.use("/ruh-esi", ruhEsiRoutes);
 app.use("/melek", melekRoutes);   // 👈 EKLENDİ
 app.use("/tarot", tarotRoutes);
+app.use("/user", userRoutes);
 
 /* =========================
    SERVER

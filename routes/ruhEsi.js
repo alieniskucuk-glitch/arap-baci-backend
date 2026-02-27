@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import auth from "../middleware/auth.js";
+import dailyReset from "../middleware/dailyReset.js";   // ← EKLENDİ
 import coinCheck from "../middleware/coinCheck.js";
 import { ruhEsi } from "../services/ruhEsiService.js";
 
@@ -14,6 +15,7 @@ const upload = multer({
 router.post(
   "/",
   auth,
+  dailyReset,                // ← SADECE BUNU EKLEDİK
   upload.fields([
     { name: "p1Hand", maxCount: 1 },
     { name: "p2Hand", maxCount: 1 },

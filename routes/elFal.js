@@ -2,6 +2,7 @@ import express from "express";
 import multer from "multer";
 import { elFal } from "../services/elFalService.js";
 import auth from "../middleware/auth.js";
+import dailyReset from "../middleware/dailyReset.js";   // ← EKLENDİ
 import coinCheck from "../middleware/coinCheck.js";
 
 const router = express.Router();
@@ -22,9 +23,10 @@ const upload = multer({
 router.post(
   "/",
   auth,
-  upload.single("image"),   // önce image parse
-  coinCheck("EL_FALI"),     // sonra coin kontrol
-  elFal                     // direkt servise geç
+  dailyReset,               // ← EKLENDİ (KRİTİK)
+  upload.single("image"),
+  coinCheck("EL_FALI"),
+  elFal
 );
 
 /* =========================

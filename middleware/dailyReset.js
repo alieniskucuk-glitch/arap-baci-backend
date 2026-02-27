@@ -3,6 +3,11 @@ import { db } from "../config/firebase.js";
 
 const TZ = "Europe/Istanbul";
 const DAILY_PREMIUM_COIN = 8;
+const MONTHLY_MAX = 240;
+
+/* =========================
+   ISTANBUL DATE KEY
+========================= */
 
 function getTodayKey(timeZone) {
   const now = new Date();
@@ -21,6 +26,25 @@ function getTodayKey(timeZone) {
   return `${y}-${m}-${d}`;
 }
 
+/* =========================
+   DAY DIFFERENCE
+========================= */
+
+function dayDiff(oldKey, newKey) {
+  if (!oldKey) return 0;
+
+  const oldDate = new Date(oldKey + "T00:00:00");
+  const newDate = new Date(newKey + "T00:00:00");
+
+  const diffMs = newDate - oldDate;
+
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+/* =========================
+   DAILY RESET MIDDLEWARE
+========================= */
+
 export default async function dailyReset(req, res, next) {
   try {
     const uid = req.user?.uid;
@@ -33,15 +57,36 @@ export default async function dailyReset(req, res, next) {
       if (!snap.exists) return;
 
       const user = snap.data();
+
+      // Premium değilse çık
       if (!user?.isPremium) return;
 
-      const todayKey = getTodayKey(TZ);
-      const lastKey = user.lastDailyResetKey || null;
+      // Subscription yoksa çık
+      if (!user.subscription?.expiresAt) return;
 
-      if (lastKey === todayKey) return;
+      // Süre dolmuşsa çık
+      const now = admin.firestore.Timestamp.now();
+      if (user.subscription.expiresAt.toMillis() < now.toMillis()) {
+        return;
+      }
+
+      const todayKey = getTodayKey(TZ);
+      const lastKey = user.lastDailyResetKey || todayKey;
+
+      const daysPassed = dayDiff(lastKey, todayKey);
+
+      if (daysPassed <= 0) return;
+
+      const currentDaily = user.dailyCoin || 0;
+      const earned = daysPassed * DAILY_PREMIUM_COIN;
+
+      const newDailyCoin = Math.min(
+        currentDaily + earned,
+        MONTHLY_MAX
+      );
 
       tx.update(userRef, {
-        dailyCoin: DAILY_PREMIUM_COIN,
+        dailyCoin: newDailyCoin,
         lastDailyResetKey: todayKey,
         lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
       });
