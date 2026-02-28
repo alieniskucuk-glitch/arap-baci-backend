@@ -83,9 +83,7 @@ const tarotDeck = [
   { id: 77, name: "Tılsım Kralı", image: "77_tilsim_kralı.webp" }
 ];
 
-const getTarotById = (id) => tarotDeck.find(card => card.id === id);
+export const getTarotById = (id) =>
+  tarotDeck.find(card => card.id === id);
 
-module.exports = {
-  tarotDeck,
-  getTarotById
-};
+export { tarotDeck };
