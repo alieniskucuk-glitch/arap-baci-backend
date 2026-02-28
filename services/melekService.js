@@ -126,10 +126,6 @@ export async function revealMelek(uid, body) {
     image: c.image,
   }));
 
-  /* =========================
-     SON KART
-  ========================= */
-
   if (session.revealed.length === session.cards.length) {
     const interpretation = await session.interpretationPromise;
 
@@ -163,7 +159,7 @@ export async function revealMelek(uid, body) {
 }
 
 /* =========================
-   GPT
+   GPT (GÜÇLENDİRİLDİ)
 ========================= */
 
 async function generateInterpretation(mode, question, cards) {
@@ -173,7 +169,8 @@ async function generateInterpretation(mode, question, cards) {
   if (mode === "standard") {
     formattedCards = `Kart: ${cards[0].title}`;
     structureInstruction = `
-Bu kartın ana mesajını açık ve güçlü şekilde yorumla.
+- Bu kartın ana mesajını güçlü ve net şekilde yorumla.
+- Yoruma doğrudan başla.
 `;
   }
 
@@ -183,7 +180,9 @@ Bu kartın ana mesajını açık ve güçlü şekilde yorumla.
 2. Kart: ${cards[1].title}
 `;
     structureInstruction = `
-Kartları ayrı ayrı yorumla ve sonunda birleşik mesaj ver.
+- Kartları ayrı ayrı yorumla.
+- Sonunda birleşik ilahi mesaj ver.
+- Yoruma doğrudan başla.
 `;
   }
 
@@ -194,12 +193,27 @@ Geçmiş: ${cards[0].title}
 Gelecek: ${cards[2].title}
 `;
     structureInstruction = `
-Zaman akışına göre yorumla. Detaylı ve uzun olsun.
+- Zaman akışına göre yorumla.
+- Ruhsal gelişimi vurgula.
+- Daha detaylı ve derin anlat.
+- Yoruma doğrudan başla.
 `;
   }
 
   const prompt = `
-Sen Arap Bacı uygulamasında ilahi rehberlik sunan mistik bir melek kartları yorumcususun.
+Sen Arap Bacı uygulamasında ilahi rehberlik sunan güçlü ve sezgisel bir melek kartları yorumcususun.
+
+Kurallar:
+- Yoruma direkt başla.
+- "Tabii", "Şimdi", "Bu kartı analiz edeceğim" gibi giriş cümleleri kullanma.
+- Analiz yaptığını anlatma.
+- Kart seçimini açıklama.
+- Spiritüel ama net ol.
+- Korkutucu dil kullanma.
+- Somut rehberlik ver.
+- Akıcı ve etkileyici yaz.
+- Gereksiz tekrar yapma.
+- Sonunda kısa bir rehber paragraf ekle.
 
 Soru: ${question || "Genel rehberlik"}
 
@@ -209,9 +223,17 @@ ${structureInstruction}
 `;
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
-    messages: [{ role: "user", content: prompt }],
+    model: "gpt-4.1-mini",
+    messages: [
+      {
+        role: "system",
+        content:
+          "Sen mistik ama net konuşan, güçlü bir melek kartı rehberisin.",
+      },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.85,
   });
 
-  return completion.choices[0].message.content;
+  return completion.choices[0].message.content.trim();
 }

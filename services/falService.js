@@ -48,7 +48,7 @@ export async function generatePreview(files) {
         ],
       },
     ],
-    max_output_tokens: 200,
+    max_output_tokens: 280,
   });
 
   return extractText(r);
@@ -64,12 +64,12 @@ export async function generateFullFromPreview(preview) {
         content: [
           {
             type: "input_text",
-            text: "Aşağıdaki falın detaylı yorumunu yap:\n\n" + preview,
+            text: "Aşağıdaki falın uzun ve detaylı yorumunu yap:\n\n" + preview,
           },
         ],
       },
     ],
-    max_output_tokens: 900,
+    max_output_tokens: 1100,
   });
 
   return extractText(r);
@@ -83,12 +83,12 @@ export async function generatePremium(files) {
       {
         role: "user",
         content: [
-          { type: "input_text", text: "Detaylı kahve falı yorumla." },
+          { type: "input_text", text: "Detaylı ve uzun kahve falı yorumla." },
           ...imagesToOpenAI(files),
         ],
       },
     ],
-    max_output_tokens: 900,
+    max_output_tokens: 1200,
   });
 
   return extractText(r);

@@ -37,6 +37,8 @@ Yorumu:
 - Yakın gelecek mesajı
 - Geçmişle bağlantısı
 - Genel tavsiyeler
+- Yoruma doğrudan başla.
+- Teknik açıklama yapma.
 
 Samimi, sıcak ve gizemli bir dil kullan.
     `;
@@ -46,7 +48,7 @@ Samimi, sıcak ve gizemli bir dil kullan.
     ========================= */
 
     const response = await openai.responses.create({
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
       input: prompt,
     });
 

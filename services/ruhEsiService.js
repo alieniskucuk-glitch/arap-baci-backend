@@ -30,7 +30,8 @@ Sen mistik bir ruh uyumu analiz uzmanısın.
 Sinastri analizi yaparak, isimlerin numerolojik analizini yaparak ve el çizgilerinin analizini yaparak iki kişinin ruhsal uyumunu değerlendiriyorsun.
 0 ile 100 arasında bir uyum yüzdesi üret.
 Ardından detaylı ama büyüleyici bir yorum yaz.
-Cevabı JSON formatında ver:
+SADECE JSON döndür. Kod bloğu kullanma.
+Format:
 {
   "percent": number,
   "result": "yorum metni"
@@ -104,20 +105,26 @@ Daha güçlü ve etkileyici yorum yaz.
 
     const raw = response.choices?.[0]?.message?.content || "";
 
+    // 🔥 MARKDOWN TEMİZLE
+    const cleaned = raw
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
     let parsed;
 
     try {
-      parsed = JSON.parse(raw);
+      parsed = JSON.parse(cleaned);
     } catch {
       parsed = {
         percent: Math.floor(Math.random() * 40) + 60,
-        result: raw,
+        result: cleaned,
       };
     }
 
     const percent = Math.min(100, Math.max(0, Number(parsed.percent) || 0));
 
-    /* ================= RESULT BAŞARILI → COIN DÜŞ ================= */
+    /* ================= COIN DÜŞ ================= */
 
     const remainingCoin = await decreaseCoin(
       uid,

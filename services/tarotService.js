@@ -2,6 +2,7 @@ import { db } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
 import openai from "../config/openai.js";
 import { decreaseCoin } from "../utils/coinManager.js";
+import { getTarotById } from "../utils/tarotDeck.js";
 
 /* =========================
    HELPERS (Aynen)
@@ -38,10 +39,18 @@ function resolveSpreadDescription(mode) {
 }
 
 function toPicked(selectedCards, revealedCount) {
-  return selectedCards.slice(0, revealedCount).map((id) => ({
-    id,
-    image: `${id}.webp`,
-  }));
+  return selectedCards.slice(0, revealedCount).map((id) => {
+    const card = getTarotById(id);
+
+    if (!card) {
+      throw new Error(`Kart bulunamadı: ${id}`);
+    }
+
+    return {
+      id,
+      image: card.image,   // direkt gerçek dosya adı
+    };
+  });
 }
 
 /* =========================
@@ -136,9 +145,12 @@ Alt kategori: ${txResult.subType || "Genel"}
 Kullanıcının Sorusu: ${txResult.question || "Belirtilmedi"}
 
 Kurallar:
+- Yoruma doğrudan başla.
+- Analiz sürecini anlatma.
+- Teknik açıklama yapma.
+- "Tabii", "Şimdi", "Kart ID" gibi ifadeler kullanma.
 - Spiritüel ama net ol.
-- Korkutucu dil kullanma.
-- Somut öneri ver.
+- Somut rehberlik ver.
 - Sonunda kısa bir rehber paragraf ekle.
 `.trim();
 
@@ -146,7 +158,7 @@ Kurallar:
 
   try {
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4.1-mini",
       messages: [
         { role: "system", content: "Sen güçlü bir tarot rehberisin." },
         { role: "user", content: prompt },
