@@ -9,13 +9,11 @@ export default function coinCheck(type) {
         return res.status(401).json({ error: "Token gerekli" });
       }
 
-      const userRef = db.collection("users").doc(uid);
+      let price = null;
 
       /* =========================
          FİYAT HESAPLAMA
       ========================= */
-
-      let price = null;
 
       // FAL / RUYA / EL_FALI
       if (["FAL", "RUYA", "EL_FALI"].includes(type)) {
@@ -24,7 +22,7 @@ export default function coinCheck(type) {
 
       // TAROT
       else if (type === "TAROT") {
-        const config = PRICING.TAROT ?? PRICING[type];
+        const config = PRICING.TAROT;
         const mode = req.body?.mode;
 
         if (!["one", "two", "three", "five", "celtic"].includes(mode)) {
@@ -64,7 +62,6 @@ export default function coinCheck(type) {
         if (option === 3) price = PRICING.UYUM.BOTH;
       }
 
-      // type tanımsızsa
       else {
         return res.status(400).json({ error: "Geçersiz işlem tipi" });
       }
@@ -74,63 +71,31 @@ export default function coinCheck(type) {
       }
 
       /* =========================
-         COIN DÜŞME (TRANSACTION)
+         SADECE KONTROL
       ========================= */
 
-      await db.runTransaction(async (tx) => {
-        const userSnap = await tx.get(userRef);
+      const userRef = db.collection("users").doc(uid);
+      const snap = await userRef.get();
 
-        if (!userSnap.exists) {
-          throw new Error("Kullanıcı bulunamadı");
-        }
-
-        const user = userSnap.data() || {};
-
-        let dailyCoin = Number(user.dailyCoin ?? 0) || 0;
-        let abCoin = Number(user.abCoin ?? 0) || 0;
-
-        const totalCoin = dailyCoin + abCoin;
-
-        if (totalCoin < price) {
-          throw new Error("Yetersiz coin");
-        }
-
-        let remaining = price;
-
-        // Önce dailyCoin düş
-        if (dailyCoin >= remaining) {
-          dailyCoin -= remaining;
-          remaining = 0;
-        } else {
-          remaining -= dailyCoin;
-          dailyCoin = 0;
-        }
-
-        // Kalanı abCoin düş
-        if (remaining > 0) {
-          abCoin -= remaining;
-        }
-
-        tx.update(userRef, {
-          dailyCoin,
-          abCoin,
-        });
-
-        // service katmanına yeni değerleri gönder
-        req.coinPrice = price;
-        req.userCoins = { dailyCoin, abCoin };
-      });
-
-      next();
-    } catch (err) {
-      if (err.message === "Yetersiz coin") {
-        return res.status(400).json({ error: "Yetersiz coin" });
-      }
-
-      if (err.message === "Kullanıcı bulunamadı") {
+      if (!snap.exists) {
         return res.status(400).json({ error: "Kullanıcı bulunamadı" });
       }
 
+      const user = snap.data() || {};
+
+      const dailyCoin = Number(user.dailyCoin ?? 0) || 0;
+      const abCoin = Number(user.abCoin ?? 0) || 0;
+
+      if (dailyCoin + abCoin < price) {
+        return res.status(400).json({ error: "Yetersiz coin" });
+      }
+
+      // sadece service katmanına gönder
+      req.coinPrice = price;
+
+      return next();
+
+    } catch (err) {
       console.error("COIN CHECK ERROR:", err);
       return res.status(500).json({ error: "Coin kontrol hatası" });
     }
