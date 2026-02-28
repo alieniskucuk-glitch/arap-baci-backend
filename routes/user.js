@@ -8,7 +8,9 @@ const router = express.Router();
 /* =========================
    POST /user/refresh
    - App açılınca çağrılır
+   - Güncel coin ve premium state döner
 ========================= */
+
 router.post("/refresh", auth, dailyReset, async (req, res) => {
   try {
     const uid = req.user?.uid;
@@ -17,22 +19,31 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    const snap = await db.collection("users").doc(uid).get();
+    const userRef = db.collection("users").doc(uid);
+    const snap = await userRef.get();
 
     if (!snap.exists) {
       return res.status(404).json({ error: "Kullanıcı bulunamadı" });
     }
 
-    const user = snap.data();
+    const user = snap.data() || {};
+
+    const dailyCoin = Number(user.dailyCoin ?? 0);
+    const abCoin = Number(user.abCoin ?? 0);
+    const isPremium = Boolean(user.isPremium);
 
     return res.json({
-      dailyCoin: user.dailyCoin || 0,
-      abCoin: user.abCoin || 0,
-      isPremium: user.isPremium || false,
+      dailyCoin,
+      abCoin,
+      totalCoin: dailyCoin + abCoin, // 🔥 frontend için kolaylık
+      isPremium,
     });
+
   } catch (err) {
     console.error("USER REFRESH ERROR:", err);
-    return res.status(500).json({ error: "Refresh hatası" });
+    return res.status(500).json({
+      error: "Refresh hatası",
+    });
   }
 });
 

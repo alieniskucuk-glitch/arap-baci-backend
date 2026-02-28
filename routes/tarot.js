@@ -1,16 +1,22 @@
 import express from "express";
+
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";   // ← EKLENDİ
+import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
+
 import { startTarot, revealTarot } from "../services/tarotService.js";
 
 const router = express.Router();
 
-// START → auth + dailyReset + coinCheck
+/* =========================
+   POST /tarot/start
+   - Sadece kontrol
+========================= */
+
 router.post(
   "/start",
   auth,
-  dailyReset,                 // ← EKLENDİ
+  dailyReset,
   coinCheck("TAROT"),
   async (req, res) => {
     try {
@@ -20,8 +26,13 @@ router.post(
         return res.status(401).json({ error: "Token gerekli" });
       }
 
-      const data = await startTarot(uid, req.body);
+      const data = await startTarot(uid, {
+        ...req.body,
+        coinPrice: req.coinPrice,
+      });
+
       res.json(data);
+
     } catch (e) {
       console.error("TAROT START ERROR:", e);
       res.status(400).json({ error: e.message });
@@ -29,11 +40,15 @@ router.post(
   }
 );
 
-// REVEAL → auth + dailyReset
+/* =========================
+   POST /tarot/reveal
+   - Coin düşme service içinde
+========================= */
+
 router.post(
   "/reveal",
   auth,
-  dailyReset,                 // ← EKLENDİ
+  dailyReset,
   async (req, res) => {
     try {
       const uid = req.user?.uid;
@@ -44,6 +59,7 @@ router.post(
 
       const data = await revealTarot(uid, req.body);
       res.json(data);
+
     } catch (e) {
       console.error("TAROT REVEAL ERROR:", e);
       res.status(400).json({ error: e.message });

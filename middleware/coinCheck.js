@@ -83,14 +83,14 @@ export default function coinCheck(type) {
 
       const user = snap.data() || {};
 
-      const dailyCoin = Number(user.dailyCoin ?? 0) || 0;
-      const abCoin = Number(user.abCoin ?? 0) || 0;
+      const dailyCoin = Number(user.dailyCoin ?? 0);
+      const abCoin = Number(user.abCoin ?? 0);
 
       if (dailyCoin + abCoin < price) {
         return res.status(400).json({ error: "Yetersiz coin" });
       }
 
-      // sadece service katmanına gönder
+      // Servis tarafında kullanılacak
       req.coinPrice = price;
 
       return next();

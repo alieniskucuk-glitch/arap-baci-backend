@@ -1,15 +1,15 @@
 import crypto from "crypto";
 import OpenAI from "openai";
-import { db } from "../config/firebase.js";
 import { MELEK_DECK } from "../utils/melekDeck.js";
 import { PRICING } from "../utils/pricing.js";
+import { decreaseCoin } from "../utils/coinManager.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const sessionStore = new Map();
-const SESSION_TTL = 1000 * 60 * 10; // 10 dakika
+const SESSION_TTL = 1000 * 60 * 10;
 
 /* =========================
    UTIL
@@ -39,7 +39,6 @@ function getMelekPrice(mode) {
   if (mode === "standard") return PRICING.MELEK.ONE_CARD;
   if (mode === "deep") return PRICING.MELEK.TWO_CARD;
   if (mode === "zaman") return PRICING.MELEK.THREE_CARD;
-
   throw new Error("Fiyat hesaplanamadı");
 }
 
@@ -48,7 +47,7 @@ function isExpired(session) {
 }
 
 /* =========================
-   START (GPT PRELOAD)
+   START
 ========================= */
 
 export async function startMelek(uid, body) {
@@ -60,8 +59,7 @@ export async function startMelek(uid, body) {
   const cards = [];
 
   if (mode === "standard") {
-    const c = randomFromRange(33, 53, used);
-    cards.push(c);
+    cards.push(randomFromRange(33, 53, used));
   }
 
   if (mode === "deep") {
@@ -81,7 +79,6 @@ export async function startMelek(uid, body) {
 
   const sessionId = crypto.randomUUID();
 
-  // GPT preload
   const interpretationPromise = generateInterpretation(
     mode,
     question,
@@ -129,49 +126,25 @@ export async function revealMelek(uid, body) {
     image: c.image,
   }));
 
-  // 🔥 SON KART
+  /* =========================
+     SON KART
+  ========================= */
+
   if (session.revealed.length === session.cards.length) {
-    // ✅ GPT'Yİ GERÇEKTEN BEKLE (30ms race kaldırıldı)
     const interpretation = await session.interpretationPromise;
 
     if (!interpretation) {
-      // GPT hata verdiyse veya null döndüyse
       throw new Error("Yorum üretilemedi");
     }
 
-    // Coin düş
     const price = getMelekPrice(session.mode);
-    const userRef = db.collection("users").doc(uid);
 
-    let remainingCoin = 0;
-
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(userRef);
-      if (!snap.exists) throw new Error("Kullanıcı bulunamadı");
-
-      const user = snap.data();
-
-      let dailyCoin = Number(user.dailyCoin ?? 0);
-      let abCoin = Number(user.abCoin ?? 0);
-
-      let remaining = price;
-
-      if (dailyCoin >= remaining) {
-        dailyCoin -= remaining;
-        remaining = 0;
-      } else {
-        remaining -= dailyCoin;
-        dailyCoin = 0;
-      }
-
-      if (remaining > 0) {
-        if (abCoin < remaining) throw new Error("Yetersiz coin");
-        abCoin -= remaining;
-      }
-
-      remainingCoin = dailyCoin + abCoin;
-      tx.update(userRef, { dailyCoin, abCoin });
-    });
+    const remainingCoin = await decreaseCoin(
+      uid,
+      price,
+      "MELEK",
+      { sessionId }
+    );
 
     sessionStore.delete(sessionId);
 
@@ -182,7 +155,6 @@ export async function revealMelek(uid, body) {
     };
   }
 
-  // ara kart
   return {
     picked,
     interpretation: null,
@@ -222,7 +194,7 @@ Geçmiş: ${cards[0].title}
 Gelecek: ${cards[2].title}
 `;
     structureInstruction = `
-Zaman akışına göre yorumla. Detaylı ve uzun olsun. 
+Zaman akışına göre yorumla. Detaylı ve uzun olsun.
 `;
   }
 

@@ -7,7 +7,16 @@ const openai = new OpenAI({
 
 export const ruhEsi = async (req, res) => {
   try {
-    // 🔥 OPTION FIX
+    const uid = req.user?.uid;
+
+    if (!uid) {
+      return res.status(401).json({ error: "Token gerekli" });
+    }
+
+    if (!req.coinPrice) {
+      return res.status(500).json({ error: "Coin fiyatı belirlenemedi" });
+    }
+
     const option = parseInt(req.body.option, 10);
 
     if (![1, 2, 3].includes(option)) {
@@ -28,7 +37,8 @@ Cevabı JSON formatında ver:
 }
 `;
 
-    // ================= OPTION 1 =================
+    /* ================= OPTION 1 ================= */
+
     if (option === 1) {
       if (!p1Name || !p1Birth || !p2Name || !p2Birth) {
         return res.status(400).json({ error: "İsim ve doğum tarihleri gerekli" });
@@ -45,7 +55,8 @@ Doğum Tarihi: ${p2Birth}
 `;
     }
 
-    // ================= OPTION 2 =================
+    /* ================= OPTION 2 ================= */
+
     if (option === 2) {
       if (!req.files?.p1Hand || !req.files?.p2Hand) {
         return res.status(400).json({ error: "İki el fotoğrafı gerekli" });
@@ -57,7 +68,8 @@ El çizgilerinin uyumuna odaklan.
 `;
     }
 
-    // ================= OPTION 3 =================
+    /* ================= OPTION 3 ================= */
+
     if (option === 3) {
       if (!p1Name || !p1Birth || !p2Name || !p2Birth) {
         return res.status(400).json({ error: "İsim ve doğum tarihleri gerekli" });
@@ -82,7 +94,7 @@ Daha güçlü ve etkileyici yorum yaz.
 `;
     }
 
-    // ================= OPENAI =================
+    /* ================= OPENAI ================= */
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -105,21 +117,27 @@ Daha güçlü ve etkileyici yorum yaz.
 
     const percent = Math.min(100, Math.max(0, Number(parsed.percent) || 0));
 
-    // 🔥 Coin düş
-    await decreaseCoin(
-      req.user.uid,
+    /* ================= RESULT BAŞARILI → COIN DÜŞ ================= */
+
+    const remainingCoin = await decreaseCoin(
+      uid,
       req.coinPrice,
       "UYUM",
       { percent }
     );
 
+    /* ================= RESPONSE ================= */
+
     return res.status(200).json({
       percent,
       result: parsed.result,
+      remainingCoin,
     });
 
   } catch (err) {
     console.error("RUH ESI ERROR:", err);
-    return res.status(500).json({ error: "Uyum analizi yapılamadı" });
+    return res.status(500).json({
+      error: "Uyum analizi yapılamadı",
+    });
   }
 };

@@ -8,6 +8,16 @@ const openai = new OpenAI({
 
 export const ruyaYorumla = async (req, res) => {
   try {
+    const uid = req.user?.uid;
+
+    if (!uid) {
+      return res.status(401).json({ error: "Token gerekli" });
+    }
+
+    if (!req.coinPrice) {
+      return res.status(500).json({ error: "Coin fiyatı belirlenemedi" });
+    }
+
     const { dream } = req.body;
 
     if (!dream || dream.trim().length < 5) {
@@ -31,6 +41,10 @@ Yorumu:
 Samimi, sıcak ve gizemli bir dil kullan.
     `;
 
+    /* =========================
+       GPT
+    ========================= */
+
     const response = await openai.responses.create({
       model: "gpt-4o",
       input: prompt,
@@ -40,27 +54,38 @@ Samimi, sıcak ve gizemli bir dil kullan.
       response.output_text ||
       "Rüyanda güçlü bir mesaj var ama biraz daha dikkatle düşünmelisin...";
 
-    const docId = `${req.user.uid}_ruya_${Date.now()}`;
+    /* =========================
+       FIRESTORE
+    ========================= */
 
-    // 🔮 Firestore kaydı
+    const docId = `${uid}_ruya_${Date.now()}`;
+
     await db.collection("ruya_yorumlari").doc(docId).set({
-      userId: req.user.uid,
+      userId: uid,
       text: result,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       type: "RUYA",
     });
 
-    // 💰 Coin düş
-    await decreaseCoin(
-      req.user.uid,
+    /* =========================
+       RESULT BAŞARILI → COIN DÜŞ
+    ========================= */
+
+    const remainingCoin = await decreaseCoin(
+      uid,
       req.coinPrice,
       "RUYA",
       { ruyaId: docId }
     );
 
+    /* =========================
+       RESPONSE
+    ========================= */
+
     return res.json({
       success: true,
       result,
+      remainingCoin,
     });
 
   } catch (err) {

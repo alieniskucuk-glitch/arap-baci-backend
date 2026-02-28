@@ -9,40 +9,31 @@ const MONTHLY_MAX = 240;
    ISTANBUL DATE KEY
 ========================= */
 
-function getTodayKey(timeZone) {
-  const now = new Date();
-
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
+function getTodayKey() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: TZ,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(now);
-
-  const y = parts.find(p => p.type === "year")?.value;
-  const m = parts.find(p => p.type === "month")?.value;
-  const d = parts.find(p => p.type === "day")?.value;
-
-  return `${y}-${m}-${d}`;
+  }).format(new Date());
 }
 
 /* =========================
-   DAY DIFFERENCE
+   DAY DIFFERENCE (SAFE)
 ========================= */
 
 function dayDiff(oldKey, newKey) {
-  if (!oldKey) return 0;
+  if (!oldKey) return 1; // 🔥 ilk girişte 1 gün say
 
-  const oldDate = new Date(oldKey + "T00:00:00");
-  const newDate = new Date(newKey + "T00:00:00");
+  const oldDate = new Date(oldKey + "T00:00:00Z");
+  const newDate = new Date(newKey + "T00:00:00Z");
 
-  const diffMs = newDate - oldDate;
-
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffMs = newDate.getTime() - oldDate.getTime();
+  return Math.floor(diffMs / 86400000);
 }
 
 /* =========================
-   DAILY RESET MIDDLEWARE
+   DAILY RESET
 ========================= */
 
 export default async function dailyReset(req, res, next) {
@@ -56,28 +47,24 @@ export default async function dailyReset(req, res, next) {
       const snap = await tx.get(userRef);
       if (!snap.exists) return;
 
-      const user = snap.data();
+      const user = snap.data() || {};
 
-      // Premium değilse çık
-      if (!user?.isPremium) return;
-
-      // Subscription yoksa çık
+      if (!user.isPremium) return;
       if (!user.subscription?.expiresAt) return;
 
-      // Süre dolmuşsa çık
       const now = admin.firestore.Timestamp.now();
-      if (user.subscription.expiresAt.toMillis() < now.toMillis()) {
+      if (user.subscription.expiresAt.toMillis() <= now.toMillis()) {
         return;
       }
 
-      const todayKey = getTodayKey(TZ);
-      const lastKey = user.lastDailyResetKey || todayKey;
+      const todayKey = getTodayKey();
+      const lastKey = user.lastDailyResetKey || null;
 
       const daysPassed = dayDiff(lastKey, todayKey);
 
       if (daysPassed <= 0) return;
 
-      const currentDaily = user.dailyCoin || 0;
+      const currentDaily = Number(user.dailyCoin ?? 0);
       const earned = daysPassed * DAILY_PREMIUM_COIN;
 
       const newDailyCoin = Math.min(

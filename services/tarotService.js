@@ -1,45 +1,20 @@
 import { db } from "../config/firebase.js";
 import { FieldValue } from "firebase-admin/firestore";
-import { PRICING } from "../utils/pricing.js";
 import openai from "../config/openai.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 
 /* =========================
-   HELPERS
+   HELPERS (Aynen)
 ========================= */
 
 function resolveCardCount(mode) {
   switch (mode) {
-    case "one":
-      return 1;
-    case "two":
-      return 2;
-    case "three":
-      return 3;
-    case "five":
-      return 5;
-    case "celtic":
-      return 10;
-    default:
-      throw new Error("Geçersiz tarot mode");
-  }
-}
-
-function resolveCost(mode) {
-  const c = PRICING.TAROT;
-  switch (mode) {
-    case "one":
-      return c.ONE_CARD;
-    case "two":
-      return c.TWO_CARD;
-    case "three":
-      return c.THREE_CARD;
-    case "five":
-      return c.FIVE_CARD;
-    case "celtic":
-      return c.CELTIC_CROSS;
-    default:
-      throw new Error("Geçersiz tarot mode");
+    case "one": return 1;
+    case "two": return 2;
+    case "three": return 3;
+    case "five": return 5;
+    case "celtic": return 10;
+    default: throw new Error("Geçersiz tarot mode");
   }
 }
 
@@ -65,17 +40,17 @@ function resolveSpreadDescription(mode) {
 function toPicked(selectedCards, revealedCount) {
   return selectedCards.slice(0, revealedCount).map((id) => ({
     id,
-    image: `${id}.webp`, // NOT: asset isimlerin farklıysa burada düzelt
+    image: `${id}.webp`,
   }));
 }
 
 /* =========================
    START
-   - Sadece session açar (coin düşmez)
 ========================= */
 
-export async function startTarot(uid, { mode, subType, question }) {
+export async function startTarot(uid, { mode, subType, question, coinPrice }) {
   if (!uid) throw new Error("UID gerekli");
+  if (!coinPrice) throw new Error("Coin price eksik");
 
   const cardCount = resolveCardCount(mode);
   const selectedCards = pickCards(cardCount);
@@ -91,7 +66,7 @@ export async function startTarot(uid, { mode, subType, question }) {
     selectedCards,
     revealedCount: 0,
     completed: false,
-    cost: resolveCost(mode), // bilgi amaçlı
+    cost: coinPrice, // 🔥 coinCheck'ten gelen fiyat
     createdAt: FieldValue.serverTimestamp(),
   });
 
@@ -103,16 +78,6 @@ export async function startTarot(uid, { mode, subType, question }) {
 
 /* =========================
    REVEAL
-   - Her reveal’de sadece revealedCount artar
-   - SON reveal’de:
-     1) "complete lock" al (transaction)
-     2) GPT üret (transaction DIŞI)
-     3) coin düş (SONDA)
-     4) session finalize et (transaction)
-   - Böylece:
-     ✅ sonsuz kart açma yok
-     ✅ internet giderse coin boşa gitmez
-     ✅ aynı anda iki istek gelirse 1 tanesi kazanır
 ========================= */
 
 export async function revealTarot(uid, { sessionId }) {
@@ -121,14 +86,12 @@ export async function revealTarot(uid, { sessionId }) {
 
   const sessionRef = db.collection("tarotSessions").doc(sessionId);
 
-  // 1) Transaction: revealedCount artır / son kartta complete lock al
   const txResult = await db.runTransaction(async (tx) => {
     const snap = await tx.get(sessionRef);
     if (!snap.exists) throw new Error("Session bulunamadı");
 
     const session = snap.data();
     if (session.uid !== uid) throw new Error("Yetkisiz erişim");
-
     if (session.completed) throw new Error("Fal zaten tamamlandı");
 
     const nextRevealed = Number(session.revealedCount || 0) + 1;
@@ -138,8 +101,6 @@ export async function revealTarot(uid, { sessionId }) {
 
     const isLast = nextRevealed === cardCount;
 
-    // revealedCount her durumda artar
-    // SON kartta ayrıca "completed: true" ile kilitle (double request engeli)
     tx.update(sessionRef, {
       revealedCount: nextRevealed,
       ...(isLast ? { completed: true, completedAt: FieldValue.serverTimestamp() } : {}),
@@ -152,16 +113,18 @@ export async function revealTarot(uid, { sessionId }) {
       question: session.question || null,
       selectedCards: session.selectedCards || [],
       picked: toPicked(session.selectedCards || [], nextRevealed),
-      cost: resolveCost(session.mode),
+      cost: session.cost, // 🔥 session'dan al
     };
   });
 
-  // SON değilse direkt dön
   if (!txResult.isLast) {
     return { picked: txResult.picked };
   }
 
-  // 2) GPT (transaction DIŞI)
+  /* =========================
+     GPT
+  ========================= */
+
   const spreadDescription = resolveSpreadDescription(txResult.mode) || "Tarot açılımı";
 
   const prompt = `
@@ -180,6 +143,7 @@ Kurallar:
 `.trim();
 
   let interpretation = "";
+
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -191,24 +155,28 @@ Kurallar:
     });
 
     interpretation = (completion?.choices?.[0]?.message?.content || "").trim();
-  } catch (e) {
-    // GPT patlarsa: session kilitli kaldı ama coin düşmedi.
-    // İstersen burada "completed=false" geri almak istersin ama o ayrı kural.
+  } catch {
     throw new Error("Yorum üretilemedi");
   }
 
-  // 3) Coin düş (SONDA) — burada yetersiz coin olursa error döner
-  // Not: /start'ta coinCheck koyarsan bu zaten yakalanır.
-  const remainingCoin = await decreaseCoin(uid, txResult.cost, "TAROT", {
-    sessionId,
-    mode: txResult.mode,
-  });
+  /* =========================
+     COIN DÜŞ (SONDA)
+  ========================= */
 
-  // 4) Session finalize (interpretation yaz)
+  const remainingCoin = await decreaseCoin(
+    uid,
+    txResult.cost,
+    "TAROT",
+    { sessionId, mode: txResult.mode }
+  );
+
+  /* =========================
+     FINALIZE
+  ========================= */
+
   await sessionRef.update({
     interpretation,
     remainingCoin,
-    cost: txResult.cost,
     finalizedAt: FieldValue.serverTimestamp(),
   });
 

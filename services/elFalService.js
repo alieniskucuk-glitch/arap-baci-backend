@@ -10,13 +10,26 @@ const db = admin.firestore();
 
 export const elFal = async (req, res) => {
   try {
+    const uid = req.user?.uid;
+
+    if (!uid) {
+      return res.status(401).json({ error: "Token gerekli" });
+    }
+
     if (!req.file) {
       return res.status(400).json({ error: "El fotoğrafı gerekli" });
     }
 
+    if (!req.coinPrice) {
+      return res.status(500).json({ error: "Coin fiyatı belirlenemedi" });
+    }
+
     const base64Image = req.file.buffer.toString("base64");
 
-    // 🔥 GÜÇLÜ PROMPT
+    /* =========================
+       GPT İŞLEMİ
+    ========================= */
+
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
@@ -51,8 +64,7 @@ Kehanet tonu kullan.
           content: [
             {
               type: "input_text",
-              text:
-                "Bu el fotoğrafını incele ve el falı yorumu yap.",
+              text: "Bu el fotoğrafını incele ve el falı yorumu yap.",
             },
             {
               type: "input_image",
@@ -68,28 +80,38 @@ Kehanet tonu kullan.
       response.output_text ||
       "Elinde güçlü bir enerji hissediyorum…";
 
-    const docId = `${req.user.uid}_el_${Date.now()}`;
+    /* =========================
+       FIRESTORE KAYIT
+    ========================= */
 
-    // 🔥 Firestore kayıt
+    const docId = `${uid}_el_${Date.now()}`;
+
     await db.collection("el_fallari").doc(docId).set({
-      userId: req.user.uid,
+      userId: uid,
       text: result,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       type: "EL_FALI",
     });
 
-    // 🔥 Coin düş
-    await decreaseCoin(
-      req.user.uid,
+    /* =========================
+       RESULT BAŞARILI → COIN DÜŞ
+    ========================= */
+
+    const remainingCoin = await decreaseCoin(
+      uid,
       req.coinPrice,
       "EL_FALI",
       { falId: docId }
     );
 
+    /* =========================
+       RESPONSE
+    ========================= */
+
     return res.json({
       success: true,
       result,
-      remainingCoin: req.remainingCoin ?? null,
+      remainingCoin,
     });
 
   } catch (err) {

@@ -1,10 +1,10 @@
 import { admin, db } from "../config/firebase.js";
 
-function userRef(uid) {
+function getUserRef(uid) {
   return db.collection("users").doc(uid);
 }
 
-function transactionRef(uid) {
+function getTransactionRef(uid) {
   return db
     .collection("users")
     .doc(uid)
@@ -13,19 +13,30 @@ function transactionRef(uid) {
 }
 
 /**
- * price: kaç coin düşecek
- * type: "FAL" | "TAROT" vs
- * meta: { falId, tarotId vs }
+ * decreaseCoin
+ *
+ * @param {string} uid
+ * @param {number} price
+ * @param {string} type
+ * @param {object} meta
+ *
+ * @returns {number} remainingTotalCoin
  */
 export async function decreaseCoin(uid, price, type, meta = {}) {
   if (!uid) throw new Error("UID gerekli");
-  if (!price || price <= 0) throw new Error("Geçersiz price");
 
-  const ref = userRef(uid);
-  const txRef = transactionRef(uid);
+  const parsedPrice = Number(price);
+  if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) {
+    throw new Error("Geçersiz price");
+  }
+
+  const userRef = getUserRef(uid);
+  const transactionRef = getTransactionRef(uid);
+
+  let remainingTotalCoin = 0;
 
   await db.runTransaction(async (tx) => {
-    const snap = await tx.get(ref);
+    const snap = await tx.get(userRef);
 
     if (!snap.exists) {
       throw new Error("Kullanıcı bulunamadı");
@@ -33,13 +44,13 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
 
     const user = snap.data() || {};
 
-    let dailyCoin = Number(user.dailyCoin || 0);
-    let abCoin = Number(user.abCoin || 0);
+    let dailyCoin = Number(user.dailyCoin ?? 0);
+    let abCoin = Number(user.abCoin ?? 0);
 
     const beforeDaily = dailyCoin;
     const beforeAb = abCoin;
 
-    let remaining = price;
+    let remaining = parsedPrice;
 
     /* =========================
        1️⃣ Önce dailyCoin düş
@@ -62,24 +73,30 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
       remaining = 0;
     }
 
+    if (remaining !== 0) {
+      throw new Error("Coin hesaplama hatası");
+    }
+
     const afterDaily = Math.max(0, dailyCoin);
     const afterAb = Math.max(0, abCoin);
 
+    remainingTotalCoin = afterDaily + afterAb;
+
     /* =========================
-       Update user coinleri
+       USER UPDATE
     ========================= */
-    tx.update(ref, {
+    tx.update(userRef, {
       dailyCoin: afterDaily,
       abCoin: afterAb,
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
     /* =========================
-       Log yaz
+       TRANSACTION LOG
     ========================= */
-    tx.set(txRef, {
+    tx.set(transactionRef, {
       type,
-      amount: -price,
+      amount: -parsedPrice,
       before: {
         dailyCoin: beforeDaily,
         abCoin: beforeAb,
@@ -92,4 +109,6 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
   });
+
+  return remainingTotalCoin;
 }

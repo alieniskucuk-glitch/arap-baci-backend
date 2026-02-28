@@ -1,9 +1,11 @@
 import express from "express";
 import multer from "multer";
-import { elFal } from "../services/elFalService.js";
+
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";   // ← EKLENDİ
+import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
+
+import { elFal } from "../services/elFalService.js";
 
 const router = express.Router();
 
@@ -13,17 +15,17 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
 });
 
 /* =========================
-   ROUTE
+   POST /el-fal
 ========================= */
 
 router.post(
   "/",
   auth,
-  dailyReset,               // ← EKLENDİ (KRİTİK)
+  dailyReset,
   upload.single("image"),
   coinCheck("EL_FALI"),
   elFal
@@ -34,7 +36,7 @@ router.post(
 ========================= */
 
 router.use((err, req, res, next) => {
-  console.error("UPLOAD ERROR:", err);
+  console.error("EL FAL ROUTE ERROR:", err);
 
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
