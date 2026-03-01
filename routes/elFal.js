@@ -24,7 +24,7 @@ const upload = multer({
 router.post(
   "/",
   auth,
-  oad.single("image"),
+  upload.single("image"),
   coinCheck("EL_FALI"),
   elFal
 );
