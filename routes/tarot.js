@@ -1,7 +1,6 @@
 import express from "express";
 
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
 
 import { startTarot, revealTarot } from "../services/tarotService.js";
@@ -16,8 +15,7 @@ const router = express.Router();
 router.post(
   "/start",
   auth,
-  dailyReset,
-  coinCheck("TAROT"),
+   coinCheck("TAROT"),
   async (req, res) => {
     try {
       const uid = req.user?.uid;
@@ -48,7 +46,6 @@ router.post(
 router.post(
   "/reveal",
   auth,
-  dailyReset,
   async (req, res) => {
     try {
       const uid = req.user?.uid;

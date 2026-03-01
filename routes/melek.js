@@ -1,7 +1,6 @@
 import express from "express";
 
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
 
 import { startMelek, revealMelek } from "../services/melekService.js";
@@ -16,7 +15,6 @@ const router = express.Router();
 router.post(
   "/start",
   auth,
-  dailyReset,
   coinCheck("MELEK"), // SADECE KONTROL
   async (req, res) => {
     try {
@@ -51,8 +49,7 @@ router.post(
 router.post(
   "/reveal",
   auth,
-  dailyReset,
-  async (req, res) => {
+   async (req, res) => {
     try {
       const uid = req.user?.uid;
 

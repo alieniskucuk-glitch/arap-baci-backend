@@ -2,7 +2,6 @@ import express from "express";
 import multer from "multer";
 
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";
 import coinCheck from "../middleware/coinCheck.js";
 
 import { elFal } from "../services/elFalService.js";
@@ -25,8 +24,7 @@ const upload = multer({
 router.post(
   "/",
   auth,
-  dailyReset,
-  upload.single("image"),
+  oad.single("image"),
   coinCheck("EL_FALI"),
   elFal
 );
