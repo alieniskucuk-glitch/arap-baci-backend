@@ -19,21 +19,23 @@ function getTodayKey() {
 }
 
 /* =========================
-   DAY DIFFERENCE (SAFE)
+   DAY DIFFERENCE (TIMEZONE SAFE)
 ========================= */
 
 function dayDiff(oldKey, newKey) {
-  if (!oldKey) return 1; // 🔥 ilk girişte 1 gün say
+  if (!oldKey) return 1;
 
-  const oldDate = new Date(oldKey + "T00:00:00Z");
-  const newDate = new Date(newKey + "T00:00:00Z");
+  const [y1, m1, d1] = oldKey.split("-").map(Number);
+  const [y2, m2, d2] = newKey.split("-").map(Number);
 
-  const diffMs = newDate.getTime() - oldDate.getTime();
-  return Math.floor(diffMs / 86400000);
+  const date1 = Date.UTC(y1, m1 - 1, d1);
+  const date2 = Date.UTC(y2, m2 - 1, d2);
+
+  return Math.floor((date2 - date1) / 86400000);
 }
 
 /* =========================
-   DAILY RESET
+   DAILY RESET MIDDLEWARE
 ========================= */
 
 export default async function dailyReset(req, res, next) {
@@ -49,10 +51,18 @@ export default async function dailyReset(req, res, next) {
 
       const user = snap.data() || {};
 
+      // Premium değilse çık
       if (!user.isPremium) return;
+
+      // Subscription yoksa çık
       if (!user.subscription?.expiresAt) return;
 
+      // Subscription aktif değilse çık
+      if (user.subscription?.status !== "active") return;
+
       const now = admin.firestore.Timestamp.now();
+
+      // Süresi bitmişse çık
       if (user.subscription.expiresAt.toMillis() <= now.toMillis()) {
         return;
       }
@@ -65,6 +75,7 @@ export default async function dailyReset(req, res, next) {
       if (daysPassed <= 0) return;
 
       const currentDaily = Number(user.dailyCoin ?? 0);
+
       const earned = daysPassed * DAILY_PREMIUM_COIN;
 
       const newDailyCoin = Math.min(
@@ -76,6 +87,7 @@ export default async function dailyReset(req, res, next) {
         dailyCoin: newDailyCoin,
         lastDailyResetKey: todayKey,
         lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
     });
 
