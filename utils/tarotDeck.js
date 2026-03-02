@@ -35,7 +35,7 @@ const tarotDeck = [
   { id: 32, name: "Değnek Uşağı", image: "32_degnek_usagi.webp" },
   { id: 33, name: "Değnek Şövalyesi", image: "33_degnek_sovalyesi.webp" },
   { id: 34, name: "Değnek Kraliçesi", image: "34_degnek_kralicesi.webp" },
-  { id: 35, name: "Değnek Kralı", image: "35_degnek_kralı.webp" },
+  { id: 35, name: "Değnek Kralı", image: "35_degnek_krali.webp" },
 
   { id: 36, name: "Kupa Ası", image: "36_kupa_asi.webp" },
   { id: 37, name: "Kupa İkilisi", image: "37_kupa_ikilisi.webp" },
@@ -50,7 +50,7 @@ const tarotDeck = [
   { id: 46, name: "Kupa Uşağı", image: "46_kupa_usagi.webp" },
   { id: 47, name: "Kupa Şövalyesi", image: "47_kupa_sovalyesi.webp" },
   { id: 48, name: "Kupa Kraliçesi", image: "48_kupa_kralicesi.webp" },
-  { id: 49, name: "Kupa Kralı", image: "49_kupa_kralı.webp" },
+  { id: 49, name: "Kupa Kralı", image: "49_kupa_krali.webp" },
 
   { id: 50, name: "Kılıç Ası", image: "50_kilic_asi.webp" },
   { id: 51, name: "Kılıç İkilisi", image: "51_kilic_ikilisi.webp" },
@@ -65,7 +65,7 @@ const tarotDeck = [
   { id: 60, name: "Kılıç Uşağı", image: "60_kilic_usagi.webp" },
   { id: 61, name: "Kılıç Şövalyesi", image: "61_kilic_sovalyesi.webp" },
   { id: 62, name: "Kılıç Kraliçesi", image: "62_kilic_kralicesi.webp" },
-  { id: 63, name: "Kılıç Kralı", image: "63_kilic_kralı.webp" },
+  { id: 63, name: "Kılıç Kralı", image: "63_kilic_krali.webp" },
 
   { id: 64, name: "Tılsım Ası", image: "64_tilsim_asi.webp" },
   { id: 65, name: "Tılsım İkilisi", image: "65_tilsim_ikilisi.webp" },
@@ -80,7 +80,7 @@ const tarotDeck = [
   { id: 74, name: "Tılsım Uşağı", image: "74_tilsim_usagi.webp" },
   { id: 75, name: "Tılsım Şövalyesi", image: "75_tilsim_sovalyesi.webp" },
   { id: 76, name: "Tılsım Kraliçesi", image: "76_tilsim_kralicesi.webp" },
-  { id: 77, name: "Tılsım Kralı", image: "77_tilsim_kralı.webp" }
+  { id: 77, name: "Tılsım Kralı", image: "77_tilsim_krali.webp" }
 ];
 
 export const getTarotById = (id) =>
