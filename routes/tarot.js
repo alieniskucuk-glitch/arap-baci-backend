@@ -5,6 +5,7 @@ import coinCheck from "../middleware/coinCheck.js";
 
 import {
   startTarot,
+  generateTarotInterpretation,
   revealTarot,
   finalizeTarot,
   saveTarot,
@@ -15,13 +16,13 @@ const router = express.Router();
 /* =========================
    POST /tarot/start
    - Coin kontrol var
-   - GPT burada çalışıyor
+   - GPT YOK
 ========================= */
 
 router.post(
   "/start",
   auth,
-  coinCheck("TAROT"), // sadece yeterli mi kontrol
+  coinCheck("TAROT"),
   async (req, res) => {
     try {
       const uid = req.user?.uid;
@@ -35,7 +36,6 @@ router.post(
       });
 
       res.json(data);
-
     } catch (e) {
       console.error("TAROT START ERROR:", e);
       res.status(400).json({ error: e.message });
@@ -44,10 +44,32 @@ router.post(
 );
 
 /* =========================
-   POST /tarot/reveal
-   - Sadece kart açma
-   - GPT YOK
+   POST /tarot/generate
+   - GPT BURADA ÇALIŞIR
    - Coin YOK
+========================= */
+
+router.post(
+  "/generate",
+  auth,
+  async (req, res) => {
+    try {
+      const uid = req.user?.uid;
+      if (!uid) {
+        return res.status(401).json({ error: "Token gerekli" });
+      }
+
+      const data = await generateTarotInterpretation(uid, req.body);
+      res.json(data);
+    } catch (e) {
+      console.error("TAROT GENERATE ERROR:", e);
+      res.status(400).json({ error: e.message });
+    }
+  }
+);
+
+/* =========================
+   POST /tarot/reveal
 ========================= */
 
 router.post(
@@ -62,7 +84,6 @@ router.post(
 
       const data = await revealTarot(uid, req.body);
       res.json(data);
-
     } catch (e) {
       console.error("TAROT REVEAL ERROR:", e);
       res.status(400).json({ error: e.message });
@@ -72,8 +93,6 @@ router.post(
 
 /* =========================
    POST /tarot/finalize
-   - Result ekranı açıldığında çağrılır
-   - Coin burada düşer
 ========================= */
 
 router.post(
@@ -88,7 +107,6 @@ router.post(
 
       const data = await finalizeTarot(uid, req.body);
       res.json(data);
-
     } catch (e) {
       console.error("TAROT FINALIZE ERROR:", e);
       res.status(400).json({ error: e.message });
@@ -98,7 +116,6 @@ router.post(
 
 /* =========================
    POST /tarot/save
-   - Kullanıcı kaydet butonuna basarsa
 ========================= */
 
 router.post(
@@ -113,7 +130,6 @@ router.post(
 
       await saveTarot(uid, req.body);
       res.json({ success: true });
-
     } catch (e) {
       console.error("TAROT SAVE ERROR:", e);
       res.status(400).json({ error: e.message });
