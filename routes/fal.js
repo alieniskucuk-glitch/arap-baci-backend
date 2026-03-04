@@ -46,6 +46,16 @@ router.post("/start", upload.array("images", 3), async (req, res) => {
 });
 
 /* =========================
+   GUEST POLLING  ✅ EKLENDİ
+========================= */
+
+router.get("/:id", (req, res) => {
+  const f = guestStore.get(req.params.id);
+  if (!f) return res.status(404).json({ error: "Bulunamadı" });
+  res.json(f);
+});
+
+/* =========================
    GUEST COMPLETE
 ========================= */
 
@@ -80,6 +90,8 @@ router.post(
   upload.array("images", 5),
   coinCheck("FAL"),
   async (req, res) => {
+    const id = crypto.randomUUID(); // ⚠️ catch içinde erişebilmek için yukarı alındı
+
     try {
       if (!req.files?.length) {
         return res.status(400).json({ error: "Fotoğraf gerekli" });
@@ -87,26 +99,16 @@ router.post(
 
       const uid = req.user.uid;
       const price = req.coinPrice;
-      const id = crypto.randomUUID();
 
       premiumStore.set(id, { status: "processing" });
 
-      // Hemen falId dön
       res.status(200).json({ falId: id });
-
-      /* =========================
-         GPT ÜRETİMİ
-      ========================= */
 
       const full = await generatePremium(req.files);
 
       if (!full) {
         throw new Error("Fal boş geldi");
       }
-
-      /* =========================
-         RESULT BAŞARILI → COIN DÜŞ
-      ========================= */
 
       await decreaseCoin(uid, price, "FAL", {
         falId: id,
