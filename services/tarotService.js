@@ -121,7 +121,6 @@ Yorum doğrudan başlasın.
 ========================= */
 
 async function generateInterpretation({ mode, subType, question, selectedCards }) {
-
   const prompt = buildPrompt({ mode, subType, question, selectedCards });
 
   const completion = await openai.chat.completions.create({
@@ -137,7 +136,7 @@ async function generateInterpretation({ mode, subType, question, selectedCards }
 }
 
 /* =========================
-   START (GPT BURADA BAŞLAR)
+   START
 ========================= */
 
 export async function startTarot(uid, { mode, subType, question, coinPrice }) {
@@ -154,7 +153,10 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     subType,
     question,
     selectedCards,
-  }).catch(() => null);
+  }).catch((err) => {
+    console.error("GPT ERROR:", err);
+    return null;
+  });
 
   sessionStore.set(sessionId, {
     uid,
@@ -172,7 +174,7 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
 }
 
 /* =========================
-   REVEAL (SON KARTTA COIN + GPT)
+   REVEAL
 ========================= */
 
 export async function revealTarot(uid, { sessionId }) {
@@ -198,7 +200,11 @@ export async function revealTarot(uid, { sessionId }) {
   if (session.revealed.length === session.selectedCards.length) {
 
     const interpretation = await session.interpretationPromise;
-    if (!interpretation) throw new Error("Yorum üretilemedi");
+
+    if (!interpretation) {
+      sessionStore.delete(sessionId);
+      throw new Error("Yorum üretilemedi");
+    }
 
     const remainingCoin = await decreaseCoin(
       uid,

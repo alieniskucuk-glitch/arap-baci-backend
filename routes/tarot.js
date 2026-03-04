@@ -6,7 +6,6 @@ import coinCheck from "../middleware/coinCheck.js";
 import {
   startTarot,
   revealTarot,
-  saveTarot,
 } from "../services/tarotService.js";
 
 const router = express.Router();
@@ -61,29 +60,6 @@ router.post(
       res.json(data);
     } catch (e) {
       console.error("TAROT REVEAL ERROR:", e);
-      res.status(400).json({ error: e.message });
-    }
-  }
-);
-
-/* =========================
-   POST /tarot/save
-========================= */
-
-router.post(
-  "/save",
-  auth,
-  async (req, res) => {
-    try {
-      const uid = req.user?.uid;
-      if (!uid) {
-        return res.status(401).json({ error: "Token gerekli" });
-      }
-
-      await saveTarot(uid, req.body);
-      res.json({ success: true });
-    } catch (e) {
-      console.error("TAROT SAVE ERROR:", e);
       res.status(400).json({ error: e.message });
     }
   }
