@@ -1,27 +1,31 @@
-import { db } from "../config/firebase.js";
-import { FieldValue } from "firebase-admin/firestore";
+import crypto from "crypto";
 import openai from "../config/openai.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { getTarotById } from "../utils/tarotDeck.js";
 
 /* =========================
-   HELPERS
+   MEMORY SESSION STORE
+========================= */
+
+const sessionStore = new Map();
+const SESSION_TTL = 1000 * 60 * 10;
+
+function isExpired(session) {
+  return Date.now() - session.createdAt > SESSION_TTL;
+}
+
+/* =========================
+   HELPERS (AYNEN)
 ========================= */
 
 function resolveCardCount(mode) {
   switch (mode) {
-    case "one":
-      return 1;
-    case "two":
-      return 2;
-    case "three":
-      return 3;
-    case "five":
-      return 5;
-    case "celtic":
-      return 10;
-    default:
-      throw new Error("Geçersiz tarot mode");
+    case "one": return 1;
+    case "two": return 2;
+    case "three": return 3;
+    case "five": return 5;
+    case "celtic": return 10;
+    default: throw new Error("Geçersiz tarot mode");
   }
 }
 
@@ -51,6 +55,10 @@ function toPicked(selectedCards, revealedCount) {
     return { id, image: card.image };
   });
 }
+
+/* =========================
+   PROMPT (DOKUNMADIM)
+========================= */
 
 function buildPrompt({ mode, subType, question, selectedCards }) {
   const spreadDescription = resolveSpreadDescription(mode) || "Tarot açılımı";
@@ -109,197 +117,108 @@ Yorum doğrudan başlasın.
 }
 
 /* =========================
-   START  (HIZLI - GPT YOK)
+   GPT
+========================= */
+
+async function generateInterpretation({ mode, subType, question, selectedCards }) {
+
+  const prompt = buildPrompt({ mode, subType, question, selectedCards });
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-mini",
+    messages: [
+      { role: "system", content: "Sen güçlü ve sezgisel bir tarot ustasısın." },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.85,
+  });
+
+  return (completion?.choices?.[0]?.message?.content || "").trim();
+}
+
+/* =========================
+   START (GPT BURADA BAŞLAR)
 ========================= */
 
 export async function startTarot(uid, { mode, subType, question, coinPrice }) {
+
   if (!uid) throw new Error("UID gerekli");
   if (!coinPrice) throw new Error("Coin price eksik");
 
   const cardCount = resolveCardCount(mode);
   const selectedCards = pickCards(cardCount);
-  const sessionRef = db.collection("tarotSessions").doc();
+  const sessionId = crypto.randomUUID();
 
-  await sessionRef.set({
+  const interpretationPromise = generateInterpretation({
+    mode,
+    subType,
+    question,
+    selectedCards,
+  }).catch(() => null);
+
+  sessionStore.set(sessionId, {
     uid,
     mode,
-    subType: subType || null,
-    question: question || null,
-    cardCount,
+    subType,
+    question,
     selectedCards,
-    revealedCount: 0,
-
-    // ✅ GPT start'ta yok
-    interpretation: null,
-    generating: false,
-
-    completed: false,
-    saved: false,
+    revealed: [],
+    interpretationPromise,
     cost: coinPrice,
-    createdAt: FieldValue.serverTimestamp(),
+    createdAt: Date.now(),
   });
 
-  return {
-    sessionId: sessionRef.id,
-    cardCount,
-  };
+  return { sessionId, cardCount };
 }
 
 /* =========================
-   GENERATE (GPT BURADA)
-========================= */
-
-export async function generateTarotInterpretation(uid, { sessionId }) {
-  if (!uid) throw new Error("UID gerekli");
-  if (!sessionId) throw new Error("sessionId gerekli");
-
-  const sessionRef = db.collection("tarotSessions").doc(sessionId);
-
-  // ✅ aynı anda 2 generate olmasın + zaten üretildiyse tekrar üretme
-  const { shouldGenerate, session } = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(sessionRef);
-    if (!snap.exists) throw new Error("Session bulunamadı");
-
-    const s = snap.data();
-    if (s.uid !== uid) throw new Error("Yetkisiz erişim");
-
-    if (s.interpretation && String(s.interpretation).trim().length > 0) {
-      return { shouldGenerate: false, session: s };
-    }
-
-    if (s.generating === true) {
-      return { shouldGenerate: false, session: s };
-    }
-
-    tx.update(sessionRef, { generating: true });
-    return { shouldGenerate: true, session: s };
-  });
-
-  // zaten varsa ya da generating ise burada dön
-  if (!shouldGenerate) {
-    return {
-      interpretation: session.interpretation || null,
-      generating: session.generating === true,
-    };
-  }
-
-  const prompt = buildPrompt({
-    mode: session.mode,
-    subType: session.subType,
-    question: session.question,
-    selectedCards: session.selectedCards,
-  });
-
-  try {
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: "Sen güçlü ve sezgisel bir tarot ustasısın." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.85,
-    });
-
-    const interpretation = (completion?.choices?.[0]?.message?.content || "")
-      .trim();
-
-    await sessionRef.update({
-      interpretation: interpretation || null,
-      generating: false,
-      generatedAt: FieldValue.serverTimestamp(),
-    });
-
-    return { interpretation: interpretation || null, generating: false };
-  } catch (e) {
-    // ✅ generating bayrağını geri kapat
-    await sessionRef.update({ generating: false });
-    throw new Error("Yorum üretilemedi");
-  }
-}
-
-/* =========================
-   REVEAL (SADECE GÖSTERİM)
+   REVEAL (SON KARTTA COIN + GPT)
 ========================= */
 
 export async function revealTarot(uid, { sessionId }) {
-  if (!uid) throw new Error("UID gerekli");
-  if (!sessionId) throw new Error("sessionId gerekli");
 
-  const sessionRef = db.collection("tarotSessions").doc(sessionId);
+  const session = sessionStore.get(sessionId);
+  if (!session) throw new Error("Session yok");
+  if (session.uid !== uid) throw new Error("Yetkisiz");
 
-  const txResult = await db.runTransaction(async (tx) => {
-    const snap = await tx.get(sessionRef);
-    if (!snap.exists) throw new Error("Session bulunamadı");
+  if (isExpired(session)) {
+    sessionStore.delete(sessionId);
+    throw new Error("Session süresi doldu");
+  }
 
-    const session = snap.data();
-    if (session.uid !== uid) throw new Error("Yetkisiz erişim");
+  const nextIndex = session.revealed.length;
+  if (nextIndex >= session.selectedCards.length)
+    throw new Error("Tüm kartlar açıldı");
 
-    const nextRevealed = Number(session.revealedCount || 0) + 1;
-    if (nextRevealed > session.cardCount) throw new Error("Tüm kartlar açıldı");
+  const cardId = session.selectedCards[nextIndex];
+  session.revealed.push(cardId);
 
-    tx.update(sessionRef, { revealedCount: nextRevealed });
+  const picked = toPicked(session.selectedCards, session.revealed.length);
+
+  if (session.revealed.length === session.selectedCards.length) {
+
+    const interpretation = await session.interpretationPromise;
+    if (!interpretation) throw new Error("Yorum üretilemedi");
+
+    const remainingCoin = await decreaseCoin(
+      uid,
+      session.cost,
+      "TAROT",
+      { sessionId, mode: session.mode }
+    );
+
+    sessionStore.delete(sessionId);
 
     return {
-      picked: toPicked(session.selectedCards, nextRevealed),
-      interpretation: session.interpretation || null, // ✅ null olabilir
-      generating: session.generating === true,
-      cost: session.cost,
+      picked,
+      interpretation,
+      remainingCoin,
     };
-  });
+  }
 
-  return txResult;
-}
-
-/* =========================
-   RESULT AÇILDIĞINDA COIN DÜŞ
-========================= */
-
-export async function finalizeTarot(uid, { sessionId }) {
-  if (!uid) throw new Error("UID gerekli");
-  if (!sessionId) throw new Error("sessionId gerekli");
-
-  const sessionRef = db.collection("tarotSessions").doc(sessionId);
-  const snap = await sessionRef.get();
-
-  if (!snap.exists) throw new Error("Session yok");
-  const session = snap.data();
-
-  if (session.uid !== uid) throw new Error("Yetkisiz erişim");
-  if (session.completed) return { remainingCoin: session.remainingCoin };
-
-  const remainingCoin = await decreaseCoin(uid, session.cost, "TAROT", {
-    sessionId,
-    mode: session.mode,
-  });
-
-  await sessionRef.update({
-    completed: true,
-    remainingCoin,
-    finalizedAt: FieldValue.serverTimestamp(),
-  });
-
-  return { remainingCoin };
-}
-
-/* =========================
-   KAYDET BUTONU
-========================= */
-
-export async function saveTarot(uid, { sessionId }) {
-  if (!uid) throw new Error("UID gerekli");
-  if (!sessionId) throw new Error("sessionId gerekli");
-
-  const sessionRef = db.collection("tarotSessions").doc(sessionId);
-  const snap = await sessionRef.get();
-
-  if (!snap.exists) throw new Error("Session yok");
-  const session = snap.data();
-  if (session.uid !== uid) throw new Error("Yetkisiz erişim");
-
-  await sessionRef.update({
-    saved: true,
-    savedAt: FieldValue.serverTimestamp(),
-  });
-
-  return { ok: true };
+  return {
+    picked,
+    interpretation: null,
+    remainingCoin: null,
+  };
 }
