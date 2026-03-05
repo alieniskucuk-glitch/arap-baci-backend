@@ -190,10 +190,6 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
   // ✅ sessionId çakışma olmasın (çok düşük ihtimal ama garanti)
   let sessionId = crypto.randomUUID();
   for (let i = 0; i < 5; i++) {
-    // Firestore'da var mı?
-    // (varsa yeniden üret)
-    // (5 denemede de olursa error)
-    // NOTE: ultra düşük ihtimal.
     // eslint-disable-next-line no-await-in-loop
     const exists = await existsSessionDoc(sessionId);
     if (!exists) break;
@@ -381,7 +377,7 @@ export async function revealTarot(uid, { sessionId }) {
         remainingCoin,
       });
 
-      // ✅ memory temizle (istersen kalsın ama replay için temizlemek iyi)
+      // ✅ memory temizle
       sessionStore.delete(sessionId);
 
       return {
@@ -406,4 +402,69 @@ export async function revealTarot(uid, { sessionId }) {
       await updateSessionDoc(sessionId, { processing: false });
     } catch (_) {}
   }
+}
+
+/* =========================
+   SAVE (HISTORY)  ✅ EKLENDİ
+   - PROMPT/START/REVEAL DOKUNMADIM
+   - Hepsi users/{uid}/history
+========================= */
+
+export async function saveTarot(uid, { sessionId }) {
+
+  if (!uid) throw new Error("UID gerekli");
+  if (!sessionId) throw new Error("sessionId gerekli");
+
+  const doc = await getSessionDoc(sessionId);
+  if (!doc) throw new Error("Session yok");
+  if (doc.uid !== uid) throw new Error("Yetkisiz");
+
+  // sadece tamamlanmış session kaydedilsin
+  if (doc.status !== "completed") {
+    throw new Error("Session tamamlanmamış");
+  }
+
+  const interpretation = (doc.interpretation || "").trim();
+  if (!interpretation) throw new Error("Yorum yok");
+
+  const selectedCards = doc.selectedCards || [];
+  const revealed = doc.revealed || [];
+  const picked = toPicked(selectedCards, revealed.length);
+
+  if (!picked.length) throw new Error("Kartlar yok");
+
+  // tekrar kaydı engelle (type + sessionId)
+  const dup = await db
+    .collection("users")
+    .doc(uid)
+    .collection("history")
+    .where("type", "==", "tarot")
+    .where("sessionId", "==", sessionId)
+    .limit(1)
+    .get();
+
+  if (!dup.empty) {
+    return { success: true, alreadySaved: true };
+  }
+
+  const ref = await db
+    .collection("users")
+    .doc(uid)
+    .collection("history")
+    .add({
+      type: "tarot",
+      sessionId,
+      mode: doc.mode || null,
+      subType: doc.subType || null,
+      question: doc.question || null,
+      interpretation,
+      cardImages: picked.map((p) => p.image),
+      createdAt: Date.now(),
+    });
+
+  return {
+    success: true,
+    alreadySaved: false,
+    historyId: ref.id,
+  };
 }

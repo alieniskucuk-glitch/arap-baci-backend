@@ -57,17 +57,21 @@ Samimi, sıcak ve gizemli bir dil kullan.
       "Rüyanda güçlü bir mesaj var ama biraz daha dikkatle düşünmelisin...";
 
     /* =========================
-       FIRESTORE
+       FIRESTORE (YENİ SİSTEM)
     ========================= */
 
     const docId = `${uid}_ruya_${Date.now()}`;
 
-    await db.collection("ruya_yorumlari").doc(docId).set({
-      userId: uid,
-      text: result,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      type: "RUYA",
-    });
+    await db
+      .collection("users")
+      .doc(uid)
+      .collection("ruyaHistory")
+      .doc(docId)
+      .set({
+        text: result,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        type: "RUYA",
+      });
 
     /* =========================
        RESULT BAŞARILI → COIN DÜŞ

@@ -81,17 +81,20 @@ Kehanet tonu kullan.
       "Elinde güçlü bir enerji hissediyorum…";
 
     /* =========================
-       FIRESTORE KAYIT
+       FIRESTORE KAYIT (YENİ SİSTEM)
     ========================= */
 
-    const docId = `${uid}_el_${Date.now()}`;
-
-    await db.collection("el_fallari").doc(docId).set({
-      userId: uid,
-      text: result,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      type: "EL_FALI",
-    });
+    const historyRef = await db
+      .collection("users")
+      .doc(uid)
+      .collection("history")
+      .add({
+        type: "el_fali",
+        interpretation: result,
+        question: null,
+        cardImages: [],
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
 
     /* =========================
        RESULT BAŞARILI → COIN DÜŞ
@@ -101,7 +104,7 @@ Kehanet tonu kullan.
       uid,
       req.coinPrice,
       "EL_FALI",
-      { falId: docId }
+      { historyId: historyRef.id }
     );
 
     /* =========================
