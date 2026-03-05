@@ -1,5 +1,4 @@
 import OpenAI from "openai";
-import { db, admin } from "../config/firebase.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 
 const openai = new OpenAI({
@@ -8,6 +7,7 @@ const openai = new OpenAI({
 
 export const ruyaYorumla = async (req, res) => {
   try {
+
     const uid = req.user?.uid;
 
     if (!uid) {
@@ -41,7 +41,7 @@ Yorumu:
 - Teknik açıklama yapma.
 
 Samimi, sıcak ve gizemli bir dil kullan.
-    `;
+`;
 
     /* =========================
        GPT
@@ -57,31 +57,13 @@ Samimi, sıcak ve gizemli bir dil kullan.
       "Rüyanda güçlü bir mesaj var ama biraz daha dikkatle düşünmelisin...";
 
     /* =========================
-       FIRESTORE (YENİ SİSTEM)
-    ========================= */
-
-    const docId = `${uid}_ruya_${Date.now()}`;
-
-    await db
-      .collection("users")
-      .doc(uid)
-      .collection("ruyaHistory")
-      .doc(docId)
-      .set({
-        text: result,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        type: "RUYA",
-      });
-
-    /* =========================
-       RESULT BAŞARILI → COIN DÜŞ
+       COIN DÜŞ
     ========================= */
 
     const remainingCoin = await decreaseCoin(
       uid,
       req.coinPrice,
-      "RUYA",
-      { ruyaId: docId }
+      "RUYA"
     );
 
     /* =========================
@@ -95,9 +77,12 @@ Samimi, sıcak ve gizemli bir dil kullan.
     });
 
   } catch (err) {
+
     console.error("RUYA ERROR:", err);
+
     return res.status(500).json({
       error: "Rüya yorumlanamadı",
     });
+
   }
 };

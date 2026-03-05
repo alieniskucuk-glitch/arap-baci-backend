@@ -1,12 +1,9 @@
 import OpenAI from "openai";
-import admin from "firebase-admin";
 import { decreaseCoin } from "../utils/coinManager.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const db = admin.firestore();
 
 export const elFal = async (req, res) => {
   try {
@@ -57,7 +54,7 @@ Sıcak, mistik ve samimi konuş.
 Başlık yazma.
 Paragraf paragraf uzun yaz.
 Kehanet tonu kullan.
-`
+`,
         },
         {
           role: "user",
@@ -76,36 +73,14 @@ Kehanet tonu kullan.
       max_output_tokens: 800,
     });
 
-    const result =
-      response.output_text ||
-      "Elinde güçlü bir enerji hissediyorum…";
+    const result = response.output_text || "Elinde güçlü bir enerji hissediyorum…";
 
     /* =========================
-       FIRESTORE KAYIT (YENİ SİSTEM)
+       ✅ RESULT BAŞARILI → COIN DÜŞ
+       - Artık backend history'e yazmıyor (autoSave frontend)
     ========================= */
 
-    const historyRef = await db
-      .collection("users")
-      .doc(uid)
-      .collection("history")
-      .add({
-        type: "el_fali",
-        interpretation: result,
-        question: null,
-        cardImages: [],
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-
-    /* =========================
-       RESULT BAŞARILI → COIN DÜŞ
-    ========================= */
-
-    const remainingCoin = await decreaseCoin(
-      uid,
-      req.coinPrice,
-      "EL_FALI",
-      { historyId: historyRef.id }
-    );
+    const remainingCoin = await decreaseCoin(uid, req.coinPrice, "EL_FALI");
 
     /* =========================
        RESPONSE
@@ -116,7 +91,6 @@ Kehanet tonu kullan.
       result,
       remainingCoin,
     });
-
   } catch (err) {
     console.error("EL FALI HATA:", err);
     return res.status(500).json({
