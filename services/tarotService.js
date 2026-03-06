@@ -2,7 +2,7 @@ import crypto from "crypto";
 import openai from "../config/openai.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { getTarotById } from "../utils/tarotDeck.js";
-import { db } from "../config/firebase.js";
+import { db, admin } from "../config/firebase.js";
 
 /* =========================
    MEMORY SESSION STORE
@@ -459,7 +459,7 @@ export async function saveTarot(uid, { sessionId }) {
       question: doc.question || null,
       interpretation,
       cardImages: picked.map((p) => p.image),
-      createdAt: Date.now(),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
   return {
