@@ -55,7 +55,22 @@ async function markExpired(sessionId) {
 }
 
 /* =========================
-   HELPERS (AYNEN)
+   MEMORY CLEANUP
+========================= */
+
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [id, session] of sessionStore.entries()) {
+    if (now - session.createdAt > SESSION_TTL) {
+      sessionStore.delete(id);
+    }
+  }
+
+}, 60000);
+
+/* =========================
+   HELPERS
 ========================= */
 
 function resolveCardCount(mode) {
@@ -97,13 +112,15 @@ function toPicked(selectedCards, revealedCount) {
 }
 
 /* =========================
-   PROMPT (DOKUNMADIM)
+   PROMPT
 ========================= */
 
 function buildPrompt({ mode, subType, question, selectedCards }) {
+
   const spreadDescription = resolveSpreadDescription(mode) || "Tarot açılımı";
 
   if (mode === "celtic") {
+
     return `
 Sen 30 yıllık deneyime sahip, kader analizi yapan güçlü bir tarot ustasısın.
 
@@ -157,20 +174,28 @@ Yorum doğrudan başlasın.
 }
 
 /* =========================
-   GPT
+   GPT (timeout eklendi)
 ========================= */
 
 async function generateInterpretation({ mode, subType, question, selectedCards }) {
+
   const prompt = buildPrompt({ mode, subType, question, selectedCards });
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
-    messages: [
-      { role: "system", content: "Sen güçlü ve sezgisel bir tarot ustasısın." },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.85,
-  });
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error("GPT timeout")), 45000)
+  );
+
+  const completion = await Promise.race([
+    openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        { role: "system", content: "Sen güçlü ve sezgisel bir tarot ustasısın." },
+        { role: "user", content: prompt },
+      ],
+      temperature: 0.85,
+    }),
+    timeout
+  ]);
 
   return (completion?.choices?.[0]?.message?.content || "").trim();
 }
@@ -187,19 +212,10 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
   const cardCount = resolveCardCount(mode);
   const selectedCards = pickCards(cardCount);
 
-  // ✅ sessionId çakışma olmasın (çok düşük ihtimal ama garanti)
   let sessionId = crypto.randomUUID();
-  for (let i = 0; i < 5; i++) {
-    // eslint-disable-next-line no-await-in-loop
-    const exists = await existsSessionDoc(sessionId);
-    if (!exists) break;
-    sessionId = crypto.randomUUID();
-    if (i === 4) throw new Error("Session üretilemedi");
-  }
 
   const createdAt = Date.now();
 
-  // ✅ Firestore'a yaz (restart olunca kaybolmasın)
   await createSessionDoc(sessionId, {
     uid,
     mode,
@@ -215,7 +231,6 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     processing: false,
   });
 
-  // ✅ memory cache (performans)
   const interpretationPromise = generateInterpretation({
     mode,
     subType,
@@ -223,13 +238,16 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     selectedCards,
   })
     .then(async (text) => {
+
       const t = (text || "").trim();
+
       if (t) {
         await updateSessionDoc(sessionId, {
           interpretation: t,
           interpretationReadyAt: Date.now(),
         });
       }
+
       return t || null;
     })
     .catch((err) => {
@@ -260,13 +278,13 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
 
 export async function revealTarot(uid, { sessionId }) {
 
-  // ✅ önce memory dene
   let session = sessionStore.get(sessionId);
 
-  // ✅ memory yoksa Firestore'dan yükle (restart senaryosu)
   if (!session) {
+
     const doc = await getSessionDoc(sessionId);
     if (!doc) throw new Error("Session yok");
+
     session = {
       uid: doc.uid,
       mode: doc.mode,
@@ -280,13 +298,12 @@ export async function revealTarot(uid, { sessionId }) {
       processing: !!doc.processing,
       status: doc.status || "active",
     };
+
     sessionStore.set(sessionId, session);
   }
 
-  if (!session) throw new Error("Session yok");
   if (session.uid !== uid) throw new Error("Yetkisiz");
 
-  // ✅ completed/expired tekrar kullanılmasın
   if (session.status === "completed") throw new Error("Session tamamlandı");
   if (session.status === "expired") throw new Error("Session süresi doldu");
 
@@ -296,17 +313,20 @@ export async function revealTarot(uid, { sessionId }) {
     throw new Error("Session süresi doldu");
   }
 
-  /* 🔒 CONCURRENCY LOCK (memory + firestore) */
-  if (session.processing) {
+  const docCheck = await getSessionDoc(sessionId);
+
+  if (session.processing || docCheck?.processing) {
     throw new Error("Reveal zaten işleniyor");
   }
 
   session.processing = true;
+
   await updateSessionDoc(sessionId, { processing: true });
 
   try {
 
     const nextIndex = session.revealed.length;
+
     if (nextIndex >= session.selectedCards.length)
       throw new Error("Tüm kartlar açıldı");
 
@@ -314,7 +334,6 @@ export async function revealTarot(uid, { sessionId }) {
 
     session.revealed.push(cardId);
 
-    // ✅ Firestore'a revealed yaz
     await updateSessionDoc(sessionId, {
       revealed: session.revealed,
     });
@@ -323,35 +342,38 @@ export async function revealTarot(uid, { sessionId }) {
 
     if (session.revealed.length === session.selectedCards.length) {
 
-      // ✅ interpretation hazır mı? (restart olduysa promise yok)
       let interpretation = null;
 
       const docNow = await getSessionDoc(sessionId);
+
       if (docNow && typeof docNow.interpretation === "string") {
         const t = docNow.interpretation.trim();
         if (t) interpretation = t;
       }
 
-      if (!interpretation) {
-        // memory promise varsa bekle
-        if (session.interpretationPromise) {
-          interpretation = await session.interpretationPromise;
-        }
+      if (!interpretation && session.interpretationPromise) {
+        interpretation = await session.interpretationPromise;
       }
 
       if (!interpretation) {
-        // ✅ fallback: yeniden üret (restart sonrası garanti)
-        interpretation = await generateInterpretation({
-          mode: session.mode,
-          subType: session.subType,
-          question: session.question,
-          selectedCards: session.selectedCards,
-        }).catch((err) => {
-          console.error("GPT ERROR (fallback):", err);
-          return null;
-        });
 
-        if (interpretation && interpretation.trim()) {
+        try {
+
+          interpretation = await generateInterpretation({
+            mode: session.mode,
+            subType: session.subType,
+            question: session.question,
+            selectedCards: session.selectedCards,
+          });
+
+        } catch (err) {
+
+          console.error("GPT FALLBACK ERROR:", err);
+          interpretation = null;
+        }
+
+        if (interpretation) {
+
           await updateSessionDoc(sessionId, {
             interpretation: interpretation.trim(),
             interpretationReadyAt: Date.now(),
@@ -360,6 +382,7 @@ export async function revealTarot(uid, { sessionId }) {
       }
 
       if (!interpretation) {
+
         await markExpired(sessionId);
         sessionStore.delete(sessionId);
         throw new Error("Yorum üretilemedi");
@@ -372,12 +395,10 @@ export async function revealTarot(uid, { sessionId }) {
         { sessionId, mode: session.mode }
       );
 
-      // ✅ completed olarak işaretle (replay engeli)
       await markCompleted(sessionId, {
         remainingCoin,
       });
 
-      // ✅ memory temizle
       sessionStore.delete(sessionId);
 
       return {
@@ -394,77 +415,13 @@ export async function revealTarot(uid, { sessionId }) {
     };
 
   } finally {
-    // ✅ lock bırak (memory + firestore)
+
     const s = sessionStore.get(sessionId);
+
     if (s) s.processing = false;
 
     try {
       await updateSessionDoc(sessionId, { processing: false });
     } catch (_) {}
   }
-}
-
-/* =========================
-   SAVE (HISTORY)  ✅ EKLENDİ
-   - PROMPT/START/REVEAL DOKUNMADIM
-   - Hepsi users/{uid}/history
-========================= */
-
-export async function saveTarot(uid, { sessionId }) {
-
-  if (!uid) throw new Error("UID gerekli");
-  if (!sessionId) throw new Error("sessionId gerekli");
-
-  const doc = await getSessionDoc(sessionId);
-  if (!doc) throw new Error("Session yok");
-  if (doc.uid !== uid) throw new Error("Yetkisiz");
-
-  // sadece tamamlanmış session kaydedilsin
-  if (doc.status !== "completed") {
-    throw new Error("Session tamamlanmamış");
-  }
-
-  const interpretation = (doc.interpretation || "").trim();
-  if (!interpretation) throw new Error("Yorum yok");
-
-  const selectedCards = doc.selectedCards || [];
-  const revealed = doc.revealed || [];
-  const picked = toPicked(selectedCards, revealed.length);
-
-  if (!picked.length) throw new Error("Kartlar yok");
-
-  // tekrar kaydı engelle (type + sessionId)
-  const dup = await db
-    .collection("users")
-    .doc(uid)
-    .collection("history")
-    .where("type", "==", "tarot")
-    .where("sessionId", "==", sessionId)
-    .limit(1)
-    .get();
-
-  if (!dup.empty) {
-    return { success: true, alreadySaved: true };
-  }
-
-  const ref = await db
-    .collection("users")
-    .doc(uid)
-    .collection("history")
-    .add({
-      type: "tarot",
-      sessionId,
-      mode: doc.mode || null,
-      subType: doc.subType || null,
-      question: doc.question || null,
-      interpretation,
-      cardImages: picked.map((p) => p.image),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
-
-  return {
-    success: true,
-    alreadySaved: false,
-    historyId: ref.id,
-  };
 }
