@@ -685,7 +685,7 @@ function buildPromptFiveGeneral({ mode, subType, question, selectedCards }) {
   const ctx = buildPromptContext({ mode, subType, question, selectedCards });
 
   return `
-Sen hayatın genel akışını, fırsatları ve blokajları okuyabilen güçlüve mistik bir tarot danışmanısın.
+Sen hayatın genel akışını, fırsatları ve blokajları okuyabilen güçlü ve mistik bir tarot danışmanısın.
 
 Bu açılım genel rehberlik içindir.
 
@@ -904,18 +904,6 @@ async function generateInterpretation({ mode, subType, question, selectedCards }
    SESSION MEMORY HELPERS
 ========================================================= */
 
-function putSessionInMemory(sessionId, session) {
-  sessionStore.set(sessionId, session);
-}
-
-function getSessionFromMemory(sessionId) {
-  return sessionStore.get(sessionId) || null;
-}
-
-function removeSessionFromMemory(sessionId) {
-  sessionStore.delete(sessionId);
-}
-
 function buildInMemorySession({
   uid,
   mode,
@@ -942,116 +930,6 @@ function buildInMemorySession({
   };
 
 }
-
-function buildHydratedSessionFromDoc(doc) {
-
-  return {
-    uid: doc.uid,
-    mode: doc.mode,
-    subType: doc.subType || null,
-    question: doc.question || null,
-    selectedCards: doc.selectedCards || [],
-    revealed: doc.revealed || [],
-    interpretationPromise: null,
-    cost: doc.cost,
-    createdAt: doc.createdAt,
-    processing: !!doc.processing,
-    status: doc.status || "active",
-  };
-
-}
-
-
-/* =========================================================
-   SESSION DOC HELPERS
-========================================================= */
-
-function buildCreateSessionPayload({
-  uid,
-  mode,
-  subType,
-  question,
-  selectedCards,
-  coinPrice,
-  createdAt,
-}) {
-
-  return {
-    uid,
-    mode,
-    subType: subType || null,
-    question: question || null,
-    selectedCards,
-    revealed: [],
-    cost: coinPrice,
-    createdAt,
-    status: "active",
-    interpretation: null,
-    interpretationReadyAt: null,
-    processing: false,
-  };
-
-}
-
-async function ensureUniqueSessionId() {
-
-  let sessionId = crypto.randomUUID();
-
-  while (await existsSessionDoc(sessionId)) {
-    sessionId = crypto.randomUUID();
-  }
-
-  return sessionId;
-
-}
-
-async function hydrateSessionFromDoc(sessionId) {
-
-  const doc = await getSessionDoc(sessionId);
-
-  if (!doc) return null;
-
-  return buildHydratedSessionFromDoc(doc);
-
-}
-
-async function persistInterpretationIfAny(sessionId, text) {
-
-  const t = (text || "").trim();
-
-  if (!t) return null;
-
-  await updateSessionDoc(sessionId, {
-    interpretation: t,
-    interpretationReadyAt: Date.now(),
-  });
-
-  return t;
-
-}
-
-async function readStoredInterpretation(sessionId) {
-
-  const doc = await getSessionDoc(sessionId);
-
-  if (!doc) return null;
-
-  if (typeof doc.interpretation !== "string") return null;
-
-  const t = doc.interpretation.trim();
-
-  return t || null;
-
-}
-
-async function lockSessionProcessing(sessionId) {
-  await updateSessionDoc(sessionId, { processing: true });
-}
-
-async function unlockSessionProcessing(sessionId) {
-  await updateSessionDoc(sessionId, { processing: false });
-}
-
 
 /* =========================================================
    REVEAL FLOW HELPERS
@@ -1135,8 +1013,13 @@ function isRevealComplete(session) {
 
 export async function startTarot(uid, { mode, subType, question, coinPrice }) {
 
-  if (!uid) throw new Error("UID gerekli");
-  if (!coinPrice) throw new Error("Coin price eksik");
+  validateStartInput({
+    uid,
+    mode,
+    subType,
+    question,
+    coinPrice
+  });
 
   const cardCount = resolveCardCount(mode);
 
@@ -1209,7 +1092,6 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
   };
 
 }
-
 
 /* =========================================================
    PUBLIC REVEAL
