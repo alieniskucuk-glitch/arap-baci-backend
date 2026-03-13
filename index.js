@@ -49,10 +49,10 @@ app.use("/user", userRoutes);
 /* =========================
    SERVER
 ========================= */
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, "0.0.0.0", () => {
-  console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
+app.listen(PORT, () => {
+  console.log(`🔮 Arap Bacı backend running on port ${PORT}`);
 
   // DEBUG (geçici kontrol için)
   console.log("ENV CHECK:");
