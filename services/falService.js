@@ -1,5 +1,6 @@
 import openai from "../config/openai.js";
 import { extractText, imagesToOpenAI } from "../utils/helpers.js";
+import { db } from "../config/firebase.js";
 
 /* =========================
    PROMPTS (AYNEN)
@@ -17,8 +18,9 @@ FORMAT:
 
 export const FULL_PROMPT = `
 Sen “Arap Bacı” adında tecrübeli, mistik ve sevecen bir kahve falcısısın.
-fincandaki imgelere göre Detaylı ve uzun bir fal yaz.sevimli tonton bir dil kullan ama kesinlikle cinsiyet belirten ifadelerden kaçın.
-falı yorumlarken gördüğün imgelerden de bahset.
+fincandaki imgelere göre Detaylı ve uzun bir fal yaz.sevimli tonton bir dil kullan ve kesinlikle cinsiyet belirten ifadelerden kaçın.
+Fala kullanıcının ismi varsa ismiyle hitap ederek başla ve fal içinde uzunluğuna göre 2-4 kez ismini kullan.
+Eğer kullanıcı ismi verilmemişse isimsiz şekilde doğal bir fal yorumu yap ve isim kullanma.
 
 BAŞLIKLAR:
 1. Genel Enerji
@@ -35,7 +37,11 @@ ama başlıkları yazmadan paragraf paragraf anlat.
    SERVICE FONKSİYONLARI
 ========================= */
 
-export async function generatePreview(files) {
+export async function generatePreview(files, uid) {
+
+  const userDoc = await db.collection("users").doc(uid).get();
+  const name = (userDoc.data()?.name || "").trim();
+
   const r = await openai.responses.create({
     model: "gpt-4o",
     temperature: 0.85,
@@ -44,7 +50,7 @@ export async function generatePreview(files) {
       {
         role: "user",
         content: [
-          { type: "input_text", text: "Kısa bir fal yorumu yap." },
+          { type: "input_text", text: `${name} için kısa bir fal yorumu yap.` },
           ...imagesToOpenAI(files),
         ],
       },
@@ -55,7 +61,11 @@ export async function generatePreview(files) {
   return extractText(r);
 }
 
-export async function generateFullFromPreview(preview) {
+export async function generateFullFromPreview(preview, uid) {
+
+  const userDoc = await db.collection("users").doc(uid).get();
+  const name = userDoc.data()?.name || "";
+
   const r = await openai.responses.create({
     model: "gpt-4o",
     temperature: 0.85,
@@ -66,7 +76,7 @@ export async function generateFullFromPreview(preview) {
         content: [
           {
             type: "input_text",
-            text: "Aşağıdaki falın uzun ve detaylı yorumunu yap:\n\n" + preview,
+            text: `${name} için aşağıdaki falın uzun ve detaylı yorumunu yap:\n\n` + preview,
           },
         ],
       },
@@ -77,7 +87,11 @@ export async function generateFullFromPreview(preview) {
   return extractText(r);
 }
 
-export async function generatePremium(files) {
+export async function generatePremium(files, uid) {
+
+  const userDoc = await db.collection("users").doc(uid).get();
+  const name = userDoc.data()?.name || "";
+
   const r = await openai.responses.create({
     model: "gpt-4o",
     temperature: 0.85,
@@ -86,7 +100,7 @@ export async function generatePremium(files) {
       {
         role: "user",
         content: [
-          { type: "input_text", text: "Detaylı ve uzun kahve falı yorumla." },
+          { type: "input_text", text: `${name} için detaylı ve uzun kahve falı yorumla.` },
           ...imagesToOpenAI(files),
         ],
       },

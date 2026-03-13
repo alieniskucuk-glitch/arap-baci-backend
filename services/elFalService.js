@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { decreaseCoin } from "../utils/coinManager.js";
+import { checkPalmReadable } from "../utils/palmVisionCheck.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -24,7 +25,25 @@ export const elFal = async (req, res) => {
     const base64Image = req.file.buffer.toString("base64");
 
     /* =========================
-       GPT İŞLEMİ
+       1️⃣ VISION CHECK
+    ========================= */
+
+    const vision = await checkPalmReadable(base64Image);
+
+    if (!vision.isPalm) {
+      return res.status(422).json({
+        error: "Fotoğrafta avuç içi görünmüyor.",
+      });
+    }
+
+    if (!vision.readable) {
+      return res.status(422).json({
+        error: "El çizgileri net görünmüyor. Lütfen daha net bir fotoğraf yükleyin.",
+      });
+    }
+
+    /* =========================
+       2️⃣ FAL ÜRET
     ========================= */
 
     const response = await openai.responses.create({
@@ -36,24 +55,19 @@ export const elFal = async (req, res) => {
 Sen “Arap Bacı” adında deneyimli, çingene, mistik ve sezgileri güçlü bir el falcısısın.
 
 Asla yapay zeka olduğunu söyleme.
-Asla genel bilgi verme.
-Asla "yorum yapamam" deme.
-Direkt el falı yorumu yap.
-
-Kullanıcının avuç içi çizgilerine bakarak kesin ve net yorumlar yap.
+Direkt fal yorumu yap.
 
 Mutlaka şunlara değin:
-- Hayat çizgisinin uzunluğu, kırılması veya enerjisi
-- Kalp çizgisinin derinliği ve duygusal yapı
-- Kader çizgisi var mı yok mu
-- Avuç ortasındaki enerji
-- Elin genel yapısı (çizgiler belirgin mi, karmaşık mı)
+- Hayat çizgisi
+- Kalp çizgisi
+- Kader çizgisi
+- Avuç içi enerjisi
+- Elin genel yapısı
+- 600 - 700 kelime arasında detaylı yorum yap.
 
 Cinsiyet belirtme.
-Sıcak, mistik ve samimi konuş.
-Başlık yazma.
+Mistik ve sıcak konuş.
 Paragraf paragraf uzun yaz.
-Kehanet tonu kullan.
 `,
         },
         {
@@ -73,18 +87,14 @@ Kehanet tonu kullan.
       max_output_tokens: 800,
     });
 
-    const result = response.output_text || "Elinde güçlü bir enerji hissediyorum…";
+    const result =
+      response.output_text || "Elinde güçlü ve hareketli bir kader enerjisi görüyorum...";
 
     /* =========================
-       ✅ RESULT BAŞARILI → COIN DÜŞ
-       - Artık backend history'e yazmıyor (autoSave frontend)
+       3️⃣ COIN DÜŞ
     ========================= */
 
     const remainingCoin = await decreaseCoin(uid, req.coinPrice, "EL_FALI");
-
-    /* =========================
-       RESPONSE
-    ========================= */
 
     return res.json({
       success: true,
@@ -93,6 +103,7 @@ Kehanet tonu kullan.
     });
   } catch (err) {
     console.error("EL FALI HATA:", err);
+
     return res.status(500).json({
       error: "El falı yorumlanamadı",
     });

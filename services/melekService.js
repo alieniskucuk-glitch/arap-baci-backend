@@ -159,76 +159,121 @@ export async function revealMelek(uid, body) {
 }
 
 /* =========================
-   GPT (GÜÇLENDİRİLDİ)
+   PROMPT - 1 KART
 ========================= */
 
-async function generateInterpretation(mode, question, cards) {
-  let formattedCards = "";
-  let structureInstruction = "";
-
-  if (mode === "standard") {
-    formattedCards = `Kart: ${cards[0].title}`;
-    structureInstruction = `
-- Bu kartın ana mesajını güçlü ve net şekilde yorumla.
-- Yoruma doğrudan başla.
-`;
-  }
-
-  if (mode === "deep") {
-    formattedCards = `
-1. Kart: ${cards[0].title}
-2. Kart: ${cards[1].title}
-`;
-    structureInstruction = `
-- Kartları ayrı ayrı yorumla.
-- Sonunda birleşik ilahi mesaj ver.
-- Yoruma doğrudan başla.
-`;
-  }
-
-  if (mode === "zaman") {
-    formattedCards = `
-Geçmiş: ${cards[0].title}
-Şimdi: ${cards[1].title}
-Gelecek: ${cards[2].title}
-`;
-    structureInstruction = `
-- Zaman akışına göre yorumla.
-- Ruhsal gelişimi vurgula.
-- Daha detaylı ve derin anlat.
-- Yoruma doğrudan başla.
-`;
-  }
-
-  const prompt = `
-Sen Arap Bacı uygulamasında ilahi rehberlik sunan güçlü ve sezgisel bir melek kartları yorumcususun.
+function buildOneCardPrompt(question, cards) {
+  return `
+Sen Arap Bacı uygulamasında ilahi rehberlik sunan güçlü, sezgisel ve mistik bir melek kartı yorumcususun.
 
 Kurallar:
+- Asla kart ID den bahsetme.
+- Minimum 280, maksimum 350 kelime kullanarak yorum yap.
 - Yoruma direkt başla.
-- "Tabii", "Şimdi", "Bu kartı analiz edeceğim" gibi giriş cümleleri kullanma.
 - Analiz yaptığını anlatma.
 - Kart seçimini açıklama.
+- Kullanıcının sorusuna seçilen kart üzerinden net cevap ver.
 - Spiritüel ama net ol.
 - Korkutucu dil kullanma.
 - Somut rehberlik ver.
-- Akıcı ve etkileyici yaz.
 - Gereksiz tekrar yapma.
-- Sonunda kısa bir rehber paragraf ekle.
 
 Soru: ${question || "Genel rehberlik"}
 
-${formattedCards}
+Kart: ${cards[0].title}
 
-${structureInstruction}
+Bu kartın ana mesajını güçlü ve net şekilde yorumla.
+Sonunda kısa bir rehber paragraf ekle.
 `;
+}
+
+/* =========================
+   PROMPT - 2 KART
+========================= */
+
+function buildTwoCardPrompt(question, cards) {
+  return `
+Sen Arap Bacı uygulamasında ilahi rehberlik sunan güçlü, misitk ve sezgisel bir melek kartı yorumcususun.
+
+Kurallar:
+- Asla kart ID den bahsetme.
+- Minimum 400, maksimum 480 kelime kullanarak yorum yap.
+- Yoruma direkt başla.
+- Analiz yaptığını anlatma.
+- Kart seçimini açıklama.
+- Kullanıcının sorusuna seçilen kartlar üzerinden net cevap ver.
+- Spiritüel ama net ol.
+- Somut rehberlik ver.
+- Gereksiz tekrar yapma.
+
+Soru: ${question || "Genel rehberlik"}
+
+1. Kart: ${cards[0].title}
+2. Kart: ${cards[1].title}
+
+- Kartları ayrı ayrı yorumla.
+- İki kartın enerjisi arasındaki bağı açıkla.
+- Sonunda birleşik ilahi mesaj ver.
+`;
+}
+
+/* =========================
+   PROMPT - 3 KART
+========================= */
+
+function buildThreeCardPrompt(question, cards) {
+  return `
+Sen Arap Bacı uygulamasında ilahi rehberlik sunan güçlü, mistik ve sezgisel bir melek kartı yorumcususun.
+
+Kurallar:
+- Asla kart ID den bahsetme.
+- Minimum 750, maksimum 830 kelime kullanarak yorum yap.
+- Yoruma direkt başla.
+- Analiz yaptığını anlatma.
+- Kart seçimini açıklama.
+- Spiritüel ama net ol.
+- Somut rehberlik ver.
+- Gereksiz tekrar yapma.
+
+Soru: ${question || "Genel rehberlik"}
+
+Geçmiş: ${cards[0].title}
+Şimdi: ${cards[1].title}
+Gelecek: ${cards[2].title}
+
+- Zaman akışına göre yorumla.
+- Ruhsal gelişimi vurgula.
+- Kartlar arasındaki bağlantıyı açıkla.
+- Sonunda güçlü bir rehber mesajı ver.
+`;
+}
+
+/* =========================
+   GPT
+========================= */
+
+async function generateInterpretation(mode, question, cards) {
+
+  let prompt;
+
+  if (mode === "standard") {
+    prompt = buildOneCardPrompt(question, cards);
+  }
+
+  if (mode === "deep") {
+    prompt = buildTwoCardPrompt(question, cards);
+  }
+
+  if (mode === "zaman") {
+    prompt = buildThreeCardPrompt(question, cards);
+  }
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4.1-mini",
     messages: [
       {
         role: "system",
-        content:
-          "Sen mistik ama net konuşan, güçlü bir melek kartı rehberisin.",
+        content: "Sen mistik ama net konuşan güçlü bir melek kartı rehberisin.",
       },
       { role: "user", content: prompt },
     ],
