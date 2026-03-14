@@ -2,57 +2,17 @@ import crypto from "crypto";
 import openai from "../config/openai.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { getTarotById } from "../utils/tarotDeck.js";
-import { db, admin } from "../config/firebase.js";
+import { db } from "../config/firebase.js";
 
 /* =========================
    MEMORY SESSION STORE
 ========================= */
 
 const sessionStore = new Map();
-
 const SESSION_TTL = 1000 * 60 * 10; // 10 dakika
-const SESSIONS_COL = "tarotSessions";
 
 function isExpired(session) {
   return Date.now() - session.createdAt > SESSION_TTL;
-}
-
-function sessionRef(sessionId) {
-  return db.collection(SESSIONS_COL).doc(sessionId);
-}
-
-async function existsSessionDoc(sessionId) {
-  const snap = await sessionRef(sessionId).get();
-  return snap.exists;
-}
-
-async function createSessionDoc(sessionId, data) {
-  await sessionRef(sessionId).set(data, { merge: false });
-}
-
-async function getSessionDoc(sessionId) {
-  const snap = await sessionRef(sessionId).get();
-  if (!snap.exists) return null;
-  return snap.data();
-}
-
-async function updateSessionDoc(sessionId, patch) {
-  await sessionRef(sessionId).set(patch, { merge: true });
-}
-
-async function markCompleted(sessionId, patch = {}) {
-  await updateSessionDoc(sessionId, {
-    status: "completed",
-    completedAt: Date.now(),
-    ...patch,
-  });
-}
-
-async function markExpired(sessionId) {
-  await updateSessionDoc(sessionId, {
-    status: "expired",
-    expiredAt: Date.now(),
-  });
 }
 
 /* =========================
@@ -67,7 +27,6 @@ setInterval(() => {
       sessionStore.delete(id);
     }
   }
-
 }, 60000);
 
 /* =========================
@@ -76,12 +35,18 @@ setInterval(() => {
 
 function resolveCardCount(mode) {
   switch (mode) {
-    case "one": return 1;
-    case "two": return 2;
-    case "three": return 3;
-    case "five": return 5;
-    case "celtic": return 10;
-    default: throw new Error("Geçersiz tarot mode");
+    case "one":
+      return 1;
+    case "two":
+      return 2;
+    case "three":
+      return 3;
+    case "five":
+      return 5;
+    case "celtic":
+      return 10;
+    default:
+      throw new Error("Geçersiz tarot mode");
   }
 }
 
@@ -96,22 +61,62 @@ function pickCards(count) {
   return all.slice(0, count);
 }
 
-function resolveSpreadDescription(mode) {
-  return {
-    one: "Tek kart ilahi mesaj",
-    two: "Durum ve karşıt enerji",
-    three: "Geçmiş - Şimdi - Gelecek",
-    five: "Detaylı rehberlik açılımı",
-    celtic: "Kelt Haçı kapsamlı kader analizi",
-  }[mode];
+function resolveSpreadDescription(mode, subType) {
+  if (mode === "one") return "Tek kart ilahi mesaj";
+  if (mode === "two") return "Durum ve karşıt enerji";
+  if (mode === "three") return "Geçmiş - Şimdi - Gelecek";
+  if (mode === "celtic") return "Kelt Haçı kapsamlı kader analizi";
+
+  if (mode === "five" && subType === "general") {
+    return "Detaylı rehberlik açılımı";
+  }
+
+  if (mode === "five" && subType === "relationship") {
+    return "İlişki odaklı detaylı rehberlik açılımı";
+  }
+
+  if (mode === "five" && subType === "spiritual") {
+    return "Ruhsal farkındalık açılımı";
+  }
+
+  return "Tarot açılımı";
+}
+
+function getCardLabel(card) {
+  return (
+    card?.name ||
+    card?.title ||
+    card?.turkishName ||
+    card?.label ||
+    card?.cardName ||
+    "Bilinmeyen Kart"
+  );
+}
+
+function buildCardIdentityLines(selectedCards) {
+  return (selectedCards || [])
+    .map((id, index) => {
+      const card = getTarotById(id);
+      if (!card) throw new Error(`Kart bulunamadı: ${id}`);
+      return `${index + 1}. kart: ${getCardLabel(card)}`;
+    })
+    .join("\n");
+}
+
+function buildCardNameCsv(selectedCards) {
+  return (selectedCards || [])
+    .map((id) => {
+      const card = getTarotById(id);
+      if (!card) throw new Error(`Kart bulunamadı: ${id}`);
+      return getCardLabel(card);
+    })
+    .join(", ");
 }
 
 function toPicked(selectedCards, revealedCount) {
-
   return (selectedCards || [])
     .slice(0, revealedCount)
     .map((id) => {
-
       const card = getTarotById(id);
 
       if (!card) {
@@ -122,28 +127,136 @@ function toPicked(selectedCards, revealedCount) {
         id,
         image: card.image,
       };
-
     });
 }
 
 async function getUserName(uid) {
-
   const snap = await db.collection("users").doc(uid).get();
 
   if (!snap.exists) return null;
 
   const data = snap.data();
 
-  return data?.name || data?.displayName || null;
+  return data?.name || null;
 }
 
+async function saveTarotHistory({
+  uid,
+  userName,
+  mode,
+  subType,
+  question,
+  selectedCards,
+  interpretation,
+}) {
+  await db.collection("tarotHistory").add({
+    uid,
+    userName: userName || null,
+    mode,
+    subType: subType || null,
+    question: question || null,
+    selectedCards: selectedCards || [],
+    interpretation: interpretation || "",
+    createdAt: Date.now(),
+  });
+}
+
+/* =========================================================
+   POSITION HELPERS
+========================================================= */
+
+function resolveOneCardPositionGuide() {
+  return [
+    "Bu tek kart kullanıcının şu anda en çok duyması gereken ana mesajı temsil eder. Sorduğu sorunun net cevabını verir.",
+  ].join("\n");
+}
+
+function resolveTwoCardPositionGuide() {
+  return [
+    "1. kart: mevcut ana enerji, kullanıcının şu anda içinde bulunduğu temel durum.",
+    "2. kart: karşıt enerji, gizli etki, engel, destek veya dengeleyici unsur.",
+  ].join("\n");
+}
+
+function resolveThreeCardPositionGuide() {
+  return [
+    "1. kart: geçmişten bugüne taşınan kök etki.",
+    "2. kart: şu andaki aktif enerji ve merkez durum.",
+    "3. kart: yakın gelecek yönelimi ve muhtemel sonuç çizgisi.",
+  ].join("\n");
+}
+
+function resolveFiveGeneralPositionGuide() {
+  return [
+    "1. kart: mevcut durumun merkez enerjisi.",
+    "2. kart: görünmeyen etki veya arka planda çalışan dinamik.",
+    "3. kart: güçlü yön, fırsat veya açılmak isteyen kapı.",
+    "4. kart: zorluk, tıkanıklık, korku veya geciktirici enerji.",
+    "5. kart: rehberlik, yön ve yaklaşan sonuç eğilimi.",
+  ].join("\n");
+}
+
+function resolveFiveRelationshipPositionGuide() {
+  return [
+    "1. kart: kullanıcının ilişkideki duygusal duruşu.",
+    "2. kart: karşı tarafın enerjisi veya yansıyan etki.",
+    "3. kart: bağın özü, görünmeyen çekim veya temel sorun.",
+    "4. kart: ilişkiyi zorlayan iç/dış blokaj.",
+    "5. kart: ilişkinin yönü ve rehberlik mesajı.",
+  ].join("\n");
+}
+
+function resolveFiveSpiritualPositionGuide() {
+  return [
+    "1. kart: ruhun şu anki dersi.",
+    "2. kart: bırakılması gereken eski enerji veya yük.",
+    "3. kart: açılmakta olan sezgisel kapı veya içsel güç.",
+    "4. kart: ruhsal blokaj veya fark edilmesi gereken gölge alan.",
+    "5. kart: yükseliş yönü ve ilahi rehberlik.",
+  ].join("\n");
+}
+
+function resolveCelticPositionGuide() {
+  return [
+    "1. kart: mevcut durumun kalbi.",
+    "2. kart: çapraz etki, engel veya itici güç.",
+    "3. kart: bilinç seviyesi, akıldaki odak.",
+    "4. kart: bilinçaltı, kök enerji, görünmeyen temel.",
+    "5. kart: geçmişte kalan ama hâlâ etkisi süren unsur.",
+    "6. kart: yakın geleceğe açılan kapı.",
+    "7. kart: kişinin kendini konumlayışı.",
+    "8. kart: dış çevre, insanlar, koşullar.",
+    "9. kart: umutlar, korkular, iç gerilimler.",
+    "10. kart: olası sonuç ve enerjinin vardığı yön.",
+  ].join("\n");
+}
+
+function resolvePositionGuide(mode, subType) {
+  if (mode === "one") return resolveOneCardPositionGuide();
+  if (mode === "two") return resolveTwoCardPositionGuide();
+  if (mode === "three") return resolveThreeCardPositionGuide();
+  if (mode === "celtic") return resolveCelticPositionGuide();
+
+  if (mode === "five" && subType === "general") {
+    return resolveFiveGeneralPositionGuide();
+  }
+
+  if (mode === "five" && subType === "relationship") {
+    return resolveFiveRelationshipPositionGuide();
+  }
+
+  if (mode === "five" && subType === "spiritual") {
+    return resolveFiveSpiritualPositionGuide();
+  }
+
+  throw new Error("Pozisyon rehberi oluşturulamadı");
+}
 
 /* =========================
    PROMPT
 ========================= */
 
 function buildPromptRouter(params) {
-
   const { mode, subType } = params;
 
   if (mode === "one") {
@@ -177,18 +290,13 @@ function buildPromptRouter(params) {
   throw new Error("Prompt oluşturulamadı");
 }
 
-
-/* =========================================================
-   PROMPT CONTEXT
-========================================================= */
-
 function buildPromptContext({ mode, subType, question, selectedCards, userName }) {
-
-  const spreadDescription = resolveSpreadDescription(mode) || "Tarot açılımı";
-
+  const spreadDescription = resolveSpreadDescription(mode, subType) || "Tarot açılımı";
   const questionText = question || "Belirtilmedi";
-
   const cardIds = (selectedCards || []).join(", ");
+  const cardIdentityLines = buildCardIdentityLines(selectedCards);
+  const cardNameCsv = buildCardNameCsv(selectedCards);
+  const positionGuide = resolvePositionGuide(mode, subType);
 
   const nameLine = userName
     ? `Kullanıcının adı: ${userName}`
@@ -198,222 +306,233 @@ function buildPromptContext({ mode, subType, question, selectedCards, userName }
     spreadDescription,
     questionText,
     cardIds,
-    nameLine
+    cardIdentityLines,
+    cardNameCsv,
+    positionGuide,
+    nameLine,
   };
 }
 
-
-/* =========================================================
-   PROMPT 1
-========================================================= */
-
 function buildPromptOne({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
 Sen güçlü sezgilere sahip deneyimli, mistik bir tarot rehberisin.
 
-Bu açılım tek karttır ve kartın mesajı kullanıcının şu anda duyması gereken en önemli farkındalığı temsil eder.
-
-${ctx.nameLine}
+Bu açılım tek karttır ve kartın mesajı kullanıcının şu anda duyması gereken en önemli farkındalığı temsil eder, kart sorusunun net cevabını verir.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
-YAZIM KURALLARI
-- Minimum 200 maksimum 250 kelime yaz
-- Kartın temel mesajını açıkla
-- Kart ID veya teknik analizden bahsetme
-- Kullanıcının sorusuna doğrudan cevap ver
-- Ruhsal ve psikolojik etkileri yorumla
-- Son bölümde güçlü rehberlik mesajı ver
+Kart Bilgileri:
+${ctx.cardIdentityLines}
 
-Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adıyla hitap et.
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
+YAZIM KURALLARI
+- Minimum 200, maksimum 250 kelime yaz
+- kartın temel mesajını açıkla
+- kart Id si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Sorduğu sorunun cevabını seçilen kart üzerinden yorumla ve cevapla
+- Ruhsal, psikolojik ve pratik etkileri birlikte yorumla
+- Kullanıcının içsel durumunu sezgisel şekilde anlat
+- Son bölümde güçlü bir rehberlik mesajı ver
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
 }
-
-
-/* =========================================================
-   PROMPT 2
-========================================================= */
 
 function buildPromptTwo({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
-Sen ikili enerji çatışmalarını yorumlayan deneyimli bir tarot ustasısın.
+Sen ikili enerji çatışmalarını ve ilişkisel dinamikleri güçlü sezgilerle okuyabilen deneyimli ve mistik bir tarot ustasısın.
 
-${ctx.nameLine}
+Bu iki kartlık açılımda kartlar birbirini tamamlayan veya zorlayan enerjileri temsil eder. kullanıcı seçilen bu iki kart ile sorduğu soruya rehberlik edilmesini ister.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
+Kart Bilgileri:
+${ctx.cardIdentityLines}
+
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
 YAZIM KURALLARI
-- Minimum 350 maksimum 450 kelime yaz
-- Kart ID veya teknik analizden bahsetme
+- Minimum 350, maksimum 450 kelime yaz
+- kart Id si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - İlk kart mevcut enerjiyi açıklar
 - İkinci kart karşıt veya gizli enerjiyi açıklar
-- Kartlar arası enerji çatışmasını yorumla
-- Duygusal ve psikolojik etkileri değerlendir
+- Sorduğu sorunun cevabını seçilen kartlar üzerinden, Kartlar arası enerji çatışmasını, Duygusal ve psikolojik etkileri birlikte ele alarak yorumla ve cevapla
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
 }
-
-
-/* =========================================================
-   PROMPT 3
-========================================================= */
 
 function buildPromptThree({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
-Sen zaman enerjilerini yorumlayan deneyimli bir tarot rehberisin.
+Sen zaman çizgisi enerjilerini yorumlayan deneyimli ve mistik bir tarot rehberisin.
 
-${ctx.nameLine}
+Bu açılım geçmiş, şimdi ve gelecek akışını gösterir.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
+Kart Bilgileri:
+${ctx.cardIdentityLines}
+
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
 YAZIM KURALLARI
-- Minimum 650 maksimum 720 kelime yaz
-- Kart ID veya teknik analizden bahsetme
-- İlk kart geçmiş etkileri
-- İkinci kart mevcut enerjiyi
-- Üçüncü kart gelecek yönelimini anlatır
+- Minimum 650, maksimum 720 kelime yaz
+- kart Id si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- İlk kart geçmiş etkileri anlatır
+- İkinci kart mevcut enerjiyi anlatır
+- Üçüncü kart geleceğe açılan yönü açıklar
 - Kartlar arası zaman köprüsünü kur
-- Son bölümde rehberlik ver
+- Son olarak rehberlik edici bir sonuç bölümü yaz.
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
 }
-
-
-/* =========================================================
-   PROMPT 5 GENERAL
-========================================================= */
 
 function buildPromptFiveGeneral({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
-Sen hayatın genel akışını yorumlayan deneyimli bir tarot danışmanısın.
+Sen hayatın genel akışını, fırsatları ve blokajları okuyabilen güçlü ve mistik bir tarot danışmanısın.
 
-${ctx.nameLine}
+Bu açılım genel rehberlik içindir.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
+Kart Bilgileri:
+${ctx.cardIdentityLines}
+
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
 YAZIM KURALLARI
-- Minimum 950 maksimum 1100 kelime yaz
-- Kart ID veya teknik analizden bahsetme
+- Minimum 950, maksimum 1100 kelime yaz
+- kart Id si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - Her kartı ayrı analiz et
-- Fırsatları ve blokajları açıkla
-- Maddi duygusal ruhsal etkileri değerlendir
-- Sonunda net rehberlik ver
+- Fırsatlar ve blokajları açıkla
+- Maddi, duygusal ve ruhsal etkileri değerlendir
+- Son bölümde net rehberlik ver
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
 }
-
-
-/* =========================================================
-   PROMPT 5 RELATIONSHIP
-========================================================= */
 
 function buildPromptFiveRelationship({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
-Sen ilişkisel enerji analizinde uzman bir tarot ustasısın.
+Sen ilişkisel enerji analizinde uzman mistik bir tarot ustasısın.
 
-${ctx.nameLine}
+Bu açılım ilişki dinamiklerini analiz eder.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
+Kart Bilgileri:
+${ctx.cardIdentityLines}
+
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
 YAZIM KURALLARI
-- Minimum 950 maksimum 1100 kelime yaz
-- Kart ID veya teknik analizden bahsetme
+- Minimum 950, maksimum 1100 kelime yaz
+- kart Id si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - Kullanıcının duygusal durumunu analiz et
 - Karşı tarafın enerjisini yorumla
-- İlişki içindeki blokajları açıkla
-- Geleceğe dair yönelim ver
+- İlişki içindeki blokajları ve bağları açıkla
+- Geleceğe dair gerçekçi yönelim ver
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
 }
 
-
-/* =========================================================
-   PROMPT 5 SPIRITUAL
-========================================================= */
-
 function buildPromptFiveSpiritual({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
-Sen ruhsal gelişimi yorumlayan mistik bir tarot rehberisin.
+Sen ruhsal gelişim ve kader derslerini yorumlayan mistik bir tarot rehberisin.
 
-${ctx.nameLine}
+Bu açılım ruhsal farkındalık içindir.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
+Kart Bilgileri:
+${ctx.cardIdentityLines}
+
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
 YAZIM KURALLARI
-- Minimum 950 maksimum 1100 kelime yaz
-- Kart ID veya teknik analizden bahsetme
+- Minimum 950, maksimum 1100 kelime yaz
+- kart Id si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - Ruhsal dersleri yorumla
 - Bırakılması gereken enerjileri açıkla
 - İçsel dönüşüm sürecini anlat
-- Ruhsal rehberlik ver
+- Kullanıcıya ruhsal rehberlik ver
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
 }
 
-
-/* =========================================================
-   PROMPT CELTIC
-========================================================= */
-
 function buildPromptCeltic({ mode, subType, question, selectedCards, userName }) {
-
   const ctx = buildPromptContext({ mode, subType, question, selectedCards, userName });
 
   return `
-Sen kader analizi yapan deneyimli bir tarot ustasısın.
+Sen kader analizinde uzman 30 yıllık deneyimli ve mistik bir tarot ustasısın.
 
-${ctx.nameLine}
+Bu açılım Kelt Haçı'dır ve derin kader analizi gerektirir.
 
 Açılım Türü: ${ctx.spreadDescription}
+${ctx.nameLine}
 Kart ID'leri: ${ctx.cardIds}
 Kullanıcının Sorusu: ${ctx.questionText}
 
+Kart Bilgileri:
+${ctx.cardIdentityLines}
+
+Pozisyon Rehberi:
+${ctx.positionGuide}
+
 YAZIM KURALLARI
-- Minimum 1500 maksimum 1700 kelime yaz
+- Minimum 1500, maksimum 1700 kelime yaz
 - En az 10 paragraf oluştur
-- Her kartı pozisyonuna göre analiz et
-- Bilinçaltı etkileri açıkla
-- Karmik bağları yorumla
-- Kartlar arası enerji akışını anlat
-- Maddi duygusal ruhsal etkileri değerlendir
-- Sonunda güçlü rehberlik mesajı ver
+- Her kartı bulunduğu pozisyona göre analiz et
+- Karmik bağları ve bilinçaltı etkileri açıkla
+- Kartlar arası enerji akışını yorumla
+- Sonunda güçlü bir kader rehberliği mesajı ver
+- Eğer kullanıcının adı verilmişse yorum içinde en az bir kez adı ile hitap et, yoksa genel hitap kullan
 
 Yorum doğrudan başlasın.
 `.trim();
@@ -428,15 +547,14 @@ async function generateInterpretation({
   subType,
   question,
   selectedCards,
-  userName
+  userName,
 }) {
-
   const prompt = buildPromptRouter({
     mode,
     subType,
     question,
     selectedCards,
-    userName
+    userName,
   });
 
   const timeout = new Promise((_, reject) =>
@@ -449,275 +567,176 @@ async function generateInterpretation({
       messages: [
         {
           role: "system",
-          content: "Sen güçlü sezgilere sahip deneyimli bir tarot ustasısın."
+          content: "Sen güçlü sezgilere sahip deneyimli bir tarot ustasısın.",
         },
         {
           role: "user",
-          content: prompt
-        }
+          content: prompt,
+        },
       ],
-      temperature: 0.85
+      temperature: 0.85,
     }),
-    timeout
+    timeout,
   ]);
 
   return (completion?.choices?.[0]?.message?.content || "").trim();
 }
-
 
 /* =========================
    START
 ========================= */
 
 export async function startTarot(uid, { mode, subType, question, coinPrice }) {
-
   if (!uid) throw new Error("UID gerekli");
   if (!coinPrice) throw new Error("Coin price eksik");
 
   const cardCount = resolveCardCount(mode);
   const selectedCards = pickCards(cardCount);
-
   const userName = await getUserName(uid);
 
   const sessionId = crypto.randomUUID();
   const createdAt = Date.now();
-
-  await createSessionDoc(sessionId, {
-    uid,
-    mode,
-    subType: subType || null,
-    question: question || null,
-    userName: userName || null,
-    selectedCards,
-    revealed: [],
-    cost: coinPrice,
-    createdAt,
-    status: "active",
-    interpretation: null,
-    interpretationReadyAt: null,
-    processing: false
-  });
 
   const interpretationPromise = generateInterpretation({
     mode,
     subType,
     question,
     selectedCards,
-    userName
+    userName,
   })
-    .then(async (text) => {
-
+    .then((text) => {
       const t = (text || "").trim();
-
-      if (t) {
-        await updateSessionDoc(sessionId, {
-          interpretation: t,
-          interpretationReadyAt: Date.now()
-        });
-      }
-
       return t || null;
-
     })
     .catch((err) => {
-
       console.error("GPT ERROR:", err);
-
       return null;
-
     });
 
   sessionStore.set(sessionId, {
     uid,
     userName,
     mode,
-    subType,
-    question,
+    subType: subType || null,
+    question: question || null,
     selectedCards,
     revealed: [],
     interpretationPromise,
     cost: coinPrice,
     createdAt,
     processing: false,
-    status: "active"
+    status: "active",
+    historySaved: false,
   });
 
   return {
     sessionId,
-    cardCount
+    cardCount,
   };
 }
-
 
 /* =========================
    REVEAL
 ========================= */
 
 export async function revealTarot(uid, { sessionId }) {
+  const session = sessionStore.get(sessionId);
 
-  let session = sessionStore.get(sessionId);
-
-  if (!session) {
-
-    const doc = await getSessionDoc(sessionId);
-
-    if (!doc) throw new Error("Session yok");
-
-    session = {
-      uid: doc.uid,
-      userName: doc.userName || null,
-      mode: doc.mode,
-      subType: doc.subType || null,
-      question: doc.question || null,
-      selectedCards: doc.selectedCards || [],
-      revealed: doc.revealed || [],
-      interpretationPromise: null,
-      cost: doc.cost,
-      createdAt: doc.createdAt,
-      processing: !!doc.processing,
-      status: doc.status || "active"
-    };
-
-    sessionStore.set(sessionId, session);
-  }
-
+  if (!session) throw new Error("Session yok");
   if (session.uid !== uid) throw new Error("Yetkisiz");
-
   if (session.status === "completed") throw new Error("Session tamamlandı");
   if (session.status === "expired") throw new Error("Session süresi doldu");
 
   if (isExpired(session)) {
-
-    await markExpired(sessionId);
-
+    session.status = "expired";
     sessionStore.delete(sessionId);
-
     throw new Error("Session süresi doldu");
-
   }
 
-  const docCheck = await getSessionDoc(sessionId);
-
-  if (session.processing || docCheck?.processing) {
+  if (session.processing) {
     throw new Error("Reveal zaten işleniyor");
   }
 
   session.processing = true;
 
-  await updateSessionDoc(sessionId, { processing: true });
-
   try {
-
     const nextIndex = session.revealed.length;
 
-    if (nextIndex >= session.selectedCards.length)
+    if (nextIndex >= session.selectedCards.length) {
       throw new Error("Tüm kartlar açıldı");
+    }
 
     const cardId = session.selectedCards[nextIndex];
-
     session.revealed.push(cardId);
-
-    await updateSessionDoc(sessionId, {
-      revealed: session.revealed
-    });
 
     const picked = toPicked(session.selectedCards, session.revealed.length);
 
     if (session.revealed.length === session.selectedCards.length) {
-
       let interpretation = null;
 
-      const docNow = await getSessionDoc(sessionId);
-
-      if (docNow && typeof docNow.interpretation === "string") {
-
-        const t = docNow.interpretation.trim();
-
-        if (t) interpretation = t;
-
-      }
-
-      if (!interpretation && session.interpretationPromise) {
-
+      if (session.interpretationPromise) {
         interpretation = await session.interpretationPromise;
-
       }
 
       if (!interpretation) {
-
         try {
-
           interpretation = await generateInterpretation({
             mode: session.mode,
             subType: session.subType,
             question: session.question,
             selectedCards: session.selectedCards,
-            userName: session.userName
+            userName: session.userName,
           });
-
         } catch (err) {
-
           console.error("GPT FALLBACK ERROR:", err);
-
           interpretation = null;
-
-        }
-
-        if (interpretation) {
-
-          await updateSessionDoc(sessionId, {
-            interpretation: interpretation.trim(),
-            interpretationReadyAt: Date.now()
-          });
-
         }
       }
 
       if (!interpretation) {
-
-        await markExpired(sessionId);
-
+        session.status = "expired";
         sessionStore.delete(sessionId);
-
         throw new Error("Yorum üretilemedi");
-
       }
 
       const remainingCoin = await decreaseCoin(
         uid,
         session.cost,
         "TAROT",
-        { sessionId, mode: session.mode }
+        { mode: session.mode }
       );
 
-      await markCompleted(sessionId, {
-        remainingCoin
-      });
+      if (!session.historySaved) {
+        await saveTarotHistory({
+          uid,
+          userName: session.userName,
+          mode: session.mode,
+          subType: session.subType,
+          question: session.question,
+          selectedCards: session.selectedCards,
+          interpretation,
+        });
 
+        session.historySaved = true;
+      }
+
+      session.status = "completed";
       sessionStore.delete(sessionId);
 
       return {
         picked,
         interpretation,
-        remainingCoin
+        remainingCoin,
       };
     }
 
     return {
       picked,
       interpretation: null,
-      remainingCoin: null
+      remainingCoin: null,
     };
-
   } finally {
-
     const s = sessionStore.get(sessionId);
-
     if (s) s.processing = false;
-
-    try {
-      await updateSessionDoc(sessionId, { processing: false });
-    } catch (_) {}
-
   }
 }
