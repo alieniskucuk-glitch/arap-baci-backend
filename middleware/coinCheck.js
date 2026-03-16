@@ -5,6 +5,7 @@ export default function coinCheck(type) {
   return async (req, res, next) => {
     try {
       const uid = req.user?.uid;
+
       if (!uid) {
         return res.status(401).json({ error: "Token gerekli" });
       }
@@ -23,7 +24,7 @@ export default function coinCheck(type) {
       // TAROT
       else if (type === "TAROT") {
         const config = PRICING.TAROT;
-        const mode = req.body?.mode;
+        const mode = String(req.body?.mode || "").toLowerCase();
 
         if (!["one", "two", "three", "five", "celtic"].includes(mode)) {
           return res.status(400).json({ error: "Geçersiz tarot mode" });
@@ -38,7 +39,7 @@ export default function coinCheck(type) {
 
       // MELEK
       else if (type === "MELEK") {
-        const mode = req.body?.mode;
+        const mode = String(req.body?.mode || "").toLowerCase();
 
         if (!["standard", "deep", "zaman"].includes(mode)) {
           return res.status(400).json({ error: "Melek modu belirlenemedi" });
@@ -83,14 +84,14 @@ export default function coinCheck(type) {
 
       const user = snap.data() || {};
 
-      const dailyCoin = Number(user.dailyCoin ?? 0);
-      const abCoin = Number(user.abCoin ?? 0);
+      const dailyCoin = Number.isFinite(user.dailyCoin) ? user.dailyCoin : 0;
+      const abCoin = Number.isFinite(user.abCoin) ? user.abCoin : 0;
 
       if (dailyCoin + abCoin < price) {
         return res.status(400).json({ error: "Yetersiz coin" });
       }
 
-      // Servis tarafında kullanılacak
+      // servis tarafı için
       req.coinPrice = price;
 
       return next();

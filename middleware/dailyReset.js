@@ -19,7 +19,7 @@ function getTodayKey() {
 }
 
 /* =========================
-   DAY DIFFERENCE (TIMEZONE SAFE)
+   DAY DIFFERENCE
 ========================= */
 
 function dayDiff(oldKey, newKey) {
@@ -54,16 +54,18 @@ export default async function dailyReset(req, res, next) {
       // Premium değilse çık
       if (!user.isPremium) return;
 
+      const subscription = user.subscription || {};
+
       // Subscription yoksa çık
-      if (!user.subscription?.expiresAt) return;
+      if (!subscription.expiresAt) return;
 
       // Subscription aktif değilse çık
-      if (user.subscription?.status !== "active") return;
+      if (subscription.status !== "active") return;
 
       const now = admin.firestore.Timestamp.now();
 
       // Süresi bitmişse çık
-      if (user.subscription.expiresAt.toMillis() <= now.toMillis()) {
+      if (subscription.expiresAt.toMillis() <= now.toMillis()) {
         return;
       }
 
@@ -74,9 +76,14 @@ export default async function dailyReset(req, res, next) {
 
       if (daysPassed <= 0) return;
 
-      const currentDaily = Number(user.dailyCoin ?? 0);
+      const currentDaily = Number.isFinite(user.dailyCoin)
+        ? user.dailyCoin
+        : 0;
 
-      const earned = daysPassed * DAILY_PREMIUM_COIN;
+      // maksimum 30 gün hesapla
+      const safeDays = Math.min(daysPassed, 30);
+
+      const earned = safeDays * DAILY_PREMIUM_COIN;
 
       const newDailyCoin = Math.min(
         currentDaily + earned,
