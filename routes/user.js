@@ -26,14 +26,16 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
 
     const user = snap.data() || {};
 
-    // 🔥 SAFE NUMBER PARSE (NaN koruması)
-    const dailyCoin = Number.isFinite(Number(user.dailyCoin))
-      ? Number(user.dailyCoin)
-      : 0;
+    // 🔥 SAFE NUMBER PARSE (NaN + undefined koruması)
+    const dailyCoin =
+      typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
+        ? user.dailyCoin
+        : 0;
 
-    const abCoin = Number.isFinite(Number(user.abCoin))
-      ? Number(user.abCoin)
-      : 0;
+    const abCoin =
+      typeof user.abCoin === "number" && Number.isFinite(user.abCoin)
+        ? user.abCoin
+        : 0;
 
     const isPremium = user.isPremium === true;
 
@@ -45,7 +47,6 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
       totalCoin,
       isPremium,
     });
-
   } catch (err) {
     console.error("USER REFRESH ERROR:", err);
 
