@@ -7,8 +7,6 @@ const router = express.Router();
 
 /* =========================
    POST /user/refresh
-   - App açılınca çağrılır
-   - Güncel coin ve premium state döner
 ========================= */
 
 router.post("/refresh", auth, dailyReset, async (req, res) => {
@@ -28,19 +26,29 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
 
     const user = snap.data() || {};
 
-    const dailyCoin = Number(user.dailyCoin ?? 0);
-    const abCoin = Number(user.abCoin ?? 0);
-    const isPremium = Boolean(user.isPremium);
+    // 🔥 SAFE NUMBER PARSE (NaN koruması)
+    const dailyCoin = Number.isFinite(Number(user.dailyCoin))
+      ? Number(user.dailyCoin)
+      : 0;
+
+    const abCoin = Number.isFinite(Number(user.abCoin))
+      ? Number(user.abCoin)
+      : 0;
+
+    const isPremium = user.isPremium === true;
+
+    const totalCoin = dailyCoin + abCoin;
 
     return res.json({
       dailyCoin,
       abCoin,
-      totalCoin: dailyCoin + abCoin, // 🔥 frontend için kolaylık
+      totalCoin,
       isPremium,
     });
 
   } catch (err) {
     console.error("USER REFRESH ERROR:", err);
+
     return res.status(500).json({
       error: "Refresh hatası",
     });
