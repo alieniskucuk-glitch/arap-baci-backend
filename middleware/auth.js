@@ -19,7 +19,21 @@ export default async function auth(req, res, next) {
        FIRESTORE USER
     ========================= */
 
-    const userDoc = await db.collection("users").doc(uid).get();
+    const userRef = db.collection("users").doc(uid);
+    let userDoc = await userRef.get();
+
+    // 🔥 USER YOKSA OLUŞTUR
+    if (!userDoc.exists) {
+      await userRef.set({
+        uid,
+        abCoin: 0,
+        dailyCoin: 0,
+        isPremium: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      userDoc = await userRef.get(); // tekrar çek
+    }
 
     const userData = userDoc.exists ? userDoc.data() : {};
 
