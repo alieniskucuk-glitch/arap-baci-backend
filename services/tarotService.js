@@ -131,7 +131,7 @@ Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 ZORUNLU KURALLAR:
-- Minimum 1500 kelime yaz.
+- Minimum 1000 kelime yaz.
 - En az 10 paragraf oluştur.
 - Her kartı temsil ettiği pozisyona göre ayrı ayrı analiz et.
 - Bilinçaltı etkileri açıkla.
@@ -160,7 +160,7 @@ Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 - Her kart için ayrı paragraf yaz.
-- Minimum 750 kelime olsun.
+- Minimum 500 kelime olsun.
 - Kartları tek tek analiz et.
 - Kartlar arası enerji bağlantısını açıkla.
 - Ruhsal ve psikolojik boyutu değerlendir.
