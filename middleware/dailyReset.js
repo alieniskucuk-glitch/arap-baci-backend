@@ -50,22 +50,35 @@ export default async function dailyReset(req, res, next) {
       if (!snap.exists) return;
 
       const user = snap.data() || {};
-
-      // Premium değilse çık
-      if (!user.isPremium) return;
-
-      const subscription = user.subscription || {};
-
-      // Subscription yoksa çık
-      if (!subscription.expiresAt) return;
-
-      // Subscription aktif değilse çık
-      if (subscription.status !== "active") return;
-
       const now = admin.firestore.Timestamp.now();
 
-      // Süresi bitmişse çık
-      if (subscription.expiresAt.toMillis() <= now.toMillis()) {
+      if (user.isPremium !== true) return;
+
+      if (user.premiumStatus !== "active") {
+        tx.update(userRef, {
+          isPremium: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return;
+      }
+
+      if (!user.premiumEndsAt || typeof user.premiumEndsAt.toMillis !== "function") {
+        tx.update(userRef, {
+          isPremium: false,
+          premiumStatus: "expired",
+          premiumAutoRenew: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        return;
+      }
+
+      if (user.premiumEndsAt.toMillis() <= now.toMillis()) {
+        tx.update(userRef, {
+          isPremium: false,
+          premiumStatus: "expired",
+          premiumAutoRenew: false,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
         return;
       }
 
@@ -76,19 +89,14 @@ export default async function dailyReset(req, res, next) {
 
       if (daysPassed <= 0) return;
 
-      const currentDaily = Number.isFinite(user.dailyCoin)
-        ? user.dailyCoin
-        : 0;
+      const currentDaily =
+        typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
+          ? user.dailyCoin
+          : 0;
 
-      // maksimum 30 gün hesapla
       const safeDays = Math.min(daysPassed, 30);
-
       const earned = safeDays * DAILY_PREMIUM_COIN;
-
-      const newDailyCoin = Math.min(
-        currentDaily + earned,
-        MONTHLY_MAX
-      );
+      const newDailyCoin = Math.min(currentDaily + earned, MONTHLY_MAX);
 
       tx.update(userRef, {
         dailyCoin: newDailyCoin,
