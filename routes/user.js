@@ -18,28 +18,33 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     }
 
     const userRef = db.collection("users").doc(uid);
-    let snap = await userRef.get();
+
+    let user;
 
     /* =========================
-       🔥 İLK KAYIT (GÜVENLİ)
+       🔥 ATOMİK CREATE (FIX)
     ========================= */
 
-    if (!snap.exists) {
-      await userRef.set({
-        abCoin: 10,
-        dailyCoin: 0,
-        isPremium: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(userRef);
 
-      snap = await userRef.get();
-    }
+      if (!snap.exists) {
+        user = {
+          abCoin: 10,
+          dailyCoin: 0,
+          isPremium: false,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
 
-    let user = snap.data() || {};
+        tx.set(userRef, user);
+      } else {
+        user = snap.data();
+      }
+    });
 
     /* =========================
-       🔥 SADECE YOKSA COIN EKLE
+       🔥 NULL / UNDEFINED FIX
     ========================= */
 
     if (user.abCoin === undefined) {
@@ -54,14 +59,10 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     }
 
     const dailyCoin =
-      typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
-        ? user.dailyCoin
-        : 0;
+      typeof user.dailyCoin === "number" ? user.dailyCoin : 0;
 
     const abCoin =
-      typeof user.abCoin === "number" && Number.isFinite(user.abCoin)
-        ? user.abCoin
-        : 0;
+      typeof user.abCoin === "number" ? user.abCoin : 0;
 
     const isPremium = user.isPremium === true;
     const totalCoin = dailyCoin + abCoin;
@@ -94,9 +95,6 @@ router.post("/update", auth, async (req, res) => {
     }
 
     const userRef = db.collection("users").doc(uid);
-    const snap = await userRef.get();
-
-    const isFirstCreate = !snap.exists;
 
     const {
       firstName,
@@ -142,20 +140,9 @@ router.post("/update", auth, async (req, res) => {
     if (typeof birthDate === "string" && birthDate.trim().length > 0) {
       const parsedDate = new Date(birthDate);
       if (!Number.isNaN(parsedDate.getTime())) {
-        updateData.birthDate = admin.firestore.Timestamp.fromDate(parsedDate);
+        updateData.birthDate =
+          admin.firestore.Timestamp.fromDate(parsedDate);
       }
-    }
-
-    /* =========================
-       🔥 İLK CREATE → COIN VER
-    ========================= */
-
-    if (isFirstCreate) {
-      updateData.abCoin = 10;
-      updateData.dailyCoin = 0;
-      updateData.isPremium = false;
-      updateData.createdAt =
-        admin.firestore.FieldValue.serverTimestamp();
     }
 
     updateData.updatedAt =
