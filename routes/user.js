@@ -21,7 +21,7 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     let snap = await userRef.get();
 
     /* =========================
-       🔥 İLK KAYIT
+       🔥 İLK KAYIT (GÜVENLİ)
     ========================= */
 
     if (!snap.exists) {
@@ -39,21 +39,18 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     let user = snap.data() || {};
 
     /* =========================
-       🔥 ESKİ USER FIX
+       🔥 SADECE YOKSA COIN EKLE
     ========================= */
 
-    if (typeof user.abCoin !== "number") {
+    if (user.abCoin === undefined) {
       await userRef.set(
         {
           abCoin: 10,
-          dailyCoin: 0,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         },
         { merge: true }
       );
 
       user.abCoin = 10;
-      user.dailyCoin = 0;
     }
 
     const dailyCoin =
@@ -95,6 +92,11 @@ router.post("/update", auth, async (req, res) => {
     if (!uid) {
       return res.status(401).json({ error: "Token gerekli" });
     }
+
+    const userRef = db.collection("users").doc(uid);
+    const snap = await userRef.get();
+
+    const isFirstCreate = !snap.exists;
 
     const {
       firstName,
@@ -144,9 +146,22 @@ router.post("/update", auth, async (req, res) => {
       }
     }
 
-    updateData.updatedAt = admin.firestore.FieldValue.serverTimestamp();
+    /* =========================
+       🔥 İLK CREATE → COIN VER
+    ========================= */
 
-    await db.collection("users").doc(uid).set(updateData, { merge: true });
+    if (isFirstCreate) {
+      updateData.abCoin = 10;
+      updateData.dailyCoin = 0;
+      updateData.isPremium = false;
+      updateData.createdAt =
+        admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    updateData.updatedAt =
+      admin.firestore.FieldValue.serverTimestamp();
+
+    await userRef.set(updateData, { merge: true });
 
     return res.status(200).json({
       success: true,
