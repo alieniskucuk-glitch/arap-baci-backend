@@ -18,13 +18,43 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     }
 
     const userRef = db.collection("users").doc(uid);
-    const snap = await userRef.get();
+    let snap = await userRef.get();
+
+    /* =========================
+       🔥 İLK KAYIT
+    ========================= */
 
     if (!snap.exists) {
-      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      await userRef.set({
+        abCoin: 10,
+        dailyCoin: 0,
+        isPremium: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      snap = await userRef.get();
     }
 
-    const user = snap.data() || {};
+    let user = snap.data() || {};
+
+    /* =========================
+       🔥 ESKİ USER FIX
+    ========================= */
+
+    if (typeof user.abCoin !== "number") {
+      await userRef.set(
+        {
+          abCoin: 10,
+          dailyCoin: 0,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      user.abCoin = 10;
+      user.dailyCoin = 0;
+    }
 
     const dailyCoin =
       typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
