@@ -1,15 +1,15 @@
 import express from "express";
 import auth from "../middleware/auth.js";
-import dailyReset from "../middleware/dailyReset.js";
 import { db, admin } from "../config/firebase.js";
 
 const router = express.Router();
 
 /* =========================
    POST /user/refresh
+   (LOGIN + SOCIAL CREATE)
 ========================= */
 
-router.post("/refresh", auth, dailyReset, async (req, res) => {
+router.post("/refresh", auth, async (req, res) => {
   try {
     const uid = req.user?.uid;
 
@@ -17,73 +17,38 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
+    // 🔥 EMAIL FIX (TOKEN'DAN)
+    const decoded = await admin.auth().getUser(uid);
+    const email = decoded.email || null;
+
     const userRef = db.collection("users").doc(uid);
+    const snap = await userRef.get();
 
-    let user;
-
-    /* =========================
-       🔥 ATOMİK CREATE (FIX)
-    ========================= */
-
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(userRef);
-
-      if (!snap.exists) {
-        user = {
-          abCoin: 10,
-          dailyCoin: 0,
-          isPremium: false,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        };
-
-        tx.set(userRef, user);
-      } else {
-        user = snap.data();
-      }
-    });
-
-    /* =========================
-       🔥 NULL / UNDEFINED FIX
-    ========================= */
-
-    if (user.abCoin === undefined) {
-      await userRef.set(
-        {
-          abCoin: 10,
-        },
-        { merge: true }
-      );
-
-      user.abCoin = 10;
+    // 🔥 USER YOKSA OLUŞTUR
+    if (!snap.exists) {
+      await userRef.set({
+        uid,
+        email,
+        abCoin: 10,
+        dailyCoin: 0,
+        isPremium: false,
+        profileCompleted: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
     }
 
-    const dailyCoin =
-      typeof user.dailyCoin === "number" ? user.dailyCoin : 0;
+    const user = (await userRef.get()).data();
 
-    const abCoin =
-      typeof user.abCoin === "number" ? user.abCoin : 0;
-
-    const isPremium = user.isPremium === true;
-    const totalCoin = dailyCoin + abCoin;
-
-    return res.json({
-      dailyCoin,
-      abCoin,
-      totalCoin,
-      isPremium,
-    });
-  } catch (err) {
-    console.error("USER REFRESH ERROR:", err);
-
-    return res.status(500).json({
-      error: "Refresh hatası",
-    });
+    return res.json(user);
+  } catch (e) {
+    console.error("REFRESH ERROR:", e);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 
 /* =========================
    POST /user/update
+   (PROFILE COMPLETE + REGISTER + EDIT)
 ========================= */
 
 router.post("/update", auth, async (req, res) => {
@@ -94,119 +59,111 @@ router.post("/update", auth, async (req, res) => {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    const userRef = db.collection("users").doc(uid);
+    // 🔥 EMAIL FIX
+    const decoded = await admin.auth().getUser(uid);
+    const email = decoded.email || null;
 
     const {
+      name,
       firstName,
       lastName,
       fullName,
-      email,
       birthDate,
-      gender,
       zodiac,
-      profileCompleted,
-    } = req.body || {};
-
-    const updateData = {};
-
-    if (typeof firstName === "string") {
-      updateData.firstName = firstName.trim();
-    }
-
-    if (typeof lastName === "string") {
-      updateData.lastName = lastName.trim();
-    }
-
-    if (typeof fullName === "string") {
-      updateData.fullName = fullName.trim();
-    }
-
-    if (typeof email === "string") {
-      updateData.email = email.trim();
-    }
-
-    if (typeof gender === "string") {
-      updateData.gender = gender.trim();
-    }
-
-    if (typeof zodiac === "string") {
-      updateData.zodiac = zodiac.trim();
-    }
-
-    if (typeof profileCompleted === "boolean") {
-      updateData.profileCompleted = profileCompleted;
-    }
-
-    if (typeof birthDate === "string" && birthDate.trim().length > 0) {
-      const parsedDate = new Date(birthDate);
-      if (!Number.isNaN(parsedDate.getTime())) {
-        updateData.birthDate =
-          admin.firestore.Timestamp.fromDate(parsedDate);
-      }
-    }
-
-    updateData.updatedAt =
-      admin.firestore.FieldValue.serverTimestamp();
-
-    await userRef.set(updateData, { merge: true });
-
-    return res.status(200).json({
-      success: true,
-      message: "Profil güncellendi",
-    });
-  } catch (err) {
-    console.error("USER UPDATE ERROR:", err);
-
-    return res.status(500).json({
-      error: "Profil güncelleme hatası",
-    });
-  }
-});
-
-/* =========================
-   POST /user/mock-premium
-========================= */
-
-router.post("/mock-premium", auth, async (req, res) => {
-  try {
-    const uid = req.user?.uid;
-
-    if (!uid) {
-      return res.status(401).json({ error: "Token gerekli" });
-    }
+      gender,
+    } = req.body;
 
     const userRef = db.collection("users").doc(uid);
+    const snap = await userRef.get();
 
-    const now = new Date();
-    const start = admin.firestore.Timestamp.fromDate(now);
+    const now = admin.firestore.FieldValue.serverTimestamp();
 
-    const endDate = new Date(now);
-    endDate.setMonth(endDate.getMonth() + 1);
-    const end = admin.firestore.Timestamp.fromDate(endDate);
+    /* =========================
+       USER YOK → EMAIL REGISTER
+    ========================= */
 
-    await userRef.set(
-      {
-        isPremium: true,
-        premiumStartedAt: start,
-        premiumEndsAt: end,
-        premiumStatus: "active",
-        premiumAutoRenew: true,
-        premiumPlanId: "monthly_premium_v1",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+    if (!snap.exists) {
+      const parsedName = name ? name.split(" ") : [];
 
-    return res.json({
-      success: true,
-      message: "Premium aktif edildi",
-    });
-  } catch (err) {
-    console.error("MOCK PREMIUM ERROR:", err);
+      const _firstName = firstName || parsedName[0] || "";
+      const _lastName =
+        lastName || parsedName.slice(1).join(" ") || "";
 
-    return res.status(500).json({
-      error: "Premium aktivasyon hatası",
-    });
+      const _fullName =
+        fullName || `${_firstName} ${_lastName}`.trim();
+
+      await userRef.set({
+        uid,
+        email,
+
+        abCoin: 10,
+        dailyCoin: 0,
+
+        isPremium: false,
+        profileCompleted: true,
+
+        name: _firstName,
+        lastname: _lastName,
+        fullname: _fullName,
+
+        birthDate: birthDate ? new Date(birthDate) : null,
+        zodiac: zodiac || null,
+        gender: gender || null,
+
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      return res.json({ success: true });
+    }
+
+    /* =========================
+       USER VAR → UPDATE / COMPLETE
+    ========================= */
+
+    const updateData = {
+      updatedAt: now,
+    };
+
+    if (firstName || name) {
+      const parsedName = name ? name.split(" ") : [];
+
+      updateData.name = firstName || parsedName[0] || "";
+      updateData.lastname =
+        lastName || parsedName.slice(1).join(" ") || "";
+      updateData.fullname =
+        fullName ||
+        `${updateData.name} ${updateData.lastname}`.trim();
+    }
+
+    if (birthDate) {
+      updateData.birthDate = new Date(birthDate);
+    }
+
+    if (zodiac) {
+      updateData.zodiac = zodiac;
+    }
+
+    if (gender) {
+      updateData.gender = gender;
+    }
+
+    // 🔥 PROFILE COMPLETE FIX (lastName eklendi)
+    if (
+      (firstName || name) &&
+      lastName &&
+      birthDate &&
+      zodiac
+    ) {
+      updateData.profileCompleted = true;
+    }
+
+    await userRef.update(updateData);
+
+    return res.json({ success: true });
+  } catch (e) {
+    console.error("UPDATE ERROR:", e);
+    return res.status(500).json({ error: "Server error" });
   }
 });
 

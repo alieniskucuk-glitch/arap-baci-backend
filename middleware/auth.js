@@ -19,26 +19,9 @@ export default async function auth(req, res, next) {
     ========================= */
 
     const userRef = db.collection("users").doc(uid);
-    let userDoc = await userRef.get();
+    const userDoc = await userRef.get();
 
-    // 🔥 USER YOKSA OLUŞTUR (BACKEND REGISTER LOGIC)
-    if (!userDoc.exists) {
-      const newUser = {
-        uid,
-        name: decoded.name || "",
-        email: decoded.email || "",
-        abCoin: 0,
-        dailyCoin: 0,
-        isPremium: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      };
-
-      await userRef.set(newUser);
-
-      userDoc = { exists: true, data: () => newUser };
-    }
-
-    const userData = userDoc.data();
+    const userData = userDoc.exists ? userDoc.data() : null;
 
     req.user = {
       uid,
@@ -47,7 +30,8 @@ export default async function auth(req, res, next) {
       isPremium: userData?.isPremium === true,
       dailyCoin:
         typeof userData?.dailyCoin === "number" ? userData.dailyCoin : 0,
-      abCoin: typeof userData?.abCoin === "number" ? userData.abCoin : 0,
+      abCoin:
+        typeof userData?.abCoin === "number" ? userData.abCoin : 0,
     };
 
     next();
