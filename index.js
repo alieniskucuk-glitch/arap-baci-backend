@@ -3,14 +3,20 @@ dotenv.config();
 
 import express from "express";
 import cors from "cors";
+
 import tarotRoutes from "./routes/tarot.js";
 import falRoutes from "./routes/fal.js";
 import horoscopeRoutes from "./routes/horoscope.js";
-import elFalRoutes from "./routes/elFal.js"; // ✅ EKLENDİ
+import elFalRoutes from "./routes/elFal.js";
 import ruyaRoutes from "./routes/ruya.js";
 import ruhEsiRoutes from "./routes/ruhEsi.js";
-import melekRoutes from "./routes/melek.js";   // 👈 EKLENDİ
-import userRoutes from "./routes/user.js";
+import melekRoutes from "./routes/melek.js";
+
+/* ================= USER ROUTES ================= */
+import userCreat from "./routes/user/creat.js";
+import userUpdate from "./routes/user/update.js";
+import userFullCreat from "./routes/user/fullcreat.js";
+import userEdit from "./routes/user/edit.js";
 
 const app = express();
 
@@ -28,7 +34,7 @@ app.get("/", (_, res) => {
 });
 
 /* =========================
-   WARMUP PING (COLD START FIX)
+   WARMUP PING
 ========================= */
 app.get("/ping", (_, res) => {
   res.status(200).json({ ok: true });
@@ -39,12 +45,17 @@ app.get("/ping", (_, res) => {
 ========================= */
 app.use("/fal", falRoutes);
 app.use("/daily-horoscope", horoscopeRoutes);
-app.use("/el-fali", elFalRoutes); // ✅ EKLENDİ
+app.use("/el-fali", elFalRoutes);
 app.use("/ruya", ruyaRoutes);
 app.use("/ruh-esi", ruhEsiRoutes);
-app.use("/melek", melekRoutes);   // 👈 EKLENDİ
+app.use("/melek", melekRoutes);
 app.use("/tarot", tarotRoutes);
-app.use("/user", userRoutes);
+
+/* ================= USER ================= */
+app.use("/user", userCreat);
+app.use("/user", userUpdate);
+app.use("/user", userFullCreat);
+app.use("/user", userEdit);
 
 /* =========================
    SERVER
@@ -54,7 +65,6 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, "0.0.0.0", () => {
   console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
 
-  // DEBUG (geçici kontrol için)
   console.log("ENV CHECK:");
   console.log("OPENAI:", !!process.env.OPENAI_API_KEY);
   console.log("FIREBASE_PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID);
