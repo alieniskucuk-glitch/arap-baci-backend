@@ -17,6 +17,8 @@ function getZodiacSign(birthDate) {
   const month = Number(parts[1]);
   const day = Number(parts[2]);
 
+  if (!Number.isFinite(month) || !Number.isFinite(day)) return null;
+
   if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return "Koç";
   if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return "Boğa";
   if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return "İkizler";
@@ -49,6 +51,7 @@ router.post("/fullcreat", auth, async (req, res) => {
     const name = String(req.body?.name || "").trim();
     const lastname = String(req.body?.lastname || "").trim();
     const birthDate = String(req.body?.birthDate || "").trim();
+    const gender = String(req.body?.gender || "").trim(); // ✅ FIX
 
     if (!name || !lastname || !birthDate) {
       return res.status(400).json({
@@ -80,13 +83,12 @@ router.post("/fullcreat", auth, async (req, res) => {
       tx.set(userRef, {
         uid,
         email,
-        password,
 
         // coin
         abCoin: 10,
         dailyCoin: 0,
 
-        // user flags
+        // flags
         isPremium: false,
         profileCompleted: true,
 
@@ -95,7 +97,7 @@ router.post("/fullcreat", auth, async (req, res) => {
         lastname,
         fullName,
         birthDate,
-        genger,
+        gender, // ✅ FIX
         zodiac,
 
         // timestamps

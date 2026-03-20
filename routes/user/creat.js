@@ -11,21 +11,27 @@ const router = express.Router();
 router.post("/creat", auth, async (req, res) => {
   try {
     const uid = req.user?.uid;
-    const email = req.user?.email || null;
 
     if (!uid) {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
+    // 🔥 EMAIL FIX (token yerine Firebase Admin'den çek)
+    const userRecord = await admin.auth().getUser(uid);
+    const email = userRecord.email || null;
+
     const userRef = db.collection("users").doc(uid);
 
     let created = false;
+    let profileCompleted = false;
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(userRef);
 
-      // ✅ varsa hiçbir şey yapma
+      // ✅ varsa: sadece profileCompleted al
       if (snap.exists) {
+        const data = snap.data() || {};
+        profileCompleted = data.profileCompleted === true;
         return;
       }
 
@@ -41,11 +47,13 @@ router.post("/creat", auth, async (req, res) => {
       });
 
       created = true;
+      profileCompleted = false;
     });
 
     return res.json({
       success: true,
-      created, // debug için: true = yeni user, false = zaten vardı
+      created,
+      profileCompleted,
     });
 
   } catch (err) {

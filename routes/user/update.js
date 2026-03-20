@@ -36,6 +36,16 @@ function getZodiacSign(birthDate) {
 }
 
 /* =========================
+   SAFE STRING
+========================= */
+
+function clean(value) {
+  if (typeof value !== "string") return null;
+  const v = value.trim();
+  return v.length > 0 ? v : null;
+}
+
+/* =========================
    POST /user/update
 ========================= */
 
@@ -47,25 +57,11 @@ router.post("/update", auth, async (req, res) => {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    const name = String(req.body?.name || "").trim();
-    const lastname = String(req.body?.lastname || "").trim();
-    const birthDate = String(req.body?.birthDate || "").trim();
-
-    if (!name || !lastname || !birthDate) {
-      return res.status(400).json({
-        error: "name, lastname ve birthDate zorunlu",
-      });
-    }
-
-    const zodiac = getZodiacSign(birthDate);
-
-    if (!zodiac) {
-      return res.status(400).json({
-        error: "Geçersiz birthDate formatı. Beklenen format: YYYY-MM-DD",
-      });
-    }
-
-    const fullName = `${name} ${lastname}`.trim();
+    const name = clean(req.body?.name);
+    const lastname = clean(req.body?.lastname);
+    const birthDate = clean(req.body?.birthDate);
+    const gender = clean(req.body?.gender);
+    const email = clean(req.body?.email);
 
     const userRef = db.collection("users").doc(uid);
     const snap = await userRef.get();
@@ -74,28 +70,69 @@ router.post("/update", auth, async (req, res) => {
       return res.status(404).json({ error: "Kullanıcı bulunamadı" });
     }
 
-    await userRef.update({
-      name,
-      lastname,
-      fullName,
-      birthDate,
-      zodiac,
-      profileCompleted: true,
+    const current = snap.data() || {};
+
+    const updateData = {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+    };
+
+    /* ========= NAME ========= */
+
+    if (name) updateData.name = name;
+    if (lastname) updateData.lastname = lastname;
+
+    if (name || lastname) {
+      const finalName = name || current.name || "";
+      const finalLast = lastname || current.lastname || "";
+      updateData.fullName = `${finalName} ${finalLast}`.trim();
+    }
+
+    /* ========= BIRTHDATE ========= */
+
+    if (birthDate) {
+      const zodiac = getZodiacSign(birthDate);
+
+      if (!zodiac) {
+        return res.status(400).json({
+          error: "Geçersiz birthDate formatı (YYYY-MM-DD)",
+        });
+      }
+
+      updateData.birthDate = birthDate;
+      updateData.zodiac = zodiac;
+    }
+
+    /* ========= OTHER ========= */
+
+    if (gender) updateData.gender = gender;
+    if (email) updateData.email = email;
+
+    /* ========= PROFILE CHECK ========= */
+
+    const finalProfile = {
+      name: name || current.name,
+      lastname: lastname || current.lastname,
+      gender: gender || current.gender,
+      birthDate: birthDate || current.birthDate,
+    };
+
+    const isComplete =
+      !!finalProfile.name &&
+      !!finalProfile.lastname &&
+      !!finalProfile.gender &&
+      !!finalProfile.birthDate;
+
+    if (isComplete) {
+      updateData.profileCompleted = true;
+    }
+
+    await userRef.update(updateData);
 
     return res.json({
       success: true,
-      data: {
-        name,
-        lastname,
-        fullName,
-        birthDate,
-        gender,
-        zodiac,
-        profileCompleted: true,
-      },
+      profileCompleted: isComplete,
     });
+
   } catch (err) {
     console.error("UPDATE ERROR:", err);
     return res.status(500).json({ error: "Sunucu hatası" });
