@@ -28,11 +28,15 @@ router.post("/premium", auth, async (req, res) => {
     const now = Date.now();
     const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 
+    // 🔥 TYPE SAFE OKUMA
+    const currentPremium =
+      user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
+
     let newPremiumUntil = now + ONE_MONTH;
 
-    // 🔥 Eğer aktif premium varsa üstüne ekle (stack mantığı)
-    if (user.premiumUntil && user.premiumUntil > now) {
-      newPremiumUntil = user.premiumUntil + ONE_MONTH;
+    // 🔥 STACK MANTIĞI
+    if (currentPremium > now) {
+      newPremiumUntil = currentPremium + ONE_MONTH;
     }
 
     await userRef.set(
