@@ -17,7 +17,8 @@ import userCreat from "./routes/user/creat.js";
 import userUpdate from "./routes/user/update.js";
 import userFullCreat from "./routes/user/fullcreat.js";
 import userEdit from "./routes/user/edit.js";
-import userPremium from "./routes/user/premium.js"; // 🔥 EKLENDİ
+import userPremium from "./routes/user/premium.js";
+import userRefresh from "./routes/user/refresh.js"; // 🔥 EKLENDİ
 
 const app = express();
 
@@ -57,7 +58,8 @@ app.use("/user", userCreat);
 app.use("/user", userUpdate);
 app.use("/user", userFullCreat);
 app.use("/user", userEdit);
-app.use("/user", userPremium); // 🔥 EKLENDİ
+app.use("/user", userPremium);
+app.use("/user", userRefresh); // 🔥 EKLENDİ
 
 /* =========================
    SERVER
