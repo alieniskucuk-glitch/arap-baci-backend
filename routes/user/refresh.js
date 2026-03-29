@@ -29,8 +29,9 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     return res.json({
       isPremium: user.isPremium === true,
       zodiac: user.zodiac || null,
-      abCoin: user.abCoin || 0,
-      dailyCoin: user.dailyCoin || 0,
+      abCoin: typeof user.abCoin === "number" ? user.abCoin : 0,
+      dailyCoin: typeof user.dailyCoin === "number" ? user.dailyCoin : 0,
+      profileCompleted: user.profileCompleted === true, // 🔥 FIX
     });
   } catch (err) {
     console.error("REFRESH ERROR:", err);
