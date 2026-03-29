@@ -11,7 +11,6 @@ export default async function auth(req, res, next) {
     const idToken = authHeader.replace("Bearer ", "");
 
     const decoded = await admin.auth().verifyIdToken(idToken);
-
     const uid = decoded.uid;
 
     /* =========================
@@ -25,8 +24,9 @@ export default async function auth(req, res, next) {
 
     req.user = {
       uid,
+      exists: userDoc.exists, // 🔥 user var mı yok mu
       name: userData?.name ?? "",
-      zodiac: userData?.zodiac ?? "",
+      zodiac: userData?.zodiac ?? null, // 🔥 boş string değil null
       isPremium: userData?.isPremium === true,
       dailyCoin:
         typeof userData?.dailyCoin === "number" ? userData.dailyCoin : 0,

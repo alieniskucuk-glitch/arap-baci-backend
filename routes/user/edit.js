@@ -58,6 +58,12 @@ router.post("/edit", auth, async (req, res) => {
 
     const updateData = {};
 
+    /* ========= PROVIDER CHECK ========= */
+    const userRecord = await admin.auth().getUser(uid);
+    const isEmailUser = userRecord.providerData.some(
+      (p) => p.providerId === "password"
+    );
+
     /* ========= NAME ========= */
     if (name) updateData.name = String(name).trim();
     if (lastname) updateData.lastname = String(lastname).trim();
@@ -81,7 +87,7 @@ router.post("/edit", auth, async (req, res) => {
     }
 
     /* ========= EMAIL ========= */
-    if (email) {
+    if (email && isEmailUser) {
       await admin.auth().updateUser(uid, {
         email: String(email).trim(),
       });
@@ -90,7 +96,7 @@ router.post("/edit", auth, async (req, res) => {
     }
 
     /* ========= PASSWORD ========= */
-    if (password) {
+    if (password && isEmailUser) {
       if (String(password).length < 6) {
         return res.status(400).json({
           error: "Şifre en az 6 karakter olmalı",
@@ -110,6 +116,7 @@ router.post("/edit", auth, async (req, res) => {
       success: true,
       data: updateData,
     });
+
   } catch (err) {
     console.error("EDIT ERROR:", err);
     return res.status(500).json({ error: "Sunucu hatası" });
