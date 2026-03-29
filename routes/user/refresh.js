@@ -20,8 +20,25 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
     const userRef = db.collection("users").doc(uid);
     const snap = await userRef.get();
 
+    // 🔥 USER YOKSA OTOMATİK OLUŞTUR (CRITICAL FIX)
     if (!snap.exists) {
-      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
+      await userRef.set({
+        uid,
+        createdAt: new Date(),
+        profileCompleted: false,
+        isPremium: false,
+        zodiac: null,
+        abCoin: 0,
+        dailyCoin: 0,
+      });
+
+      return res.json({
+        isPremium: false,
+        zodiac: null,
+        abCoin: 0,
+        dailyCoin: 0,
+        profileCompleted: false,
+      });
     }
 
     const user = snap.data() || {};
@@ -31,7 +48,7 @@ router.post("/refresh", auth, dailyReset, async (req, res) => {
       zodiac: user.zodiac || null,
       abCoin: typeof user.abCoin === "number" ? user.abCoin : 0,
       dailyCoin: typeof user.dailyCoin === "number" ? user.dailyCoin : 0,
-      profileCompleted: user.profileCompleted === true, // 🔥 FIX
+      profileCompleted: user.profileCompleted === true,
     });
   } catch (err) {
     console.error("REFRESH ERROR:", err);

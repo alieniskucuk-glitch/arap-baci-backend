@@ -10,7 +10,8 @@ export default async function auth(req, res, next) {
 
     const idToken = authHeader.replace("Bearer ", "");
 
-    const decoded = await admin.auth().verifyIdToken(idToken);
+    // 🔥 HARD VERIFY (revoked check)
+    const decoded = await admin.auth().verifyIdToken(idToken, true);
     const uid = decoded.uid;
 
     /* =========================
@@ -24,9 +25,9 @@ export default async function auth(req, res, next) {
 
     req.user = {
       uid,
-      exists: userDoc.exists, // 🔥 user var mı yok mu
+      exists: userDoc.exists,
       name: userData?.name ?? "",
-      zodiac: userData?.zodiac ?? null, // 🔥 boş string değil null
+      zodiac: userData?.zodiac ?? null,
       isPremium: userData?.isPremium === true,
       dailyCoin:
         typeof userData?.dailyCoin === "number" ? userData.dailyCoin : 0,
