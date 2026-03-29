@@ -10,13 +10,9 @@ export default async function auth(req, res, next) {
 
     const idToken = authHeader.replace("Bearer ", "");
 
-    // 🔥 HARD VERIFY (revoked check)
-    const decoded = await admin.auth().verifyIdToken(idToken, true);
+    // 🔥 FIX: revoked check KALDIRILDI
+    const decoded = await admin.auth().verifyIdToken(idToken);
     const uid = decoded.uid;
-
-    /* =========================
-       FIRESTORE USER
-    ========================= */
 
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
