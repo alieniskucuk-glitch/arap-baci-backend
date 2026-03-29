@@ -16,9 +16,8 @@ router.post("/creat", auth, async (req, res) => {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    // 🔥 EMAIL FIX (token yerine Firebase Admin'den çek)
-    const userRecord = await admin.auth().getUser(uid);
-    const email = userRecord.email || null;
+    // ✅ HIZLI EMAIL (auth middleware’den)
+    const email = req.user?.email || null;
 
     const userRef = db.collection("users").doc(uid);
 
