@@ -51,7 +51,7 @@ router.post("/fullcreat", auth, async (req, res) => {
     const name = String(req.body?.name || "").trim();
     const lastname = String(req.body?.lastname || "").trim();
     const birthDate = String(req.body?.birthDate || "").trim();
-    const gender = String(req.body?.gender || "").trim(); // ✅ FIX
+    const gender = String(req.body?.gender || "").trim();
 
     if (!name || !lastname || !birthDate) {
       return res.status(400).json({
@@ -73,34 +73,59 @@ router.post("/fullcreat", auth, async (req, res) => {
 
     let created = false;
 
+    let finalData = {
+      profileCompleted: true,
+      name,
+      lastname,
+      fullName,
+      birthDate,
+      gender,
+      zodiac,
+    };
+
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(userRef);
 
+      /* =========================
+         USER VARSA (EN KRİTİK FIX)
+      ========================= */
       if (snap.exists) {
+        const data = snap.data() || {};
+
+        finalData = {
+          profileCompleted: data.profileCompleted === true,
+          name: data.name || "",
+          lastname: data.lastname || "",
+          fullName: data.fullName || "",
+          birthDate: data.birthDate || "",
+          gender: data.gender || "",
+          zodiac: data.zodiac || "",
+        };
+
         return;
       }
+
+      /* =========================
+         USER YOKSA OLUŞTUR
+      ========================= */
 
       tx.set(userRef, {
         uid,
         email,
 
-        // coin
         abCoin: 10,
         dailyCoin: 0,
 
-        // flags
         isPremium: false,
         profileCompleted: true,
 
-        // profile
         name,
         lastname,
         fullName,
         birthDate,
-        gender, // ✅ FIX
+        gender,
         zodiac,
 
-        // timestamps
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
@@ -108,9 +133,21 @@ router.post("/fullcreat", auth, async (req, res) => {
       created = true;
     });
 
+    /* =========================
+       RESPONSE (HER ZAMAN GERÇEK DATA)
+    ========================= */
+
     return res.json({
       success: true,
       created,
+
+      profileCompleted: finalData.profileCompleted,
+      name: finalData.name,
+      lastname: finalData.lastname,
+      fullName: finalData.fullName,
+      birthDate: finalData.birthDate,
+      gender: finalData.gender,
+      zodiac: finalData.zodiac,
     });
 
   } catch (err) {

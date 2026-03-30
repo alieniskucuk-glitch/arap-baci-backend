@@ -36,7 +36,7 @@ function getZodiacSign(birthDate) {
 }
 
 /* =========================
-   SAFE STRING
+   CLEAN HELPER
 ========================= */
 
 function clean(value) {
@@ -61,7 +61,6 @@ router.post("/update", auth, async (req, res) => {
     const lastname = clean(req.body?.lastname);
     const birthDate = clean(req.body?.birthDate);
     const gender = clean(req.body?.gender);
-    const email = clean(req.body?.email);
 
     const userRef = db.collection("users").doc(uid);
     const snap = await userRef.get();
@@ -81,13 +80,14 @@ router.post("/update", auth, async (req, res) => {
     if (name) updateData.name = name;
     if (lastname) updateData.lastname = lastname;
 
-    if (name || lastname) {
-      const finalName = name || current.name || "";
-      const finalLast = lastname || current.lastname || "";
-      updateData.fullName = `${finalName} ${finalLast}`.trim();
-    }
+    const finalName = name ?? current.name ?? "";
+    const finalLast = lastname ?? current.lastname ?? "";
+
+    updateData.fullName = `${finalName} ${finalLast}`.trim();
 
     /* ========= BIRTHDATE ========= */
+
+    let finalZodiac = current.zodiac ?? "";
 
     if (birthDate) {
       const zodiac = getZodiacSign(birthDate);
@@ -100,20 +100,20 @@ router.post("/update", auth, async (req, res) => {
 
       updateData.birthDate = birthDate;
       updateData.zodiac = zodiac;
+      finalZodiac = zodiac;
     }
 
     /* ========= OTHER ========= */
 
     if (gender) updateData.gender = gender;
-    if (email) updateData.email = email;
 
-    /* ========= PROFILE CHECK ========= */
+    /* ========= PROFILE COMPLETE ========= */
 
     const finalProfile = {
-      name: name || current.name,
-      lastname: lastname || current.lastname,
-      gender: gender || current.gender,
-      birthDate: birthDate || current.birthDate,
+      name: finalName,
+      lastname: finalLast,
+      gender: gender ?? current.gender,
+      birthDate: birthDate ?? current.birthDate,
     };
 
     const isComplete =
@@ -122,15 +122,22 @@ router.post("/update", auth, async (req, res) => {
       !!finalProfile.gender &&
       !!finalProfile.birthDate;
 
-    if (isComplete) {
-      updateData.profileCompleted = true;
-    }
+    updateData.profileCompleted = isComplete;
 
     await userRef.update(updateData);
+
+    /* ========= RESPONSE (CACHE READY) ========= */
 
     return res.json({
       success: true,
       profileCompleted: isComplete,
+
+      name: finalName,
+      lastname: finalLast,
+      fullName: `${finalName} ${finalLast}`.trim(),
+      birthDate: finalProfile.birthDate || "",
+      gender: finalProfile.gender || "",
+      zodiac: finalZodiac,
     });
 
   } catch (err) {
