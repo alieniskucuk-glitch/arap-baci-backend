@@ -16,15 +16,12 @@ router.post("/creat", auth, async (req, res) => {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    // ✅ SADECE AUTH'TAN GELİR
     const email = req.user?.email || null;
 
     const userRef = db.collection("users").doc(uid);
 
     let created = false;
     let profileCompleted = false;
-    let name = "";
-    let zodiac = "";
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(userRef);
@@ -35,10 +32,12 @@ router.post("/creat", auth, async (req, res) => {
       if (snap.exists) {
         const data = snap.data() || {};
 
-        profileCompleted = data.profileCompleted === true;
-        name = typeof data.name === "string" ? data.name : "";
-        zodiac = typeof data.zodiac === "string" ? data.zodiac : "";
+        // email boşsa ve şimdi geldiyse yaz
+        if (!data.email && email) {
+          tx.update(userRef, { email });
+        }
 
+        profileCompleted = data.profileCompleted === true;
         return;
       }
 
@@ -48,34 +47,24 @@ router.post("/creat", auth, async (req, res) => {
       tx.set(userRef, {
         uid,
         email,
-
         abCoin: 10,
-        dailyCoin: 0,
-
         isPremium: false,
         profileCompleted: false,
-
-        name: "",
-        zodiac: "",
-
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
 
       created = true;
       profileCompleted = false;
-      name = "";
-      zodiac = "";
     });
 
     /* =========================
-       RESPONSE (HER ZAMAN NET)
+       RESPONSE
     ========================= */
     return res.json({
       success: true,
       created,
       profileCompleted,
-      name,
-      zodiac,
+      uid, // 🔥 EKLENDİ (frontend için net kimlik)
     });
 
   } catch (err) {

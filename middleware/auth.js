@@ -8,17 +8,18 @@ export default async function auth(req, res, next) {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    const idToken = authHeader.split("Bearer ")[1];
+    // 🔥 DAHA SAĞLAM PARSE
+    const idToken = authHeader.replace("Bearer ", "").trim();
 
-    if (!idToken || idToken.trim().length === 0) {
+    if (!idToken) {
       return res.status(401).json({ error: "Token boş" });
     }
 
     /* =========================
-       TOKEN VERIFY
+       TOKEN VERIFY (REVOKED CHECK)
     ========================= */
 
-    const decoded = await admin.auth().verifyIdToken(idToken);
+    const decoded = await admin.auth().verifyIdToken(idToken, true);
 
     const uid = decoded.uid;
     const email = decoded.email || null;
@@ -38,7 +39,7 @@ export default async function auth(req, res, next) {
 
     req.user = {
       uid,
-      email, // 🔥 EKLENDİ (ÖNEMLİ)
+      email,
 
       exists: userDoc.exists,
 
