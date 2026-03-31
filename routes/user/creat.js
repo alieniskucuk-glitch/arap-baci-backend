@@ -58,17 +58,17 @@ router.post("/creat", auth, async (req, res) => {
     });
 
     /* =========================
-       RESPONSE
+       RESPONSE (TEMİZ)
     ========================= */
     return res.json({
       success: true,
       created,
       profileCompleted,
-      uid, // 🔥 EKLENDİ (frontend için net kimlik)
+      uid,
     });
 
   } catch (err) {
-    console.error("CREAT ERROR:", err);
+    console.error("CREAT ERROR:", err?.message || err);
     return res.status(500).json({
       error: "Sunucu hatası",
     });

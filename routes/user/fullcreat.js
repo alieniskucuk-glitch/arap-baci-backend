@@ -87,7 +87,7 @@ router.post("/fullcreat", auth, async (req, res) => {
       const snap = await tx.get(userRef);
 
       /* =========================
-         USER VARSA (EN KRİTİK FIX)
+         USER VARSA
       ========================= */
       if (snap.exists) {
         const data = snap.data() || {};
@@ -134,7 +134,7 @@ router.post("/fullcreat", auth, async (req, res) => {
     });
 
     /* =========================
-       RESPONSE (HER ZAMAN GERÇEK DATA)
+       RESPONSE
     ========================= */
 
     return res.json({
@@ -151,7 +151,7 @@ router.post("/fullcreat", auth, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("FULL CREAT ERROR:", err);
+    console.error("FULL CREAT ERROR:", err?.message || err);
     return res.status(500).json({ error: "Sunucu hatası" });
   }
 });

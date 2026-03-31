@@ -8,8 +8,8 @@ export default async function auth(req, res, next) {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    // 🔥 DAHA SAĞLAM PARSE
-    const idToken = authHeader.replace("Bearer ", "").trim();
+    // 🔥 SAFE PARSE (daha temiz)
+    const idToken = authHeader.split("Bearer ")[1]?.trim();
 
     if (!idToken) {
       return res.status(401).json({ error: "Token boş" });
@@ -58,7 +58,7 @@ export default async function auth(req, res, next) {
 
     next();
   } catch (err) {
-    console.error("VERIFY ERROR:", err);
+    console.error("VERIFY ERROR:", err?.code || err?.message || err);
 
     return res.status(401).json({
       error: "Geçersiz token",

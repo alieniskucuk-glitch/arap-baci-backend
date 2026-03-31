@@ -126,7 +126,7 @@ router.post("/update", auth, async (req, res) => {
 
     await userRef.update(updateData);
 
-    /* ========= RESPONSE (CACHE READY) ========= */
+    /* ========= RESPONSE ========= */
 
     return res.json({
       success: true,
@@ -141,7 +141,7 @@ router.post("/update", auth, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("UPDATE ERROR:", err);
+    console.error("UPDATE ERROR:", err?.message || err);
     return res.status(500).json({ error: "Sunucu hatası" });
   }
 });
