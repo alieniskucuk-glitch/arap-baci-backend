@@ -62,17 +62,19 @@ export default async function dailyReset(req, res, next) {
         return;
       }
 
-      if (!user.premiumEndsAt || typeof user.premiumEndsAt.toMillis !== "function") {
+      // 🔥 FIX: premiumUntil ile uyumlu hale getirildi
+      const premiumUntil =
+        user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
+
+      if (!premiumUntil) {
         tx.update(userRef, {
           isPremium: false,
-          premiumStatus: "expired",
-          premiumAutoRenew: false,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         return;
       }
 
-      if (user.premiumEndsAt.toMillis() <= now.toMillis()) {
+      if (premiumUntil <= now.toMillis()) {
         tx.update(userRef, {
           isPremium: false,
           premiumStatus: "expired",
