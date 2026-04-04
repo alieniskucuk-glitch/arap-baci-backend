@@ -1,6 +1,7 @@
 import express from "express";
 import auth from "../../middleware/auth.js";
 import { db } from "../../config/firebase.js";
+import admin from "firebase-admin";
 
 const router = express.Router();
 
@@ -28,13 +29,13 @@ router.post("/premium", auth, async (req, res) => {
     const now = Date.now();
     const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 
-    // 🔥 TYPE SAFE OKUMA
+    // TYPE SAFE OKUMA
     const currentPremium =
       user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
 
     let newPremiumUntil = now + ONE_MONTH;
 
-    // 🔥 STACK MANTIĞI
+    // STACK MANTIĞI
     if (currentPremium > now) {
       newPremiumUntil = currentPremium + ONE_MONTH;
     }
@@ -43,6 +44,13 @@ router.post("/premium", auth, async (req, res) => {
       {
         isPremium: true,
         premiumUntil: newPremiumUntil,
+
+        // 🔥 EKLENEN ZORUNLU ALANLAR
+        premiumStartedAt: now,
+        premiumStatus: "active",
+        premiumAutoRenew: true,
+
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
     );

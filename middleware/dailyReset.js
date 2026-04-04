@@ -52,8 +52,10 @@ export default async function dailyReset(req, res, next) {
       const user = snap.data() || {};
       const now = admin.firestore.Timestamp.now();
 
+      // Premium değilse çık
       if (user.isPremium !== true) return;
 
+      // Status kontrol
       if (user.premiumStatus !== "active") {
         tx.update(userRef, {
           isPremium: false,
@@ -62,10 +64,11 @@ export default async function dailyReset(req, res, next) {
         return;
       }
 
-      // 🔥 FIX: premiumUntil ile uyumlu hale getirildi
+      // 🔥 premiumUntil FIX
       const premiumUntil =
         user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
 
+      // Premium yoksa kapat
       if (!premiumUntil) {
         tx.update(userRef, {
           isPremium: false,
@@ -74,6 +77,7 @@ export default async function dailyReset(req, res, next) {
         return;
       }
 
+      // Süre bittiyse kapat
       if (premiumUntil <= now.toMillis()) {
         tx.update(userRef, {
           isPremium: false,
@@ -89,6 +93,7 @@ export default async function dailyReset(req, res, next) {
 
       const daysPassed = dayDiff(lastKey, todayKey);
 
+      // Aynı gün tekrar verme
       if (daysPassed <= 0) return;
 
       const currentDaily =
@@ -96,8 +101,13 @@ export default async function dailyReset(req, res, next) {
           ? user.dailyCoin
           : 0;
 
+      // 🔥 max 30 gün birikim
       const safeDays = Math.min(daysPassed, 30);
+
+      // kazanılan coin
       const earned = safeDays * DAILY_PREMIUM_COIN;
+
+      // max 240 limit
       const newDailyCoin = Math.min(currentDaily + earned, MONTHLY_MAX);
 
       tx.update(userRef, {
