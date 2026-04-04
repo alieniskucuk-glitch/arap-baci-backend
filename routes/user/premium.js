@@ -26,30 +26,25 @@ router.post("/premium", auth, async (req, res) => {
 
     const user = snap.data() || {};
 
-    const now = Date.now();
+    const nowMs = Date.now();
     const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 
-    // TYPE SAFE OKUMA
-    const currentPremium =
+    const currentPremiumMs =
       user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
 
-    let newPremiumUntil = now + ONE_MONTH;
+    let newPremiumUntilMs = nowMs + ONE_MONTH;
 
-    // STACK MANTIĞI
-    if (currentPremium > now) {
-      newPremiumUntil = currentPremium + ONE_MONTH;
+    if (currentPremiumMs > nowMs) {
+      newPremiumUntilMs = currentPremiumMs + ONE_MONTH;
     }
 
     await userRef.set(
       {
         isPremium: true,
-        premiumUntil: newPremiumUntil,
-
-        // 🔥 EKLENEN ZORUNLU ALANLAR
-        premiumStartedAt: now,
+        premiumStartedAt: admin.firestore.Timestamp.fromMillis(nowMs),
+        premiumUntil: admin.firestore.Timestamp.fromMillis(newPremiumUntilMs),
         premiumStatus: "active",
         premiumAutoRenew: true,
-
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
       { merge: true }
@@ -58,7 +53,7 @@ router.post("/premium", auth, async (req, res) => {
     return res.json({
       success: true,
       isPremium: true,
-      premiumUntil: newPremiumUntil,
+      premiumUntil: newPremiumUntilMs,
     });
   } catch (err) {
     console.error("PREMIUM ERROR:", err);

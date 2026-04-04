@@ -64,12 +64,17 @@ export default async function dailyReset(req, res, next) {
         return;
       }
 
-      // 🔥 premiumUntil FIX
-      const premiumUntil =
-        user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
+      // 🔥 premiumUntil (timestamp uyumlu)
+      let premiumUntilMs = 0;
+
+      if (user.premiumUntil?.toMillis) {
+        premiumUntilMs = user.premiumUntil.toMillis();
+      } else if (typeof user.premiumUntil === "number") {
+        premiumUntilMs = user.premiumUntil;
+      }
 
       // Premium yoksa kapat
-      if (!premiumUntil) {
+      if (!premiumUntilMs) {
         tx.update(userRef, {
           isPremium: false,
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -78,7 +83,7 @@ export default async function dailyReset(req, res, next) {
       }
 
       // Süre bittiyse kapat
-      if (premiumUntil <= now.toMillis()) {
+      if (premiumUntilMs <= now.toMillis()) {
         tx.update(userRef, {
           isPremium: false,
           premiumStatus: "expired",
@@ -101,13 +106,11 @@ export default async function dailyReset(req, res, next) {
           ? user.dailyCoin
           : 0;
 
-      // 🔥 max 30 gün birikim
+      // max 30 gün birikim
       const safeDays = Math.min(daysPassed, 30);
 
-      // kazanılan coin
       const earned = safeDays * DAILY_PREMIUM_COIN;
 
-      // max 240 limit
       const newDailyCoin = Math.min(currentDaily + earned, MONTHLY_MAX);
 
       tx.update(userRef, {
