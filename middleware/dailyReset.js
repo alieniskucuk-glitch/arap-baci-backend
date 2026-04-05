@@ -23,7 +23,7 @@ function getTodayKey() {
 ========================= */
 
 function dayDiff(oldKey, newKey) {
-  if (!oldKey) return 1;
+  if (!oldKey) return 0; // 🔥 FIX: ilk gün ekstra coin verme
 
   const [y1, m1, d1] = oldKey.split("-").map(Number);
   const [y2, m2, d2] = newKey.split("-").map(Number);
@@ -52,19 +52,10 @@ export default async function dailyReset(req, res, next) {
       const user = snap.data() || {};
       const now = admin.firestore.Timestamp.now();
 
-      // Premium değilse çık
-      if (user.isPremium !== true) return;
+      /* =========================
+         PREMIUM UNTIL PARSE (FIX)
+      ========================= */
 
-      // Status kontrol
-      if (user.premiumStatus !== "active") {
-        tx.update(userRef, {
-          isPremium: false,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        return;
-      }
-
-      // 🔥 premiumUntil (timestamp uyumlu)
       let premiumUntilMs = 0;
 
       if (user.premiumUntil?.toMillis) {
@@ -73,17 +64,11 @@ export default async function dailyReset(req, res, next) {
         premiumUntilMs = user.premiumUntil;
       }
 
-      // Premium yoksa kapat
-      if (!premiumUntilMs) {
-        tx.update(userRef, {
-          isPremium: false,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        return;
-      }
+      /* =========================
+         PREMIUM VALIDATION (SIMPLIFIED FIX)
+      ========================= */
 
-      // Süre bittiyse kapat
-      if (premiumUntilMs <= now.toMillis()) {
+      if (!premiumUntilMs || premiumUntilMs <= now.toMillis()) {
         tx.update(userRef, {
           isPremium: false,
           premiumStatus: "expired",

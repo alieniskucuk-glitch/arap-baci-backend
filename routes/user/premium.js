@@ -29,14 +29,31 @@ router.post("/premium", auth, async (req, res) => {
     const nowMs = Date.now();
     const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 
-    const currentPremiumMs =
-      user.premiumUntil?.toMillis?.() || user.premiumUntil || 0;
+    /* =========================
+       SAFE premiumUntil PARSE (FIX)
+    ========================= */
+
+    let currentPremiumMs = 0;
+
+    if (user.premiumUntil?.toMillis) {
+      currentPremiumMs = user.premiumUntil.toMillis();
+    } else if (typeof user.premiumUntil === "number") {
+      currentPremiumMs = user.premiumUntil;
+    }
+
+    /* =========================
+       PREMIUM EXTEND LOGIC
+    ========================= */
 
     let newPremiumUntilMs = nowMs + ONE_MONTH;
 
     if (currentPremiumMs > nowMs) {
       newPremiumUntilMs = currentPremiumMs + ONE_MONTH;
     }
+
+    /* =========================
+       UPDATE
+    ========================= */
 
     await userRef.set(
       {

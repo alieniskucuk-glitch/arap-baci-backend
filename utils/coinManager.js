@@ -44,8 +44,15 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
 
     const user = snap.data() || {};
 
-    let dailyCoin = Number.isFinite(user.dailyCoin) ? user.dailyCoin : 0;
-    let abCoin = Number.isFinite(user.abCoin) ? user.abCoin : 0;
+    let dailyCoin =
+      typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
+        ? user.dailyCoin
+        : 0;
+
+    let abCoin =
+      typeof user.abCoin === "number" && Number.isFinite(user.abCoin)
+        ? user.abCoin
+        : 0;
 
     const beforeDaily = dailyCoin;
     const beforeAb = abCoin;
@@ -75,6 +82,10 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
       remaining = 0;
     }
 
+    /* =========================
+       FINAL CHECK (FIX)
+    ========================= */
+
     if (remaining !== 0) {
       throw new Error("Coin hesaplama hatası");
     }
@@ -95,7 +106,7 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
     });
 
     /* =========================
-       TRANSACTION LOG
+       TRANSACTION LOG (FIX)
     ========================= */
 
     tx.set(transactionRef, {
@@ -109,7 +120,7 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
         dailyCoin: afterDaily,
         abCoin: afterAb,
       },
-      meta: meta || {},
+      meta: typeof meta === "object" && meta !== null ? meta : {},
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
   });

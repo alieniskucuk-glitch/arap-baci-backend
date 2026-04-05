@@ -67,35 +67,54 @@ export default function coinCheck(type) {
         return res.status(400).json({ error: "Geçersiz işlem tipi" });
       }
 
+      /* =========================
+         FİYAT VALIDATION (FIX)
+      ========================= */
+
       if (!Number.isFinite(price) || price <= 0) {
         return res.status(500).json({ error: "Fiyat hesaplanamadı" });
       }
 
       /* =========================
-         SADECE KONTROL
+         USER CHECK
       ========================= */
 
       const userRef = db.collection("users").doc(uid);
       const snap = await userRef.get();
 
       if (!snap.exists) {
-        return res.status(400).json({ error: "Kullanıcı bulunamadı" });
+        return res.status(404).json({ error: "Kullanıcı bulunamadı" });
       }
 
       const user = snap.data() || {};
 
-      const dailyCoin = Number.isFinite(user.dailyCoin) ? user.dailyCoin : 0;
-      const abCoin = Number.isFinite(user.abCoin) ? user.abCoin : 0;
+      const dailyCoin =
+        typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
+          ? user.dailyCoin
+          : 0;
 
-      if (dailyCoin + abCoin < price) {
+      const abCoin =
+        typeof user.abCoin === "number" && Number.isFinite(user.abCoin)
+          ? user.abCoin
+          : 0;
+
+      const totalCoin = dailyCoin + abCoin;
+
+      /* =========================
+         COIN CHECK (FIX)
+      ========================= */
+
+      if (totalCoin < price) {
         return res.status(400).json({ error: "Yetersiz coin" });
       }
 
-      // servis tarafı için
+      /* =========================
+         REQUEST'e EKLE (SERVİS İÇİN)
+      ========================= */
+
       req.coinPrice = price;
 
       return next();
-
     } catch (err) {
       console.error("COIN CHECK ERROR:", err);
       return res.status(500).json({ error: "Coin kontrol hatası" });
