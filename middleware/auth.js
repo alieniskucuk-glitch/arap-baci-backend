@@ -4,43 +4,29 @@ export default async function auth(req, res, next) {
   try {
     const authHeader = req.headers.authorization || "";
 
-    if (!authHeader.startsWith("Bearer ")) {
+    if (!authHeader.toLowerCase().startsWith("bearer ")) {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    // 🔥 SAFE PARSE (daha temiz)
-    const idToken = authHeader.split("Bearer ")[1]?.trim();
+    const idToken = authHeader.split(" ")[1]?.trim();
 
     if (!idToken) {
       return res.status(401).json({ error: "Token boş" });
     }
-
-    /* =========================
-       TOKEN VERIFY (REVOKED CHECK)
-    ========================= */
 
     const decoded = await admin.auth().verifyIdToken(idToken, true);
 
     const uid = decoded.uid;
     const email = decoded.email || null;
 
-    /* =========================
-       USER DOC
-    ========================= */
-
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
 
     const userData = userDoc.exists ? userDoc.data() : {};
 
-    /* =========================
-       SAFE DEFAULTS
-    ========================= */
-
     req.user = {
       uid,
       email,
-
       exists: userDoc.exists,
 
       name: typeof userData?.name === "string" ? userData.name : "",
@@ -60,8 +46,14 @@ export default async function auth(req, res, next) {
   } catch (err) {
     console.error("VERIFY ERROR:", err?.code || err?.message || err);
 
-    return res.status(401).json({
-      error: "Geçersiz token",
-    });
+    if (err.code === "auth/id-token-expired") {
+      return res.status(401).json({ error: "Token süresi dolmuş" });
+    }
+
+    if (err.code === "auth/id-token-revoked") {
+      return res.status(401).json({ error: "Token iptal edilmiş" });
+    }
+
+    return res.status(401).json({ error: "Geçersiz token" });
   }
 }

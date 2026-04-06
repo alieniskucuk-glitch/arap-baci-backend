@@ -15,7 +15,7 @@ function getTodayKey() {
 }
 
 function dayDiff(oldKey, newKey) {
-  if (!oldKey) return 1; // 🔥 ilk gün 8 coin ver
+  if (!oldKey) return 1; // 🔥 ilk girişte 8 coin
 
   const [y1, m1, d1] = oldKey.split("-").map(Number);
   const [y2, m2, d2] = newKey.split("-").map(Number);
@@ -38,7 +38,10 @@ export default async function dailyReset(req, res, next) {
       if (!snap.exists) return;
 
       const user = snap.data() || {};
-      const now = admin.firestore.Timestamp.now();
+
+      /* =========================
+         PREMIUM CHECK
+      ========================= */
 
       let premiumUntilMs = 0;
 
@@ -48,8 +51,10 @@ export default async function dailyReset(req, res, next) {
         premiumUntilMs = user.premiumUntil;
       }
 
-      // premium bitmişse kapat
-      if (!premiumUntilMs || premiumUntilMs <= now.toMillis()) {
+      const nowMs = Date.now();
+
+      // 🔥 premium bitmişse kapat
+      if (!premiumUntilMs || premiumUntilMs <= nowMs) {
         tx.update(userRef, {
           isPremium: false,
           premiumStatus: "expired",
@@ -59,6 +64,10 @@ export default async function dailyReset(req, res, next) {
         return;
       }
 
+      /* =========================
+         DAILY RESET
+      ========================= */
+
       const todayKey = getTodayKey();
       const lastKey = user.lastDailyResetKey || null;
 
@@ -66,15 +75,25 @@ export default async function dailyReset(req, res, next) {
 
       if (daysPassed <= 0) return;
 
-      const currentDaily = Number(user.dailyCoin) || 0;
-
       const safeDays = Math.min(daysPassed, 30);
       const earned = safeDays * DAILY_PREMIUM_COIN;
 
-      const newDailyCoin = Math.min(currentDaily + earned, MONTHLY_MAX);
+      const currentDaily = Number(user.dailyCoin) || 0;
+
+      // 🔥 MAX LIMIT KORUMA
+      const finalEarn = Math.min(
+        earned,
+        MONTHLY_MAX - currentDaily
+      );
+
+      if (finalEarn <= 0) return;
+
+      /* =========================
+         UPDATE (ATOMIC)
+      ========================= */
 
       tx.update(userRef, {
-        dailyCoin: newDailyCoin,
+        dailyCoin: admin.firestore.FieldValue.increment(finalEarn),
         lastDailyResetKey: todayKey,
         lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),

@@ -53,9 +53,12 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
 
     const user = snap.data() || {};
 
-    // 🔥 FIX: SAFE NUMBER PARSE
-    let dailyCoin = Number(user.dailyCoin) || 0;
-    let abCoin = Number(user.abCoin) || 0;
+    /* =========================
+       SAFE PARSE
+    ========================= */
+
+    let dailyCoin = Math.max(0, Number(user.dailyCoin) || 0);
+    let abCoin = Math.max(0, Number(user.abCoin) || 0);
 
     const beforeDaily = dailyCoin;
     const beforeAb = abCoin;
@@ -99,7 +102,7 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
     remainingTotalCoin = afterDaily + afterAb;
 
     /* =========================
-       USER UPDATE
+       UPDATE (ATOMIC)
     ========================= */
 
     tx.update(userRef, {

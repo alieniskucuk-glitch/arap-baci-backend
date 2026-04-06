@@ -30,80 +30,86 @@ router.post("/premium", auth, async (req, res) => {
     }
 
     const userRef = db.collection("users").doc(uid);
-    const snap = await userRef.get();
 
-    if (!snap.exists) {
-      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
-    }
+    let responseData = null;
 
-    const user = snap.data() || {};
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(userRef);
 
-    const nowMs = Date.now();
-    const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
+      if (!snap.exists) {
+        throw new Error("Kullanıcı bulunamadı");
+      }
 
-    /* =========================
-       SAFE premiumUntil PARSE
-    ========================= */
+      const user = snap.data() || {};
 
-    let currentPremiumMs = 0;
+      const nowMs = Date.now();
+      const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 
-    if (user.premiumUntil?.toMillis) {
-      currentPremiumMs = user.premiumUntil.toMillis();
-    } else if (typeof user.premiumUntil === "number") {
-      currentPremiumMs = user.premiumUntil;
-    }
+      /* =========================
+         PREMIUM TIME
+      ========================= */
 
-    /* =========================
-       PREMIUM EXTEND LOGIC
-    ========================= */
+      let currentPremiumMs = 0;
 
-    let newPremiumUntilMs = nowMs + ONE_MONTH;
+      if (user.premiumUntil?.toMillis) {
+        currentPremiumMs = user.premiumUntil.toMillis();
+      } else if (typeof user.premiumUntil === "number") {
+        currentPremiumMs = user.premiumUntil;
+      }
 
-    if (currentPremiumMs > nowMs) {
-      newPremiumUntilMs = currentPremiumMs + ONE_MONTH;
-    }
+      let newPremiumUntilMs = nowMs + ONE_MONTH;
 
-    /* =========================
-       🔥 GÜNLÜK 8 COIN EKLE (EKLENDİ)
-    ========================= */
+      if (currentPremiumMs > nowMs) {
+        newPremiumUntilMs = currentPremiumMs + ONE_MONTH;
+      }
 
-    const todayKey = getTodayKey();
-    const currentDaily = Number(user.dailyCoin) || 0;
+      /* =========================
+         🔥 ANINDA 8 COIN
+      ========================= */
 
-    const alreadyGivenToday = user.lastDailyResetKey === todayKey;
+      const todayKey = getTodayKey();
 
-    const newDailyCoin = alreadyGivenToday
-      ? currentDaily
-      : currentDaily + DAILY_PREMIUM_COIN;
+      const alreadyGivenToday =
+        user.lastPremiumGivenKey === todayKey;
 
-    /* =========================
-       UPDATE
-    ========================= */
+      let dailyAdded = 0;
 
-    await userRef.set(
-      {
+      const dailyUpdate = !alreadyGivenToday
+        ? admin.firestore.FieldValue.increment(DAILY_PREMIUM_COIN)
+        : user.dailyCoin || 0;
+
+      if (!alreadyGivenToday) {
+        dailyAdded = DAILY_PREMIUM_COIN;
+      }
+
+      /* =========================
+         UPDATE
+      ========================= */
+
+      tx.update(userRef, {
         isPremium: true,
         premiumStartedAt: admin.firestore.Timestamp.fromMillis(nowMs),
         premiumUntil: admin.firestore.Timestamp.fromMillis(newPremiumUntilMs),
         premiumStatus: "active",
         premiumAutoRenew: true,
 
-        // 🔥 EKLENEN KISIM
-        dailyCoin: newDailyCoin,
-        lastDailyResetKey: todayKey,
-        lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
+        dailyCoin: dailyUpdate,
+
+        // 🔥 SADECE PREMIUM İÇİN
+        lastPremiumGivenKey: todayKey,
 
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true }
-    );
+      });
 
-    return res.json({
-      success: true,
-      isPremium: true,
-      premiumUntil: newPremiumUntilMs,
-      dailyAdded: alreadyGivenToday ? 0 : 8,
+      responseData = {
+        success: true,
+        isPremium: true,
+        premiumUntil: newPremiumUntilMs,
+        dailyAdded,
+      };
     });
+
+    return res.json(responseData);
   } catch (err) {
     console.error("PREMIUM ERROR:", err);
     return res.status(500).json({ error: "Server error" });
