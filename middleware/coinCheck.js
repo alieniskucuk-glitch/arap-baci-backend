@@ -12,16 +12,10 @@ export default function coinCheck(type) {
 
       let price = null;
 
-      /* =========================
-         FİYAT HESAPLAMA
-      ========================= */
-
-      // FAL / RUYA / EL_FALI
       if (["FAL", "RUYA", "EL_FALI"].includes(type)) {
         price = PRICING[type];
       }
 
-      // TAROT
       else if (type === "TAROT") {
         const config = PRICING.TAROT;
         const mode = String(req.body?.mode || "").toLowerCase();
@@ -37,7 +31,6 @@ export default function coinCheck(type) {
         if (mode === "celtic") price = config.CELTIC_CROSS;
       }
 
-      // MELEK
       else if (type === "MELEK") {
         const mode = String(req.body?.mode || "").toLowerCase();
 
@@ -50,7 +43,6 @@ export default function coinCheck(type) {
         if (mode === "zaman") price = PRICING.MELEK.THREE_CARD;
       }
 
-      // UYUM
       else if (type === "UYUM") {
         const option = Number.parseInt(req.body?.option, 10);
 
@@ -67,17 +59,9 @@ export default function coinCheck(type) {
         return res.status(400).json({ error: "Geçersiz işlem tipi" });
       }
 
-      /* =========================
-         FİYAT VALIDATION (FIX)
-      ========================= */
-
       if (!Number.isFinite(price) || price <= 0) {
         return res.status(500).json({ error: "Fiyat hesaplanamadı" });
       }
-
-      /* =========================
-         USER CHECK
-      ========================= */
 
       const userRef = db.collection("users").doc(uid);
       const snap = await userRef.get();
@@ -88,29 +72,12 @@ export default function coinCheck(type) {
 
       const user = snap.data() || {};
 
-      const dailyCoin =
-        typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
-          ? user.dailyCoin
-          : 0;
+      const dailyCoin = typeof user.dailyCoin === "number" ? user.dailyCoin : 0;
+      const abCoin = typeof user.abCoin === "number" ? user.abCoin : 0;
 
-      const abCoin =
-        typeof user.abCoin === "number" && Number.isFinite(user.abCoin)
-          ? user.abCoin
-          : 0;
-
-      const totalCoin = dailyCoin + abCoin;
-
-      /* =========================
-         COIN CHECK (FIX)
-      ========================= */
-
-      if (totalCoin < price) {
+      if (dailyCoin + abCoin < price) {
         return res.status(400).json({ error: "Yetersiz coin" });
       }
-
-      /* =========================
-         REQUEST'e EKLE (SERVİS İÇİN)
-      ========================= */
 
       req.coinPrice = price;
 

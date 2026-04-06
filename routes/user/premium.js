@@ -5,10 +5,6 @@ import admin from "firebase-admin";
 
 const router = express.Router();
 
-/* =========================
-   POST /user/premium
-========================= */
-
 router.post("/premium", auth, async (req, res) => {
   try {
     const uid = req.user?.uid;
@@ -29,10 +25,6 @@ router.post("/premium", auth, async (req, res) => {
     const nowMs = Date.now();
     const ONE_MONTH = 1000 * 60 * 60 * 24 * 30;
 
-    /* =========================
-       SAFE premiumUntil PARSE (FIX)
-    ========================= */
-
     let currentPremiumMs = 0;
 
     if (user.premiumUntil?.toMillis) {
@@ -41,19 +33,11 @@ router.post("/premium", auth, async (req, res) => {
       currentPremiumMs = user.premiumUntil;
     }
 
-    /* =========================
-       PREMIUM EXTEND LOGIC
-    ========================= */
-
     let newPremiumUntilMs = nowMs + ONE_MONTH;
 
     if (currentPremiumMs > nowMs) {
       newPremiumUntilMs = currentPremiumMs + ONE_MONTH;
     }
-
-    /* =========================
-       UPDATE
-    ========================= */
 
     await userRef.set(
       {

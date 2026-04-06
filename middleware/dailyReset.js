@@ -5,10 +5,6 @@ const TZ = "Europe/Istanbul";
 const DAILY_PREMIUM_COIN = 8;
 const MONTHLY_MAX = 240;
 
-/* =========================
-   ISTANBUL DATE KEY
-========================= */
-
 function getTodayKey() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: TZ,
@@ -18,12 +14,8 @@ function getTodayKey() {
   }).format(new Date());
 }
 
-/* =========================
-   DAY DIFFERENCE
-========================= */
-
 function dayDiff(oldKey, newKey) {
-  if (!oldKey) return 0; // 🔥 FIX: ilk gün ekstra coin verme
+  if (!oldKey) return 0;
 
   const [y1, m1, d1] = oldKey.split("-").map(Number);
   const [y2, m2, d2] = newKey.split("-").map(Number);
@@ -33,10 +25,6 @@ function dayDiff(oldKey, newKey) {
 
   return Math.floor((date2 - date1) / 86400000);
 }
-
-/* =========================
-   DAILY RESET MIDDLEWARE
-========================= */
 
 export default async function dailyReset(req, res, next) {
   try {
@@ -52,10 +40,6 @@ export default async function dailyReset(req, res, next) {
       const user = snap.data() || {};
       const now = admin.firestore.Timestamp.now();
 
-      /* =========================
-         PREMIUM UNTIL PARSE (FIX)
-      ========================= */
-
       let premiumUntilMs = 0;
 
       if (user.premiumUntil?.toMillis) {
@@ -63,10 +47,6 @@ export default async function dailyReset(req, res, next) {
       } else if (typeof user.premiumUntil === "number") {
         premiumUntilMs = user.premiumUntil;
       }
-
-      /* =========================
-         PREMIUM VALIDATION (SIMPLIFIED FIX)
-      ========================= */
 
       if (!premiumUntilMs || premiumUntilMs <= now.toMillis()) {
         tx.update(userRef, {
@@ -83,17 +63,12 @@ export default async function dailyReset(req, res, next) {
 
       const daysPassed = dayDiff(lastKey, todayKey);
 
-      // Aynı gün tekrar verme
       if (daysPassed <= 0) return;
 
       const currentDaily =
-        typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
-          ? user.dailyCoin
-          : 0;
+        typeof user.dailyCoin === "number" ? user.dailyCoin : 0;
 
-      // max 30 gün birikim
       const safeDays = Math.min(daysPassed, 30);
-
       const earned = safeDays * DAILY_PREMIUM_COIN;
 
       const newDailyCoin = Math.min(currentDaily + earned, MONTHLY_MAX);
