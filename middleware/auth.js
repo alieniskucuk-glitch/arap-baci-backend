@@ -8,10 +8,7 @@ export default async function auth(req, res, next) {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
-    /* =========================
-       SAFE TOKEN PARSE
-    ========================= */
-
+    // 🔥 SAFE PARSE (daha temiz)
     const idToken = authHeader.split("Bearer ")[1]?.trim();
 
     if (!idToken) {
@@ -34,15 +31,7 @@ export default async function auth(req, res, next) {
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
 
-    /* =========================
-       USER YOKSA HATA (FIX)
-    ========================= */
-
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: "Kullanıcı bulunamadı" });
-    }
-
-    const userData = userDoc.data() || {};
+    const userData = userDoc.exists ? userDoc.data() : {};
 
     /* =========================
        SAFE DEFAULTS
@@ -52,7 +41,7 @@ export default async function auth(req, res, next) {
       uid,
       email,
 
-      exists: true,
+      exists: userDoc.exists,
 
       name: typeof userData?.name === "string" ? userData.name : "",
       zodiac:
