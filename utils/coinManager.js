@@ -1,5 +1,9 @@
 import { admin, db } from "../config/firebase.js";
 
+/* =========================
+   HELPERS
+========================= */
+
 function getUserRef(uid) {
   return db.collection("users").doc(uid);
 }
@@ -12,6 +16,10 @@ function getTransactionRef(uid) {
     .doc();
 }
 
+/* =========================
+   DECREASE COIN
+========================= */
+
 /**
  * decreaseCoin
  *
@@ -22,6 +30,7 @@ function getTransactionRef(uid) {
  *
  * @returns {number} remainingTotalCoin
  */
+
 export async function decreaseCoin(uid, price, type, meta = {}) {
   if (!uid) throw new Error("UID gerekli");
 
@@ -44,15 +53,9 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
 
     const user = snap.data() || {};
 
-    let dailyCoin =
-      typeof user.dailyCoin === "number" && Number.isFinite(user.dailyCoin)
-        ? user.dailyCoin
-        : 0;
-
-    let abCoin =
-      typeof user.abCoin === "number" && Number.isFinite(user.abCoin)
-        ? user.abCoin
-        : 0;
+    // 🔥 FIX: SAFE NUMBER PARSE
+    let dailyCoin = Number(user.dailyCoin) || 0;
+    let abCoin = Number(user.abCoin) || 0;
 
     const beforeDaily = dailyCoin;
     const beforeAb = abCoin;
@@ -83,7 +86,7 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
     }
 
     /* =========================
-       FINAL CHECK (FIX)
+       FINAL CHECK
     ========================= */
 
     if (remaining !== 0) {
@@ -106,7 +109,7 @@ export async function decreaseCoin(uid, price, type, meta = {}) {
     });
 
     /* =========================
-       TRANSACTION LOG (FIX)
+       TRANSACTION LOG
     ========================= */
 
     tx.set(transactionRef, {

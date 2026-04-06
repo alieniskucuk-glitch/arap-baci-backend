@@ -8,19 +8,35 @@ export default async function auth(req, res, next) {
       return res.status(401).json({ error: "Token gerekli" });
     }
 
+    /* =========================
+       SAFE TOKEN PARSE
+    ========================= */
+
     const idToken = authHeader.split("Bearer ")[1]?.trim();
 
     if (!idToken) {
       return res.status(401).json({ error: "Token boş" });
     }
 
+    /* =========================
+       TOKEN VERIFY (REVOKED CHECK)
+    ========================= */
+
     const decoded = await admin.auth().verifyIdToken(idToken, true);
 
     const uid = decoded.uid;
     const email = decoded.email || null;
 
+    /* =========================
+       USER DOC
+    ========================= */
+
     const userRef = db.collection("users").doc(uid);
     const userDoc = await userRef.get();
+
+    /* =========================
+       USER YOKSA HATA (FIX)
+    ========================= */
 
     if (!userDoc.exists) {
       return res.status(404).json({ error: "Kullanıcı bulunamadı" });
@@ -28,19 +44,27 @@ export default async function auth(req, res, next) {
 
     const userData = userDoc.data() || {};
 
+    /* =========================
+       SAFE DEFAULTS
+    ========================= */
+
     req.user = {
       uid,
       email,
 
-      name: typeof userData.name === "string" ? userData.name : "",
-      zodiac: typeof userData.zodiac === "string" ? userData.zodiac : null,
+      exists: true,
 
-      isPremium: userData.isPremium === true,
+      name: typeof userData?.name === "string" ? userData.name : "",
+      zodiac:
+        typeof userData?.zodiac === "string" ? userData.zodiac : null,
+
+      isPremium: userData?.isPremium === true,
 
       dailyCoin:
-        typeof userData.dailyCoin === "number" ? userData.dailyCoin : 0,
+        typeof userData?.dailyCoin === "number" ? userData.dailyCoin : 0,
 
-      abCoin: typeof userData.abCoin === "number" ? userData.abCoin : 0,
+      abCoin:
+        typeof userData?.abCoin === "number" ? userData.abCoin : 0,
     };
 
     next();

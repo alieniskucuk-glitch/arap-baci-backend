@@ -15,7 +15,7 @@ function getTodayKey() {
 }
 
 function dayDiff(oldKey, newKey) {
-  if (!oldKey) return 0;
+  if (!oldKey) return 1; // 🔥 ilk gün 8 coin ver
 
   const [y1, m1, d1] = oldKey.split("-").map(Number);
   const [y2, m2, d2] = newKey.split("-").map(Number);
@@ -48,6 +48,7 @@ export default async function dailyReset(req, res, next) {
         premiumUntilMs = user.premiumUntil;
       }
 
+      // premium bitmişse kapat
       if (!premiumUntilMs || premiumUntilMs <= now.toMillis()) {
         tx.update(userRef, {
           isPremium: false,
@@ -65,8 +66,7 @@ export default async function dailyReset(req, res, next) {
 
       if (daysPassed <= 0) return;
 
-      const currentDaily =
-        typeof user.dailyCoin === "number" ? user.dailyCoin : 0;
+      const currentDaily = Number(user.dailyCoin) || 0;
 
       const safeDays = Math.min(daysPassed, 30);
       const earned = safeDays * DAILY_PREMIUM_COIN;
