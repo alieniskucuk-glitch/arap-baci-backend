@@ -2,34 +2,71 @@ import express from "express";
 import { generateDailyHoroscope } from "../services/horoscopeService.js";
 
 const router = express.Router();
+
+/* ================= MEMORY CACHE ================= */
+
 const dailyHoroscopeStore = new Map();
 
+/* ================= DATE KEY ================= */
+
+function getTodayKey() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Istanbul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+/* ================= ROUTE ================= */
+
 router.post("/", async (req, res) => {
-  const { zodiac } = req.body;
-  if (!zodiac) return res.status(400).json({ error: "Burç gerekli" });
+  try {
+    const { zodiac } = req.body;
 
-  const today = new Date().toISOString().split("T")[0];
-  const key = `${zodiac}-${today}`;
+    if (!zodiac || typeof zodiac !== "string") {
+      return res.status(400).json({ error: "Burç gerekli" });
+    }
 
-  if (dailyHoroscopeStore.has(key)) {
+    const today = getTodayKey();
+    const key = `${zodiac}-${today}`;
+
+    /* ================= CACHE HIT ================= */
+
+    if (dailyHoroscopeStore.has(key)) {
+      return res.json({
+        zodiac,
+        comment: dailyHoroscopeStore.get(key),
+        cached: true,
+      });
+    }
+
+    /* ================= GENERATE ================= */
+
+    const text = await generateDailyHoroscope(zodiac);
+
+    if (!text || text.trim().length === 0) {
+      return res.status(500).json({ error: "Boş yorum döndü" });
+    }
+
+    const cleanText = text.trim();
+
+    /* ================= SAVE CACHE ================= */
+
+    dailyHoroscopeStore.set(key, cleanText);
+
     return res.json({
       zodiac,
-      comment: dailyHoroscopeStore.get(key),
-      cached: true,
-    });
-  }
-
-  try {
-    const text = await generateDailyHoroscope(zodiac);
-    dailyHoroscopeStore.set(key, text);
-
-    res.json({
-      zodiac,
-      comment: text,
+      comment: cleanText,
       cached: false,
     });
-  } catch {
-    res.status(500).json({ error: "Burç yorumu alınamadı" });
+
+  } catch (err) {
+    console.error("Daily horoscope error:", err);
+
+    return res.status(500).json({
+      error: "Burç yorumu alınamadı",
+    });
   }
 });
 

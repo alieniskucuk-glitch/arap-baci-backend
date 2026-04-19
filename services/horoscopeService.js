@@ -13,20 +13,38 @@ Kurallar:
 - Anaç ama tarafsız, sevimli fakat gizemli bir dil kullan
 `;
 
-export async function generateDailyHoroscope(zodiac) {
-  const r = await openai.responses.create({
-    model: "gpt-4.1-mini",
-    input: [
-      { role: "system", content: DAILY_HOROSCOPE_PROMPT },
-      {
-        role: "user",
-        content: [
-          { type: "input_text", text: `${zodiac} burcu için bugünün falını yorumla.` },
-        ],
-      },
-    ],
-    max_output_tokens: 250,
-  });
+/* ================= GENERATE ================= */
 
-  return extractText(r);
+export async function generateDailyHoroscope(zodiac) {
+  try {
+    const r = await openai.responses.create({
+      model: "gpt-4.1-mini",
+      input: [
+        { role: "system", content: DAILY_HOROSCOPE_PROMPT },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text: `${zodiac} burcu için bugünün falını yorumla.`,
+            },
+          ],
+        },
+      ],
+      max_output_tokens: 400, // 🔥 biraz artırıldı (250 yetmiyordu)
+    });
+
+    const text = extractText(r);
+
+    // ❗ boş response koruması
+    if (!text || text.trim().length === 0) {
+      throw new Error("Empty horoscope response");
+    }
+
+    return text.trim();
+
+  } catch (err) {
+    console.error("generateDailyHoroscope error:", err);
+    throw err;
+  }
 }
