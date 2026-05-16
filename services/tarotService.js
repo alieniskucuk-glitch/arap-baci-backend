@@ -374,13 +374,6 @@ export async function revealTarot(uid, { sessionId }) {
         throw new Error("Yorum üretilemedi");
       }
 
-      const remainingCoin = await decreaseCoin(
-        uid,
-        session.cost,
-        "TAROT",
-        { sessionId, mode: session.mode }
-      );
-
       if (!(await existsSessionDoc(sessionId))) {
         await createSessionDoc(sessionId, {
           uid,
@@ -397,6 +390,13 @@ export async function revealTarot(uid, { sessionId }) {
           processing: false,
         });
       }
+
+      const remainingCoin = await decreaseCoin(
+        uid,
+        session.cost,
+        "TAROT",
+        { sessionId, mode: session.mode }
+      );
 
       await markCompleted(sessionId, {
         remainingCoin,
