@@ -19,6 +19,7 @@ import userFullCreat from "./routes/user/fullcreat.js";
 import userEdit from "./routes/user/edit.js";
 import userPremium from "./routes/user/premium.js";
 import userRefresh from "./routes/user/refresh.js";
+import rewardRoutes from "./routes/reward.js";
 
 const app = express();
 
@@ -52,6 +53,7 @@ app.use("/ruya", ruyaRoutes);
 app.use("/ruh-esi", ruhEsiRoutes);
 app.use("/melek", melekRoutes);
 app.use("/tarot", tarotRoutes);
+app.use("/reward", rewardRoutes);
 
 /* ================= USER ================= */
 app.use("/user", userCreat);
