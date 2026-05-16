@@ -46,6 +46,7 @@ async function markCompleted(uid, sessionId, patch = {}) {
   await updateSessionDoc(uid, sessionId, {
     status: "completed",
     completedAt: Date.now(),
+    completedAtServer: admin.firestore.FieldValue.serverTimestamp(),
     ...patch,
   });
 }
@@ -54,6 +55,7 @@ async function markExpired(uid, sessionId) {
   await updateSessionDoc(uid, sessionId, {
     status: "expired",
     expiredAt: Date.now(),
+    expiredAtServer: admin.firestore.FieldValue.serverTimestamp(),
   });
 }
 
@@ -89,10 +91,12 @@ function resolveCardCount(mode) {
 
 function pickCards(count) {
   const all = Array.from({ length: 78 }, (_, i) => i);
+
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [all[i], all[j]] = [all[j], all[i]];
   }
+
   return all.slice(0, count);
 }
 
@@ -109,8 +113,14 @@ function resolveSpreadDescription(mode) {
 function toPicked(selectedCards, revealedCount) {
   return (selectedCards || []).slice(0, revealedCount).map((id) => {
     const card = getTarotById(id);
+
     if (!card) throw new Error(`Kart bulunamadı: ${id}`);
-    return { id, image: card.image };
+
+    return {
+      id,
+      title: card.title || card.name || card.trTitle || null,
+      image: card.image,
+    };
   });
 }
 
@@ -228,8 +238,10 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     question: question || null,
     selectedCards,
     revealed: [],
+    cards: [],
     cost: coinPrice,
     createdAt,
+    createdAtServer: admin.firestore.FieldValue.serverTimestamp(),
     status: "active",
     interpretation: null,
     interpretationReadyAt: null,
@@ -250,6 +262,7 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
         await updateSessionDoc(uid, sessionId, {
           interpretation: t,
           interpretationReadyAt: Date.now(),
+          interpretationReadyAtServer: admin.firestore.FieldValue.serverTimestamp(),
         });
       }
 
@@ -339,11 +352,12 @@ export async function revealTarot(uid, { sessionId }) {
 
     session.revealed.push(cardId);
 
+    const picked = toPicked(session.selectedCards, session.revealed.length);
+
     await updateSessionDoc(uid, sessionId, {
       revealed: session.revealed,
+      cards: picked,
     });
-
-    const picked = toPicked(session.selectedCards, session.revealed.length);
 
     if (session.revealed.length === session.selectedCards.length) {
 
@@ -382,6 +396,7 @@ export async function revealTarot(uid, { sessionId }) {
           await updateSessionDoc(uid, sessionId, {
             interpretation: interpretation.trim(),
             interpretationReadyAt: Date.now(),
+            interpretationReadyAtServer: admin.firestore.FieldValue.serverTimestamp(),
           });
         }
       }
@@ -402,6 +417,8 @@ export async function revealTarot(uid, { sessionId }) {
 
       await markCompleted(uid, sessionId, {
         remainingCoin,
+        cards: picked,
+        interpretation,
       });
 
       sessionStore.delete(sessionId);
