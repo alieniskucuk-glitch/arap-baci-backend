@@ -17,6 +17,47 @@ function getTodayKey() {
   }).format(new Date());
 }
 
+/* ================= CHECK LIMIT ================= */
+
+router.get("/check", auth, async (req, res) => {
+  try {
+    const uid = req.user.uid;
+
+    const snap = await db
+        .collection("users")
+        .doc(uid)
+        .get();
+
+    if (!snap.exists) {
+      return res.status(404).json({
+        error: "USER_NOT_FOUND",
+      });
+    }
+
+    const data = snap.data();
+
+    const today = getTodayKey();
+
+    let rewardDate = data.rewardDate || "";
+    let rewardCount = data.rewardCount || 0;
+
+    if (rewardDate !== today) {
+      rewardCount = 0;
+    }
+
+    return res.json({
+      allowed: rewardCount < 5,
+      remaining: Math.max(0, 5 - rewardCount),
+    });
+  } catch (e) {
+    console.error(e);
+
+    return res.status(500).json({
+      error: "CHECK_FAILED",
+    });
+  }
+});
+
 /* ================= REWARD ================= */
 
 router.post("/", auth, async (req, res) => {
@@ -39,13 +80,11 @@ router.post("/", auth, async (req, res) => {
       let rewardDate = data.rewardDate || "";
       let rewardCount = data.rewardCount || 0;
 
-      // GÜN DEĞİŞTİYSE RESET
       if (rewardDate !== today) {
         rewardDate = today;
         rewardCount = 0;
       }
 
-      // LIMIT
       if (rewardCount >= 5) {
         throw new Error("DAILY_LIMIT");
       }
