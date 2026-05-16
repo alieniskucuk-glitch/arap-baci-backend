@@ -71,7 +71,6 @@ setInterval(() => {
       sessionStore.delete(id);
     }
   }
-
 }, 60000);
 
 /* =========================
@@ -114,103 +113,12 @@ function toPicked(selectedCards, revealedCount) {
   return (selectedCards || []).slice(0, revealedCount).map((id) => {
     const card = getTarotById(id);
 
-    if (!card) throw new Error(`Kart bulunamadı: ${id}`);
-
     return {
       id,
       title: card.title || card.name || card.trTitle || null,
       image: card.image,
     };
   });
-}
-
-/* =========================
-   PROMPT
-========================= */
-
-function buildPrompt({ mode, subType, question, selectedCards }) {
-
-  const spreadDescription = resolveSpreadDescription(mode) || "Tarot açılımı";
-
-  if (mode === "celtic") {
-
-    return `
-Sen 30 yıllık deneyime sahip, kader analizi yapan güçlü bir tarot ustasısın.
-
-Bu bir Kelt Haçı açılımıdır ve derin kader çözümlemesi gerektirir.
-
-Kart ID’leri: ${(selectedCards || []).join(", ")}
-Alt kategori: ${subType || "Genel"}
-Kullanıcının Sorusu: ${question || "Belirtilmedi"}
-
-ZORUNLU KURALLAR:
-- Minimum 1000 kelime yaz.
-- En az 10 paragraf oluştur.
-- Her kartı temsil ettiği pozisyona göre ayrı ayrı analiz et.
-- Bilinçaltı etkileri açıkla.
-- Karmik bağları değerlendir.
-- İçsel çatışmaları analiz et.
-- Dışsal faktörleri analiz et.
-- Kader planı ve ruhsal dersleri detaylandır.
-- Kartlar arası enerji akışını mutlaka açıkla.
-- Maddi, duygusal, ruhsal ve zihinsel alanları ayrı ayrı ele al.
-- Geleceğe dair güçlü ama gerçekçi öngörüler yap.
-- Sonunda güçlü bir uyanış ve rehberlik mesajı yaz.
-
-Analiz sürecini anlatma.
-Teknik açıklama yapma.
-Listeleme yapma.
-Yorum doğrudan başlasın.
-`.trim();
-  }
-
-  return `
-Sen deneyimli ve sezgisel bir tarot rehberisin.
-
-Açılım Türü: ${spreadDescription}
-Kart ID’leri: ${(selectedCards || []).join(", ")}
-Alt kategori: ${subType || "Genel"}
-Kullanıcının Sorusu: ${question || "Belirtilmedi"}
-
-- Her kart için ayrı paragraf yaz.
-- Minimum 500 kelime olsun.
-- Kartları tek tek analiz et.
-- Kartlar arası enerji bağlantısını açıkla.
-- Ruhsal ve psikolojik boyutu değerlendir.
-- Somut rehberlik ver.
-- Sonunda motive edici bir kapanış yap.
-
-Kısa cevap verme.
-Analiz sürecini anlatma.
-Yorum doğrudan başlasın.
-`.trim();
-}
-
-/* =========================
-   GPT (timeout eklendi)
-========================= */
-
-async function generateInterpretation({ mode, subType, question, selectedCards }) {
-
-  const prompt = buildPrompt({ mode, subType, question, selectedCards });
-
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error("GPT timeout")), 45000)
-  );
-
-  const completion = await Promise.race([
-    openai.chat.completions.create({
-      model: "gpt-4.1-mini",
-      messages: [
-        { role: "system", content: "Sen güçlü ve sezgisel bir tarot ustasısın." },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.85,
-    }),
-    timeout
-  ]);
-
-  return (completion?.choices?.[0]?.message?.content || "").trim();
 }
 
 /* =========================
@@ -225,28 +133,8 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
   const cardCount = resolveCardCount(mode);
   const selectedCards = pickCards(cardCount);
 
-  let sessionId = crypto.randomUUID();
-
+  const sessionId = crypto.randomUUID();
   const createdAt = Date.now();
-
-  await createSessionDoc(uid, sessionId, {
-    uid,
-    type: "tarot",
-    sessionId,
-    mode,
-    subType: subType || null,
-    question: question || null,
-    selectedCards,
-    revealed: [],
-    cards: [],
-    cost: coinPrice,
-    createdAt,
-    createdAtServer: admin.firestore.FieldValue.serverTimestamp(),
-    status: "active",
-    interpretation: null,
-    interpretationReadyAt: null,
-    processing: false,
-  });
 
   const interpretationPromise = generateInterpretation({
     mode,
@@ -254,20 +142,7 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     question,
     selectedCards,
   })
-    .then(async (text) => {
-
-      const t = (text || "").trim();
-
-      if (t) {
-        await updateSessionDoc(uid, sessionId, {
-          interpretation: t,
-          interpretationReadyAt: Date.now(),
-          interpretationReadyAtServer: admin.firestore.FieldValue.serverTimestamp(),
-        });
-      }
-
-      return t || null;
-    })
+    .then((text) => (text || "").trim() || null)
     .catch((err) => {
       console.error("GPT ERROR:", err);
       return null;
@@ -299,7 +174,6 @@ export async function revealTarot(uid, { sessionId }) {
   let session = sessionStore.get(sessionId);
 
   if (!session) {
-
     const doc = await getSessionDoc(uid, sessionId);
     if (!doc) throw new Error("Session yok");
 
@@ -322,128 +196,75 @@ export async function revealTarot(uid, { sessionId }) {
 
   if (session.uid !== uid) throw new Error("Yetkisiz");
 
-  if (session.status === "completed") throw new Error("Session tamamlandı");
-  if (session.status === "expired") throw new Error("Session süresi doldu");
-
   if (isExpired(session)) {
     await markExpired(uid, sessionId);
     sessionStore.delete(sessionId);
     throw new Error("Session süresi doldu");
   }
 
-  const docCheck = await getSessionDoc(uid, sessionId);
+  const nextIndex = session.revealed.length;
+  const cardId = session.selectedCards[nextIndex];
 
-  if (session.processing || docCheck?.processing) {
-    throw new Error("Reveal zaten işleniyor");
-  }
+  session.revealed.push(cardId);
 
-  session.processing = true;
+  const picked = toPicked(
+    session.selectedCards,
+    session.revealed.length
+  );
 
-  await updateSessionDoc(uid, sessionId, { processing: true });
+  if (session.revealed.length === session.selectedCards.length) {
 
-  try {
+    let interpretation =
+      await session.interpretationPromise;
 
-    const nextIndex = session.revealed.length;
+    const remainingCoin = await decreaseCoin(
+      uid,
+      session.cost,
+      "TAROT",
+      { sessionId, mode: session.mode }
+    );
 
-    if (nextIndex >= session.selectedCards.length)
-      throw new Error("Tüm kartlar açıldı");
+    if (!(await existsSessionDoc(uid, sessionId))) {
 
-    const cardId = session.selectedCards[nextIndex];
-
-    session.revealed.push(cardId);
-
-    const picked = toPicked(session.selectedCards, session.revealed.length);
-
-    await updateSessionDoc(uid, sessionId, {
-      revealed: session.revealed,
-      cards: picked,
-    });
-
-    if (session.revealed.length === session.selectedCards.length) {
-
-      let interpretation = null;
-
-      const docNow = await getSessionDoc(uid, sessionId);
-
-      if (docNow && typeof docNow.interpretation === "string") {
-        const t = docNow.interpretation.trim();
-        if (t) interpretation = t;
-      }
-
-      if (!interpretation && session.interpretationPromise) {
-        interpretation = await session.interpretationPromise;
-      }
-
-      if (!interpretation) {
-
-        try {
-
-          interpretation = await generateInterpretation({
-            mode: session.mode,
-            subType: session.subType,
-            question: session.question,
-            selectedCards: session.selectedCards,
-          });
-
-        } catch (err) {
-
-          console.error("GPT FALLBACK ERROR:", err);
-          interpretation = null;
-        }
-
-        if (interpretation) {
-
-          await updateSessionDoc(uid, sessionId, {
-            interpretation: interpretation.trim(),
-            interpretationReadyAt: Date.now(),
-            interpretationReadyAtServer: admin.firestore.FieldValue.serverTimestamp(),
-          });
-        }
-      }
-
-      if (!interpretation) {
-
-        await markExpired(uid, sessionId);
-        sessionStore.delete(sessionId);
-        throw new Error("Yorum üretilemedi");
-      }
-
-      const remainingCoin = await decreaseCoin(
+      await createSessionDoc(uid, sessionId, {
         uid,
-        session.cost,
-        "TAROT",
-        { sessionId, mode: session.mode }
-      );
-
-      await markCompleted(uid, sessionId, {
-        remainingCoin,
+        type: "tarot",
+        sessionId,
+        mode: session.mode,
+        subType: session.subType,
+        question: session.question,
+        selectedCards: session.selectedCards,
+        revealed: session.revealed,
         cards: picked,
+        cost: session.cost,
+        createdAt: session.createdAt,
+        createdAtServer:
+          admin.firestore.FieldValue.serverTimestamp(),
+        status: "active",
         interpretation,
+        processing: false,
       });
 
-      sessionStore.delete(sessionId);
-
-      return {
-        picked,
-        interpretation,
-        remainingCoin,
-      };
     }
+
+    await markCompleted(uid, sessionId, {
+      remainingCoin,
+      cards: picked,
+      interpretation,
+    });
+
+    sessionStore.delete(sessionId);
 
     return {
       picked,
-      interpretation: null,
-      remainingCoin: null,
+      interpretation,
+      remainingCoin,
     };
-
-  } finally {
-
-    const s = sessionStore.get(sessionId);
-
-    if (s) s.processing = false;
-
-    try {
-      await updateSessionDoc(uid, sessionId, { processing: false });
-    } catch (_) {}
   }
+
+  return {
+    picked,
+    interpretation: null,
+    remainingCoin: null,
+  };
 }
