@@ -10,45 +10,48 @@ import { db, admin } from "../config/firebase.js";
 
 const sessionStore = new Map();
 const SESSION_TTL = 1000 * 60 * 10;
-const SESSIONS_COL = "tarotSessions";
 
 function isExpired(session) {
   return Date.now() - session.createdAt > SESSION_TTL;
 }
 
-function sessionRef(sessionId) {
-  return db.collection(SESSIONS_COL).doc(sessionId);
+function sessionRef(uid, sessionId) {
+  return db
+    .collection("users")
+    .doc(uid)
+    .collection("history")
+    .doc(sessionId);
 }
 
-async function existsSessionDoc(sessionId) {
-  const snap = await sessionRef(sessionId).get();
+async function existsSessionDoc(uid, sessionId) {
+  const snap = await sessionRef(uid, sessionId).get();
   return snap.exists;
 }
 
-async function createSessionDoc(sessionId, data) {
-  await sessionRef(sessionId).set(data, { merge: false });
+async function createSessionDoc(uid, sessionId, data) {
+  await sessionRef(uid, sessionId).set(data, { merge: false });
 }
 
-async function getSessionDoc(sessionId) {
-  const snap = await sessionRef(sessionId).get();
+async function getSessionDoc(uid, sessionId) {
+  const snap = await sessionRef(uid, sessionId).get();
   if (!snap.exists) return null;
   return snap.data();
 }
 
-async function updateSessionDoc(sessionId, patch) {
-  await sessionRef(sessionId).set(patch, { merge: true });
+async function updateSessionDoc(uid, sessionId, patch) {
+  await sessionRef(uid, sessionId).set(patch, { merge: true });
 }
 
-async function markCompleted(sessionId, patch = {}) {
-  await updateSessionDoc(sessionId, {
+async function markCompleted(uid, sessionId, patch = {}) {
+  await updateSessionDoc(uid, sessionId, {
     status: "completed",
     completedAt: Date.now(),
     ...patch,
   });
 }
 
-async function markExpired(sessionId) {
-  await updateSessionDoc(sessionId, {
+async function markExpired(uid, sessionId) {
+  await updateSessionDoc(uid, sessionId, {
     status: "expired",
     expiredAt: Date.now(),
   });
@@ -216,8 +219,10 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
 
   const createdAt = Date.now();
 
-  await createSessionDoc(sessionId, {
+  await createSessionDoc(uid, sessionId, {
     uid,
+    type: "tarot",
+    sessionId,
     mode,
     subType: subType || null,
     question: question || null,
@@ -242,7 +247,7 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
       const t = (text || "").trim();
 
       if (t) {
-        await updateSessionDoc(sessionId, {
+        await updateSessionDoc(uid, sessionId, {
           interpretation: t,
           interpretationReadyAt: Date.now(),
         });
@@ -282,7 +287,7 @@ export async function revealTarot(uid, { sessionId }) {
 
   if (!session) {
 
-    const doc = await getSessionDoc(sessionId);
+    const doc = await getSessionDoc(uid, sessionId);
     if (!doc) throw new Error("Session yok");
 
     session = {
@@ -308,12 +313,12 @@ export async function revealTarot(uid, { sessionId }) {
   if (session.status === "expired") throw new Error("Session süresi doldu");
 
   if (isExpired(session)) {
-    await markExpired(sessionId);
+    await markExpired(uid, sessionId);
     sessionStore.delete(sessionId);
     throw new Error("Session süresi doldu");
   }
 
-  const docCheck = await getSessionDoc(sessionId);
+  const docCheck = await getSessionDoc(uid, sessionId);
 
   if (session.processing || docCheck?.processing) {
     throw new Error("Reveal zaten işleniyor");
@@ -321,7 +326,7 @@ export async function revealTarot(uid, { sessionId }) {
 
   session.processing = true;
 
-  await updateSessionDoc(sessionId, { processing: true });
+  await updateSessionDoc(uid, sessionId, { processing: true });
 
   try {
 
@@ -334,7 +339,7 @@ export async function revealTarot(uid, { sessionId }) {
 
     session.revealed.push(cardId);
 
-    await updateSessionDoc(sessionId, {
+    await updateSessionDoc(uid, sessionId, {
       revealed: session.revealed,
     });
 
@@ -344,7 +349,7 @@ export async function revealTarot(uid, { sessionId }) {
 
       let interpretation = null;
 
-      const docNow = await getSessionDoc(sessionId);
+      const docNow = await getSessionDoc(uid, sessionId);
 
       if (docNow && typeof docNow.interpretation === "string") {
         const t = docNow.interpretation.trim();
@@ -374,7 +379,7 @@ export async function revealTarot(uid, { sessionId }) {
 
         if (interpretation) {
 
-          await updateSessionDoc(sessionId, {
+          await updateSessionDoc(uid, sessionId, {
             interpretation: interpretation.trim(),
             interpretationReadyAt: Date.now(),
           });
@@ -383,7 +388,7 @@ export async function revealTarot(uid, { sessionId }) {
 
       if (!interpretation) {
 
-        await markExpired(sessionId);
+        await markExpired(uid, sessionId);
         sessionStore.delete(sessionId);
         throw new Error("Yorum üretilemedi");
       }
@@ -395,7 +400,7 @@ export async function revealTarot(uid, { sessionId }) {
         { sessionId, mode: session.mode }
       );
 
-      await markCompleted(sessionId, {
+      await markCompleted(uid, sessionId, {
         remainingCoin,
       });
 
@@ -421,7 +426,7 @@ export async function revealTarot(uid, { sessionId }) {
     if (s) s.processing = false;
 
     try {
-      await updateSessionDoc(sessionId, { processing: false });
+      await updateSessionDoc(uid, sessionId, { processing: false });
     } catch (_) {}
   }
 }
