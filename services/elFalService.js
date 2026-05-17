@@ -34,89 +34,6 @@ export const elFal = async (req, res) => {
     const base64Image =
       req.file.buffer.toString("base64");
 
-    /* =========================
-       FOTO KALİTE KONTROL
-    ========================= */
-
-    const validation =
-      await openai.responses.create({
-        model: "gpt-4o-mini",
-
-        input: [
-          {
-            role: "system",
-
-            content: `
-Fotoğraf kalite kontrol sistemi ol.
-
-Sadece JSON döndür:
-
-{
- "valid": true,
- "reason":""
-}
-
-veya
-
-{
- "valid": false,
- "reason":"blur"
-}
-
-Kontrol:
-
-- avuç içi var mı
-- el kadrajda mı
-- çizgiler seçiliyor mu
-- çok bulanık mı
-- çok karanlık mı
-- çok uzak mı
-- alakasız foto mu
-`,
-          },
-
-          {
-            role: "user",
-
-            content: [
-              {
-                type: "input_image",
-
-                image_url:
-                  `data:image/jpeg;base64,${base64Image}`,
-              },
-            ],
-          },
-        ],
-
-        max_output_tokens: 100,
-      });
-
-    let isValid = true;
-
-    try {
-      const parsed = JSON.parse(
-        validation.output_text || "{}"
-      );
-
-      isValid = parsed.valid === true;
-    } catch {
-      isValid = true;
-    }
-
-    if (!isValid) {
-      return res.status(400).json({
-        success: false,
-
-        error:
-          "El fotoğrafı okunamadı. Daha net ve yakın çekin.",
-      });
-    }
-
-    /* =========================
-       EL FALI
-    ========================= */
-
     const response =
       await openai.responses.create({
         model: "gpt-4o",
@@ -126,13 +43,39 @@ Kontrol:
             role: "system",
 
             content: `
-Sen Arap Bacı adlı
-mistik el falcısısın.
+Sen “Arap Bacı”
+adında deneyimli
+mistik bir el falcısısın.
 
-Yorumları kullanıcının
-burcundan destek alarak yap.
+ÖNCE fotoğrafı kontrol et.
 
-Burçtan asla bahsetme.
+Şunlardan biri varsa:
+
+- el görünmüyor
+- avuç içi yok
+- çok bulanık
+- çok uzak
+- çok karanlık
+- çizgiler okunmuyor
+
+SADECE şunu yaz:
+
+[FOTO_OKUNAMADI]
+
+Başka hiçbir şey yazma.
+
+Eğer fotoğraf uygunsa
+normal el falına geç.
+
+Mutlaka:
+
+- hayat çizgisi
+- kalp çizgisi
+- kader çizgisi
+- avuç enerjisi
+- el yapısı
+
+yorumla.
 
 İsim:
 ${userName}
@@ -143,11 +86,13 @@ ${userGender}
 Burç:
 ${userZodiac}
 
-Hayat çizgisi,
-kalp çizgisi,
-kader çizgisi,
-avuç enerjisi
-ve el yapısını yorumla.
+Burcu sadece
+arka planda kullan.
+
+Asla bahsetme.
+
+İsmi en fazla
+2 kez kullan.
 
 Başlık yazma.
 
@@ -163,7 +108,7 @@ Uzun ve mistik yaz.
                 type: "input_text",
 
                 text:
-                  "Bu el fotoğrafını yorumla",
+                  "Fotoğrafı incele ve el falı yap.",
               },
 
               {
@@ -181,7 +126,20 @@ Uzun ve mistik yaz.
 
     const result =
       response.output_text ||
-      "Elinde güçlü bir enerji hissediyorum…";
+      "";
+
+    if (
+      result.includes(
+        "[FOTO_OKUNAMADI]"
+      )
+    ) {
+      return res.status(400).json({
+        success: false,
+
+        error:
+          "El fotoğrafı net değil. Daha yakın ve aydınlık çekin.",
+      });
+    }
 
     const remainingCoin =
       await decreaseCoin(
