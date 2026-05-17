@@ -43,7 +43,8 @@ export const elFal = async (req, res) => {
       req.file.buffer.toString("base64");
 
     /* =========================
-       FOTOĞRAF VALIDATION
+       FOTO KALİTE KONTROL
+       COIN DÜŞMEZ
     ========================= */
 
     const validation =
@@ -57,27 +58,27 @@ export const elFal = async (req, res) => {
             content: `
 Sen bir görüntü doğrulama sistemisin.
 
-Sadece şunları kontrol et:
+Sadece TEK kelime döndür.
 
-- Fotoğrafta avuç içi net görünüyor mu?
-- El kadrajda mı?
-- Çizgiler okunabilir mi?
-- Fotoğraf çok bulanık mı?
-- Çok karanlık mı?
-- Çok uzak mı?
-- Tamamen alakasız görüntü mü?
-
-Eğer el falı yapılabilecek kalite varsa sadece:
+Geçerliyse:
 
 VALID
 
-yaz.
-
-Eğer kalite yetersizse sadece:
+Geçersizse:
 
 INVALID
 
-yaz.
+Başka hiçbir açıklama yazma.
+
+Kontrol et:
+
+- Avuç içi görünmeli
+- El kadrajda olmalı
+- Çizgiler seçilebilmeli
+- Çok bulanık olmamalı
+- Çok uzak olmamalı
+- Çok karanlık olmamalı
+- Alakasız foto olmamalı
 `,
           },
 
@@ -101,19 +102,23 @@ yaz.
     const validationText =
       validation.output_text
         ?.trim()
-        ?.toUpperCase();
+        ?.toUpperCase() || "";
 
-    if (validationText !== "VALID") {
+    const isValid =
+      validationText.includes("VALID") &&
+      !validationText.includes("INVALID");
+
+    if (!isValid) {
       return res.status(400).json({
         success: false,
 
         error:
-          "El fotoğrafı net değil. Avuç içini daha yakın, aydınlık ve net şekilde çekin.",
+          "El fotoğrafı okunamadı. Avuç içini daha net, yakın ve aydınlık çekin.",
       });
     }
 
     /* =========================
-       GPT İŞLEMİ
+       EL FALI
     ========================= */
 
     const response =
@@ -125,8 +130,9 @@ yaz.
             role: "system",
 
             content: `
-Sen “Arap Bacı” adında deneyimli, çingene,
-mistik ve sezgileri güçlü bir el falcısısın.
+Sen “Arap Bacı” adında deneyimli,
+çingene, mistik ve sezgileri güçlü
+bir el falcısısın.
 
 Asla yapay zeka olduğunu söyleme.
 Asla genel bilgi verme.
@@ -134,69 +140,65 @@ Asla "yorum yapamam" deme.
 
 Direkt el falı yorumu yap.
 
-Kullanıcının avuç içi çizgilerine bakarak
-kesin ve net yorumlar yap.
+Kullanıcının avuç içi
+çizgilerine bakarak kesin
+ve net yorumlar yap.
 
-Yorumları yaparken burcundan yararlan
+Yorumları yaparken
+burcundan yararlan
 ve yorumlarını onunla destekle.
 
 Mutlaka şunlara değin:
 
-- Hayat çizgisinin uzunluğu,
-  kırılması veya enerjisi
-
-- Kalp çizgisinin derinliği
-  ve duygusal yapı
-
-- Kader çizgisi var mı yok mu
-
-- Avuç ortasındaki enerji
-
-- Elin genel yapısı
-  (çizgiler belirgin mi,
-   karmaşık mı)
+- Hayat çizgisi
+- Kalp çizgisi
+- Kader çizgisi
+- Avuç enerjisi
+- El yapısı
 
 KULLANICI PROFİLİ:
 
-İsim: ${userName}
+İsim:
+${userName}
 
-Cinsiyet: ${userGender}
+Cinsiyet:
+${userGender}
 
-Burç: ${userZodiac}
+Burç:
+${userZodiac}
 
-Bu bilgileri SADECE:
+Bu bilgileri:
 
-- yorumun enerjisini
-- karakter tonunu
-- duygusal yaklaşımı
-- sezgi biçimini
+- karakter tonu
+- sezgi biçimi
+- duygu yapısı
+- enerji
 
-belirlemek için kullan.
+için kullan.
 
 Burçtan ASLA bahsetme.
 
-Burç ismini ASLA yazma.
+Burç ismini yazma.
 
-“Koç enerjisi”,
-“burcun”,
-“zodyak”,
-“ateş grubu”
-gibi ifadeler kullanma.
+“Burcun”
+“Koç enerjisi”
+“Zodyak”
+“Ateş grubu”
 
-Kullanıcının ismini doğal şekilde
+ifadelerini kullanma.
+
+İsmi doğal şekilde
 en fazla 2 kez kullan.
 
 Cinsiyeti direkt söyleme.
 
-Hitap tonunu doğal şekilde ayarla.
-
-Yorum tamamen doğal görünmeli.
-
-Sıcak, mistik ve samimi konuş.
+Sıcak,
+mistik,
+samimi konuş.
 
 Başlık yazma.
 
-Paragraf paragraf uzun yaz.
+Uzun yaz.
 
 Kehanet tonu kullan.
 `,
@@ -231,7 +233,7 @@ Kehanet tonu kullan.
       "Elinde güçlü bir enerji hissediyorum…";
 
     /* =========================
-       RESULT OK → COIN DÜŞ
+       BAŞARILI → COIN DÜŞ
     ========================= */
 
     const remainingCoin =
@@ -241,20 +243,20 @@ Kehanet tonu kullan.
         "EL_FALI"
       );
 
-    /* =========================
-       RESPONSE
-    ========================= */
-
     return res.json({
       success: true,
       result,
       remainingCoin,
     });
   } catch (err) {
-    console.error("EL FALI HATA:", err);
+    console.error(
+      "EL FALI HATA:",
+      err
+    );
 
     return res.status(500).json({
-      error: "El falı yorumlanamadı",
+      error:
+        "El falı yorumlanamadı",
     });
   }
 };
