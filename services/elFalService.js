@@ -27,24 +27,15 @@ export const elFal = async (req, res) => {
       });
     }
 
-    /* =========================
-       USER PROFİL
-    ========================= */
-
     const userName = req.user?.name || "";
     const userGender = req.user?.gender || "";
     const userZodiac = req.user?.zodiac || "";
-
-    /* =========================
-       IMAGE
-    ========================= */
 
     const base64Image =
       req.file.buffer.toString("base64");
 
     /* =========================
        FOTO KALİTE KONTROL
-       COIN DÜŞMEZ
     ========================= */
 
     const validation =
@@ -56,29 +47,31 @@ export const elFal = async (req, res) => {
             role: "system",
 
             content: `
-Sen bir görüntü doğrulama sistemisin.
+Fotoğraf kalite kontrol sistemi ol.
 
-Sadece TEK kelime döndür.
+Sadece JSON döndür:
 
-Geçerliyse:
+{
+ "valid": true,
+ "reason":""
+}
 
-VALID
+veya
 
-Geçersizse:
+{
+ "valid": false,
+ "reason":"blur"
+}
 
-INVALID
+Kontrol:
 
-Başka hiçbir açıklama yazma.
-
-Kontrol et:
-
-- Avuç içi görünmeli
-- El kadrajda olmalı
-- Çizgiler seçilebilmeli
-- Çok bulanık olmamalı
-- Çok uzak olmamalı
-- Çok karanlık olmamalı
-- Alakasız foto olmamalı
+- avuç içi var mı
+- el kadrajda mı
+- çizgiler seçiliyor mu
+- çok bulanık mı
+- çok karanlık mı
+- çok uzak mı
+- alakasız foto mu
 `,
           },
 
@@ -96,24 +89,27 @@ Kontrol et:
           },
         ],
 
-        max_output_tokens: 10,
+        max_output_tokens: 100,
       });
 
-    const validationText =
-      validation.output_text
-        ?.trim()
-        ?.toUpperCase() || "";
+    let isValid = true;
 
-    const isValid =
-      validationText.includes("VALID") &&
-      !validationText.includes("INVALID");
+    try {
+      const parsed = JSON.parse(
+        validation.output_text || "{}"
+      );
+
+      isValid = parsed.valid === true;
+    } catch {
+      isValid = true;
+    }
 
     if (!isValid) {
       return res.status(400).json({
         success: false,
 
         error:
-          "El fotoğrafı okunamadı. Avuç içini daha net, yakın ve aydınlık çekin.",
+          "El fotoğrafı okunamadı. Daha net ve yakın çekin.",
       });
     }
 
@@ -130,33 +126,13 @@ Kontrol et:
             role: "system",
 
             content: `
-Sen “Arap Bacı” adında deneyimli,
-çingene, mistik ve sezgileri güçlü
-bir el falcısısın.
+Sen Arap Bacı adlı
+mistik el falcısısın.
 
-Asla yapay zeka olduğunu söyleme.
-Asla genel bilgi verme.
-Asla "yorum yapamam" deme.
+Yorumları kullanıcının
+burcundan destek alarak yap.
 
-Direkt el falı yorumu yap.
-
-Kullanıcının avuç içi
-çizgilerine bakarak kesin
-ve net yorumlar yap.
-
-Yorumları yaparken
-burcundan yararlan
-ve yorumlarını onunla destekle.
-
-Mutlaka şunlara değin:
-
-- Hayat çizgisi
-- Kalp çizgisi
-- Kader çizgisi
-- Avuç enerjisi
-- El yapısı
-
-KULLANICI PROFİLİ:
+Burçtan asla bahsetme.
 
 İsim:
 ${userName}
@@ -167,40 +143,15 @@ ${userGender}
 Burç:
 ${userZodiac}
 
-Bu bilgileri:
-
-- karakter tonu
-- sezgi biçimi
-- duygu yapısı
-- enerji
-
-için kullan.
-
-Burçtan ASLA bahsetme.
-
-Burç ismini yazma.
-
-“Burcun”
-“Koç enerjisi”
-“Zodyak”
-“Ateş grubu”
-
-ifadelerini kullanma.
-
-İsmi doğal şekilde
-en fazla 2 kez kullan.
-
-Cinsiyeti direkt söyleme.
-
-Sıcak,
-mistik,
-samimi konuş.
+Hayat çizgisi,
+kalp çizgisi,
+kader çizgisi,
+avuç enerjisi
+ve el yapısını yorumla.
 
 Başlık yazma.
 
-Uzun yaz.
-
-Kehanet tonu kullan.
+Uzun ve mistik yaz.
 `,
           },
 
@@ -212,7 +163,7 @@ Kehanet tonu kullan.
                 type: "input_text",
 
                 text:
-                  "Bu el fotoğrafını incele ve el falı yorumu yap.",
+                  "Bu el fotoğrafını yorumla",
               },
 
               {
@@ -231,10 +182,6 @@ Kehanet tonu kullan.
     const result =
       response.output_text ||
       "Elinde güçlü bir enerji hissediyorum…";
-
-    /* =========================
-       BAŞARILI → COIN DÜŞ
-    ========================= */
 
     const remainingCoin =
       await decreaseCoin(
