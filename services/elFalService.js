@@ -43,17 +43,88 @@ export const elFal = async (req, res) => {
       req.file.buffer.toString("base64");
 
     /* =========================
+       FOTOĞRAF VALIDATION
+    ========================= */
+
+    const validation =
+      await openai.responses.create({
+        model: "gpt-4o-mini",
+
+        input: [
+          {
+            role: "system",
+
+            content: `
+Sen bir görüntü doğrulama sistemisin.
+
+Sadece şunları kontrol et:
+
+- Fotoğrafta avuç içi net görünüyor mu?
+- El kadrajda mı?
+- Çizgiler okunabilir mi?
+- Fotoğraf çok bulanık mı?
+- Çok karanlık mı?
+- Çok uzak mı?
+- Tamamen alakasız görüntü mü?
+
+Eğer el falı yapılabilecek kalite varsa sadece:
+
+VALID
+
+yaz.
+
+Eğer kalite yetersizse sadece:
+
+INVALID
+
+yaz.
+`,
+          },
+
+          {
+            role: "user",
+
+            content: [
+              {
+                type: "input_image",
+
+                image_url:
+                  `data:image/jpeg;base64,${base64Image}`,
+              },
+            ],
+          },
+        ],
+
+        max_output_tokens: 10,
+      });
+
+    const validationText =
+      validation.output_text
+        ?.trim()
+        ?.toUpperCase();
+
+    if (validationText !== "VALID") {
+      return res.status(400).json({
+        success: false,
+
+        error:
+          "El fotoğrafı net değil. Avuç içini daha yakın, aydınlık ve net şekilde çekin.",
+      });
+    }
+
+    /* =========================
        GPT İŞLEMİ
     ========================= */
 
-    const response = await openai.responses.create({
-      model: "gpt-4o",
+    const response =
+      await openai.responses.create({
+        model: "gpt-4o",
 
-      input: [
-        {
-          role: "system",
+        input: [
+          {
+            role: "system",
 
-          content: `
+            content: `
 Sen “Arap Bacı” adında deneyimli, çingene,
 mistik ve sezgileri güçlü bir el falcısısın.
 
@@ -64,7 +135,10 @@ Asla "yorum yapamam" deme.
 Direkt el falı yorumu yap.
 
 Kullanıcının avuç içi çizgilerine bakarak
-kesin ve net yorumlar yap.Yorumları yaparken burcundan yararlan ve yorumlarını onunla destekel.
+kesin ve net yorumlar yap.
+
+Yorumları yaparken burcundan yararlan
+ve yorumlarını onunla destekle.
 
 Mutlaka şunlara değin:
 
@@ -126,31 +200,31 @@ Paragraf paragraf uzun yaz.
 
 Kehanet tonu kullan.
 `,
-        },
+          },
 
-        {
-          role: "user",
+          {
+            role: "user",
 
-          content: [
-            {
-              type: "input_text",
+            content: [
+              {
+                type: "input_text",
 
-              text:
-                "Bu el fotoğrafını incele ve el falı yorumu yap.",
-            },
+                text:
+                  "Bu el fotoğrafını incele ve el falı yorumu yap.",
+              },
 
-            {
-              type: "input_image",
+              {
+                type: "input_image",
 
-              image_url:
-                `data:image/jpeg;base64,${base64Image}`,
-            },
-          ],
-        },
-      ],
+                image_url:
+                  `data:image/jpeg;base64,${base64Image}`,
+              },
+            ],
+          },
+        ],
 
-      max_output_tokens: 800,
-    });
+        max_output_tokens: 800,
+      });
 
     const result =
       response.output_text ||
