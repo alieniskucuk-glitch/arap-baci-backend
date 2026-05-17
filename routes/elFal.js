@@ -14,7 +14,9 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15MB
+  limits: {
+    fileSize: 15 * 1024 * 1024, // 15MB
+  },
 });
 
 /* =========================
@@ -38,7 +40,8 @@ router.use((err, req, res, next) => {
 
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
-      error: "Fotoğraf çok büyük. Maksimum 15MB yükleyebilirsiniz.",
+      error:
+        "Fotoğraf çok büyük. Maksimum 15MB yükleyebilirsiniz.",
     });
   }
 

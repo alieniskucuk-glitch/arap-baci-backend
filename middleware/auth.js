@@ -29,17 +29,32 @@ export default async function auth(req, res, next) {
       email,
       exists: userDoc.exists,
 
-      name: typeof userData?.name === "string" ? userData.name : "",
+      name:
+        typeof userData?.name === "string"
+          ? userData.name
+          : "",
+
+      gender:
+        typeof userData?.gender === "string"
+          ? userData.gender
+          : "",
+
       zodiac:
-        typeof userData?.zodiac === "string" ? userData.zodiac : null,
+        typeof userData?.zodiac === "string"
+          ? userData.zodiac
+          : "",
 
       isPremium: userData?.isPremium === true,
 
       dailyCoin:
-        typeof userData?.dailyCoin === "number" ? userData.dailyCoin : 0,
+        typeof userData?.dailyCoin === "number"
+          ? userData.dailyCoin
+          : 0,
 
       abCoin:
-        typeof userData?.abCoin === "number" ? userData.abCoin : 0,
+        typeof userData?.abCoin === "number"
+          ? userData.abCoin
+          : 0,
     };
 
     next();
@@ -47,13 +62,19 @@ export default async function auth(req, res, next) {
     console.error("VERIFY ERROR:", err?.code || err?.message || err);
 
     if (err.code === "auth/id-token-expired") {
-      return res.status(401).json({ error: "Token süresi dolmuş" });
+      return res.status(401).json({
+        error: "Token süresi dolmuş",
+      });
     }
 
     if (err.code === "auth/id-token-revoked") {
-      return res.status(401).json({ error: "Token iptal edilmiş" });
+      return res.status(401).json({
+        error: "Token iptal edilmiş",
+      });
     }
 
-    return res.status(401).json({ error: "Geçersiz token" });
+    return res.status(401).json({
+      error: "Geçersiz token",
+    });
   }
 }

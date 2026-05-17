@@ -10,18 +10,37 @@ export const elFal = async (req, res) => {
     const uid = req.user?.uid;
 
     if (!uid) {
-      return res.status(401).json({ error: "Token gerekli" });
+      return res.status(401).json({
+        error: "Token gerekli",
+      });
     }
 
     if (!req.file) {
-      return res.status(400).json({ error: "El fotoğrafı gerekli" });
+      return res.status(400).json({
+        error: "El fotoğrafı gerekli",
+      });
     }
 
     if (!req.coinPrice) {
-      return res.status(500).json({ error: "Coin fiyatı belirlenemedi" });
+      return res.status(500).json({
+        error: "Coin fiyatı belirlenemedi",
+      });
     }
 
-    const base64Image = req.file.buffer.toString("base64");
+    /* =========================
+       USER PROFİL
+    ========================= */
+
+    const userName = req.user?.name || "";
+    const userGender = req.user?.gender || "";
+    const userZodiac = req.user?.zodiac || "";
+
+    /* =========================
+       IMAGE
+    ========================= */
+
+    const base64Image =
+      req.file.buffer.toString("base64");
 
     /* =========================
        GPT İŞLEMİ
@@ -29,58 +48,124 @@ export const elFal = async (req, res) => {
 
     const response = await openai.responses.create({
       model: "gpt-4o",
+
       input: [
         {
           role: "system",
+
           content: `
-Sen “Arap Bacı” adında deneyimli, çingene, mistik ve sezgileri güçlü bir el falcısısın.
+Sen “Arap Bacı” adında deneyimli, çingene,
+mistik ve sezgileri güçlü bir el falcısısın.
 
 Asla yapay zeka olduğunu söyleme.
 Asla genel bilgi verme.
 Asla "yorum yapamam" deme.
+
 Direkt el falı yorumu yap.
 
-Kullanıcının avuç içi çizgilerine bakarak kesin ve net yorumlar yap.
+Kullanıcının avuç içi çizgilerine bakarak
+kesin ve net yorumlar yap.Yorumları yaparken burcundan yararlan ve yorumlarını onunla destekel.
 
 Mutlaka şunlara değin:
-- Hayat çizgisinin uzunluğu, kırılması veya enerjisi
-- Kalp çizgisinin derinliği ve duygusal yapı
-- Kader çizgisi var mı yok mu
-- Avuç ortasındaki enerji
-- Elin genel yapısı (çizgiler belirgin mi, karmaşık mı)
 
-Cinsiyet belirtme.
+- Hayat çizgisinin uzunluğu,
+  kırılması veya enerjisi
+
+- Kalp çizgisinin derinliği
+  ve duygusal yapı
+
+- Kader çizgisi var mı yok mu
+
+- Avuç ortasındaki enerji
+
+- Elin genel yapısı
+  (çizgiler belirgin mi,
+   karmaşık mı)
+
+KULLANICI PROFİLİ:
+
+İsim: ${userName}
+
+Cinsiyet: ${userGender}
+
+Burç: ${userZodiac}
+
+Bu bilgileri SADECE:
+
+- yorumun enerjisini
+- karakter tonunu
+- duygusal yaklaşımı
+- sezgi biçimini
+
+belirlemek için kullan.
+
+Burçtan ASLA bahsetme.
+
+Burç ismini ASLA yazma.
+
+“Koç enerjisi”,
+“burcun”,
+“zodyak”,
+“ateş grubu”
+gibi ifadeler kullanma.
+
+Kullanıcının ismini doğal şekilde
+en fazla 2 kez kullan.
+
+Cinsiyeti direkt söyleme.
+
+Hitap tonunu doğal şekilde ayarla.
+
+Yorum tamamen doğal görünmeli.
+
 Sıcak, mistik ve samimi konuş.
+
 Başlık yazma.
+
 Paragraf paragraf uzun yaz.
+
 Kehanet tonu kullan.
 `,
         },
+
         {
           role: "user",
+
           content: [
             {
               type: "input_text",
-              text: "Bu el fotoğrafını incele ve el falı yorumu yap.",
+
+              text:
+                "Bu el fotoğrafını incele ve el falı yorumu yap.",
             },
+
             {
               type: "input_image",
-              image_url: `data:image/jpeg;base64,${base64Image}`,
+
+              image_url:
+                `data:image/jpeg;base64,${base64Image}`,
             },
           ],
         },
       ],
+
       max_output_tokens: 800,
     });
 
-    const result = response.output_text || "Elinde güçlü bir enerji hissediyorum…";
+    const result =
+      response.output_text ||
+      "Elinde güçlü bir enerji hissediyorum…";
 
     /* =========================
-       ✅ RESULT BAŞARILI → COIN DÜŞ
-       - Artık backend history'e yazmıyor (autoSave frontend)
+       RESULT OK → COIN DÜŞ
     ========================= */
 
-    const remainingCoin = await decreaseCoin(uid, req.coinPrice, "EL_FALI");
+    const remainingCoin =
+      await decreaseCoin(
+        uid,
+        req.coinPrice,
+        "EL_FALI"
+      );
 
     /* =========================
        RESPONSE
@@ -93,6 +178,7 @@ Kehanet tonu kullan.
     });
   } catch (err) {
     console.error("EL FALI HATA:", err);
+
     return res.status(500).json({
       error: "El falı yorumlanamadı",
     });
