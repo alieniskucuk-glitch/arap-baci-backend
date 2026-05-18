@@ -41,24 +41,51 @@ router.post(
       const uid = req.user.uid;
       const price = req.coinPrice;
 
-      falStore.set(id, { status: "processing" });
+      falStore.set(id, {
+        status: "processing",
+      });
 
       // 🔥 hemen response
-      res.status(200).json({ falId: id });
+      res.status(200).json({
+        falId: id,
+      });
 
-      const full = await generateFal(req.files);
+      const full = await generateFal(
+        req.files,
+        {
+          name: req.user.name,
+          zodiac: req.user.zodiac,
+          gender: req.user.gender,
+        }
+      );
 
       if (!full) {
         throw new Error("Fal boş geldi");
       }
 
-      await decreaseCoin(uid, price, "FAL", { falId: id });
+      await decreaseCoin(
+        uid,
+        price,
+        "FAL",
+        {
+          falId: id,
+        }
+      );
 
-      falStore.set(id, { status: "done", full });
+      falStore.set(id, {
+        status: "done",
+        full,
+      });
 
     } catch (err) {
-      console.error("FAL ERROR:", err);
-      falStore.set(id, { status: "error" });
+      console.error(
+        "FAL ERROR:",
+        err
+      );
+
+      falStore.set(id, {
+        status: "error",
+      });
     }
   }
 );
@@ -68,10 +95,14 @@ router.post(
 ========================= */
 
 router.get("/:id", (req, res) => {
-  const f = falStore.get(req.params.id);
+  const f = falStore.get(
+    req.params.id
+  );
 
   if (!f) {
-    return res.status(404).json({ error: "Bulunamadı" });
+    return res.status(404).json({
+      error: "Bulunamadı",
+    });
   }
 
   res.json(f);
