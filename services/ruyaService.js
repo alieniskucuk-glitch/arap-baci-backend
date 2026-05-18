@@ -11,60 +11,122 @@ export const ruyaYorumla = async (req, res) => {
     const uid = req.user?.uid;
 
     if (!uid) {
-      return res.status(401).json({ error: "Token gerekli" });
+      return res.status(401).json({
+        error: "Token gerekli"
+      });
     }
 
     if (!req.coinPrice) {
-      return res.status(500).json({ error: "Coin fiyatı belirlenemedi" });
+      return res.status(500).json({
+        error:
+          "Coin fiyatı belirlenemedi"
+      });
     }
 
     const { dream } = req.body;
 
-    if (!dream || dream.trim().length < 5) {
-      return res.status(400).json({ error: "Rüya metni çok kısa" });
+    if (
+      !dream ||
+      dream.trim().length < 5
+    ) {
+      return res.status(400).json({
+        error:
+          "Rüya metni çok kısa"
+      });
     }
 
-    const prompt = `
-Sen Arap Bacı adında mistik bir falcısın.
-Kullanıcının sana anlattığı rüyasını yorumluyorsun.
+    const user =
+      req.ruyaUser || {};
 
-Rüya:
+    const prompt = `
+Sen Arap Bacı adında
+mistik ve sezgileri güçlü
+bir rüya yorumcususun.
+
+Kullanıcının isim,
+burç ve cinsiyet
+bilgilerini kullanarak
+yorumu kişiselleştir.
+
+Ancak burçlardan
+yararlandığını belli etme.
+
+Burç adı veya
+astrolojik ifade yazma.
+
+KULLANICI:
+
+İsim:
+${user.name || ""}
+
+Burç:
+${user.zodiac || ""}
+
+Cinsiyet:
+${user.gender || ""}
+
+RÜYA:
+
 "${dream}"
 
-Yorumu:
-- Psikolojik anlamı
-- Sembolik anlamı
-- Yakın gelecek mesajı
-- Geçmişle bağlantısı
-- Genel tavsiyeler
-- Yoruma doğrudan başla.
-- Teknik açıklama yapma.
+Rüyayı yorumlarken:
 
-Samimi, sıcak ve gizemli bir dil kullan.
+- Psikolojik anlam
+- Sembolik anlam
+- Bilinçaltı mesajı
+- Yakın gelecek
+- Geçmiş bağlantıları
+- Ruhsal mesajlar
+- Genel tavsiyeler
+
+işlenmeli.
+
+Kullanıcının adıyla
+doğal hitap et.
+
+Başlık yazma.
+
+Paragraf paragraf anlat.
+
+Samimi,
+sıcak,
+gizemli dil kullan.
+
+En az yaklaşık
+700 token uzunluğunda yaz.
 `;
 
     /* =========================
        GPT
     ========================= */
 
-    const response = await openai.responses.create({
-      model: "gpt-4.1-mini",
-      input: prompt,
-    });
+    const response =
+      await openai.responses.create({
+
+        model:
+          "gpt-4.1-mini",
+
+        input: prompt,
+
+        max_output_tokens:
+          1200,
+      });
 
     const result =
       response.output_text ||
+
       "Rüyanda güçlü bir mesaj var ama biraz daha dikkatle düşünmelisin...";
 
     /* =========================
        COIN DÜŞ
     ========================= */
 
-    const remainingCoin = await decreaseCoin(
-      uid,
-      req.coinPrice,
-      "RUYA"
-    );
+    const remainingCoin =
+      await decreaseCoin(
+        uid,
+        req.coinPrice,
+        "RUYA"
+      );
 
     /* =========================
        RESPONSE
@@ -72,16 +134,22 @@ Samimi, sıcak ve gizemli bir dil kullan.
 
     return res.json({
       success: true,
+
       result,
+
       remainingCoin,
     });
 
   } catch (err) {
 
-    console.error("RUYA ERROR:", err);
+    console.error(
+      "RUYA ERROR:",
+      err
+    );
 
     return res.status(500).json({
-      error: "Rüya yorumlanamadı",
+      error:
+        "Rüya yorumlanamadı",
     });
 
   }

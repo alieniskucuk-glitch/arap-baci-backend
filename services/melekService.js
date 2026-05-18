@@ -65,14 +65,18 @@ export async function startMelek(uid, body) {
   if (mode === "deep") {
     const c1 = randomFromRange(33, 53, used);
     used.add(c1.id);
+
     const c2 = randomFromRange(0, 32, used);
+
     cards.push(c1, c2);
   }
 
   if (mode === "zaman") {
     for (let i = 0; i < 3; i++) {
       const c = randomFromRange(0, 53, used);
+
       used.add(c.id);
+
       cards.push(c);
     }
   }
@@ -82,7 +86,8 @@ export async function startMelek(uid, body) {
   const interpretationPromise = generateInterpretation(
     mode,
     question,
-    cards
+    cards,
+    body.user
   ).catch(() => null);
 
   sessionStore.set(sessionId, {
@@ -106,43 +111,76 @@ export async function revealMelek(uid, body) {
   const { sessionId } = body;
 
   const session = sessionStore.get(sessionId);
-  if (!session) throw new Error("Session bulunamadı");
-  if (session.uid !== uid) throw new Error("Yetkisiz erişim");
+
+  if (!session)
+    throw new Error("Session bulunamadı");
+
+  if (session.uid !== uid)
+    throw new Error("Yetkisiz erişim");
 
   if (isExpired(session)) {
     sessionStore.delete(sessionId);
-    throw new Error("Session süresi doldu");
+
+    throw new Error(
+      "Session süresi doldu"
+    );
   }
 
-  const nextIndex = session.revealed.length;
-  if (nextIndex >= session.cards.length)
-    throw new Error("Tüm kartlar açıldı");
+  const nextIndex =
+    session.revealed.length;
 
-  const card = session.cards[nextIndex];
+  if (
+    nextIndex >=
+    session.cards.length
+  ) {
+    throw new Error(
+      "Tüm kartlar açıldı"
+    );
+  }
+
+  const card =
+    session.cards[nextIndex];
+
   session.revealed.push(card);
 
-  const picked = session.revealed.map((c) => ({
-    title: c.title,
-    image: c.image,
-  }));
-
-  if (session.revealed.length === session.cards.length) {
-    const interpretation = await session.interpretationPromise;
-
-    if (!interpretation) {
-      throw new Error("Yorum üretilemedi");
-    }
-
-    const price = getMelekPrice(session.mode);
-
-    const remainingCoin = await decreaseCoin(
-      uid,
-      price,
-      "MELEK",
-      { sessionId }
+  const picked =
+    session.revealed.map(
+      (c) => ({
+        title: c.title,
+        image: c.image,
+      })
     );
 
-    sessionStore.delete(sessionId);
+  if (
+    session.revealed.length ===
+    session.cards.length
+  ) {
+
+    const interpretation =
+      await session.interpretationPromise;
+
+    if (!interpretation) {
+      throw new Error(
+        "Yorum üretilemedi"
+      );
+    }
+
+    const price =
+      getMelekPrice(
+        session.mode
+      );
+
+    const remainingCoin =
+      await decreaseCoin(
+        uid,
+        price,
+        "MELEK",
+        { sessionId }
+      );
+
+    sessionStore.delete(
+      sessionId
+    );
 
     return {
       picked,
@@ -159,81 +197,199 @@ export async function revealMelek(uid, body) {
 }
 
 /* =========================
-   GPT (GÜÇLENDİRİLDİ)
+   GPT
 ========================= */
 
-async function generateInterpretation(mode, question, cards) {
-  let formattedCards = "";
-  let structureInstruction = "";
+async function generateInterpretation(
+  mode,
+  question,
+  cards,
+  user = {}
+) {
+
+  let prompt = "";
+
+  /* =========================
+     1 KART
+  ========================= */
 
   if (mode === "standard") {
-    formattedCards = `Kart: ${cards[0].title}`;
-    structureInstruction = `
-- Bu kartın ana mesajını güçlü ve net şekilde yorumla.
-- Yoruma doğrudan başla.
-`;
-  }
 
-  if (mode === "deep") {
-    formattedCards = `
-1. Kart: ${cards[0].title}
-2. Kart: ${cards[1].title}
-`;
-    structureInstruction = `
-- Kartları ayrı ayrı yorumla.
-- Sonunda birleşik ilahi mesaj ver.
-- Yoruma doğrudan başla.
-`;
-  }
+    prompt = `
+Sen Arap Bacı uygulamasında
+ilahi rehberlik sunan
+güçlü ve sezgisel
+bir melek kartı yorumcususun.
 
-  if (mode === "zaman") {
-    formattedCards = `
-Geçmiş: ${cards[0].title}
-Şimdi: ${cards[1].title}
-Gelecek: ${cards[2].title}
-`;
-    structureInstruction = `
-- Zaman akışına göre yorumla.
-- Ruhsal gelişimi vurgula.
-- Daha detaylı ve derin anlat.
-- Yoruma doğrudan başla.
-`;
-  }
+Bu açılım:
 
-  const prompt = `
-Sen Arap Bacı uygulamasında ilahi rehberlik sunan güçlü ve sezgisel bir melek kartları yorumcususun.
+TEK KARTLIK
+NET CEVAP
+açılımıdır.
+
+KULLANICI:
+
+İsim:
+${user?.name || ""}
+
+Burç:
+${user?.zodiac || ""}
+
+Cinsiyet:
+${user?.gender || ""}
+
+Burç etkisini kullan
+ama belli etme.
+
+Kart:
+
+${cards[0].title}
+
+Soru:
+
+${question || "Genel rehberlik"}
 
 Kurallar:
-- Yoruma direkt başla.
-- "Tabii", "Şimdi", "Bu kartı analiz edeceğim" gibi giriş cümleleri kullanma.
-- Analiz yaptığını anlatma.
-- Kart seçimini açıklama.
-- Spiritüel ama net ol.
-- Korkutucu dil kullanma.
-- Somut rehberlik ver.
-- Akıcı ve etkileyici yaz.
-- Gereksiz tekrar yapma.
-- Sonunda kısa bir rehber paragraf ekle.
 
-Soru: ${question || "Genel rehberlik"}
-
-${formattedCards}
-
-${structureInstruction}
+- Yoruma direkt başla
+- Kartın ana mesajına odaklan
+- Net cevap ver
+- Kısa ama güçlü yaz
 `;
+  }
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
-    messages: [
-      {
-        role: "system",
-        content:
-          "Sen mistik ama net konuşan, güçlü bir melek kartı rehberisin.",
-      },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.85,
-  });
+  /* =========================
+     2 KART
+  ========================= */
 
-  return completion.choices[0].message.content.trim();
+  if (mode === "deep") {
+
+    prompt = `
+Sen Arap Bacı uygulamasında
+derin rehberlik veren
+bir melek yorumcususun.
+
+Bu açılım:
+
+2 KARTLIK
+DETAYLI REHBERLİK
+açılımıdır.
+
+KULLANICI:
+
+İsim:
+${user?.name || ""}
+
+Burç:
+${user?.zodiac || ""}
+
+Cinsiyet:
+${user?.gender || ""}
+
+Burç etkisini kullan
+ama yazma.
+
+Soru:
+
+${question || "Detaylı rehberlik"}
+
+1. Kart:
+
+${cards[0].title}
+
+2. Kart:
+
+${cards[1].title}
+
+Kurallar:
+
+- İlk kart ana enerjiyi anlatır
+- İkinci kart çözüm sunar
+- Kartları ayrı yorumla
+- Sonunda birleşik ilahi mesaj ver
+`;
+  }
+
+  /* =========================
+     ZAMAN
+  ========================= */
+
+  if (mode === "zaman") {
+
+    prompt = `
+Sen Arap Bacı uygulamasında
+zaman akışı yorumlayan
+bir melek rehberisin.
+
+Bu açılım:
+
+GEÇMİŞ
+ŞİMDİ
+GELECEK
+
+açılımıdır.
+
+KULLANICI:
+
+İsim:
+${user?.name || ""}
+
+Burç:
+${user?.zodiac || ""}
+
+Cinsiyet:
+${user?.gender || ""}
+
+Burç adı yazma.
+
+Geçmiş:
+
+${cards[0].title}
+
+Şimdi:
+
+${cards[1].title}
+
+Gelecek:
+
+${cards[2].title}
+
+Kurallar:
+
+- Geçmiş enerjiyi anlat
+- Şimdiki durumu yorumla
+- Geleceği açıkla
+- Zaman akışını bağla
+- Ruhsal gelişimi vurgula
+`;
+  }
+
+  const completion =
+    await openai.chat.completions.create({
+
+      model:
+        "gpt-4.1-mini",
+
+      messages: [
+        {
+          role: "system",
+
+          content:
+            "Sen mistik ama net konuşan, güçlü bir melek kartı rehberisin.",
+        },
+
+        {
+          role: "user",
+          content: prompt,
+        },
+      ],
+
+      temperature: 0.85,
+    });
+
+  return completion
+    .choices[0]
+    .message
+    .content
+    .trim();
 }

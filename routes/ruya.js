@@ -16,7 +16,19 @@ router.post(
   "/",
   auth,
   coinCheck("RUYA"),
-  ruyaYorumla
+
+  async (req, res) => {
+    req.ruyaUser = {
+      name: req.user.name,
+      zodiac: req.user.zodiac,
+      gender: req.user.gender,
+    };
+
+    return ruyaYorumla(
+      req,
+      res
+    );
+  }
 );
 
 export default router;
