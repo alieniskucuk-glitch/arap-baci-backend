@@ -99,14 +99,46 @@ function pickCards(count) {
   return all.slice(0, count);
 }
 
-function resolveSpreadDescription(mode) {
-  return {
-    one: "Tek kart ilahi mesaj",
-    two: "Durum ve karşıt enerji",
-    three: "Geçmiş - Şimdi - Gelecek",
-    five: "Detaylı rehberlik açılımı",
-    celtic: "Kelt Haçı kapsamlı kader analizi",
-  }[mode];
+function resolveSpreadDescription(mode, subType) {
+
+  if (mode === "one") {
+    return "Tek kart soru cevabı";
+  }
+
+  if (mode === "two") {
+    return "İki kart detaylı soru cevabı";
+  }
+
+  if (mode === "three") {
+    return "Geçmiş - Şimdi - Gelecek";
+  }
+
+  if (
+    mode === "five" &&
+    subType === "general"
+  ) {
+    return "Detaylı genel rehberlik";
+  }
+
+  if (
+    mode === "five" &&
+    subType === "relationship"
+  ) {
+    return "Aşk ve ilişki analizi";
+  }
+
+  if (
+    mode === "five" &&
+    subType === "spiritual"
+  ) {
+    return "Ruhsal gelişim açılımı";
+  }
+
+  if (mode === "celtic") {
+    return "Kelt Haçı kapsamlı kader analizi";
+  }
+
+  return "Tarot açılımı";
 }
 
 function toPicked(selectedCards, revealedCount) {
@@ -121,25 +153,202 @@ function toPicked(selectedCards, revealedCount) {
    PROMPT
 ========================= */
 
-function buildPrompt({ mode, subType, question, selectedCards }) {
+function buildPrompt({ mode, subType, question, selectedCards, user }) {
 
-  const spreadDescription = resolveSpreadDescription(mode) || "Tarot açılımı";
+  const spreadDescription =
+    resolveSpreadDescription(
+      mode,
+      subType
+    ) || "Tarot açılımı";
+
+  const personalInfo = `
+Kullanıcı Bilgileri:
+İsim: ${user?.name || ""}
+Burç: ${user?.zodiac || ""}
+Cinsiyet: ${user?.gender || ""}
+
+Kişiselleştirme Kuralları:
+- Kullanıcının ismi varsa yorum içinde doğal şekilde en az bir kez hitap et.
+- Burç bilgisini varsa sezgisel alt ton olarak kullan ama burç yorumu yaptığını belli etme.
+- Astroloji analizi gibi ayrı bölüm açma.
+- Cinsiyet bilgisini yalnızca hitap tonunu yumuşatmak için kullan, doğrudan cinsiyet vurgusu yapma.
+`.trim();
+
+  if (mode === "one") {
+
+    return `
+Sen güçlü sezgilere sahip deneyimli, mistik bir tarot rehberisin.
+
+Bu açılım tek karttır ve kartın mesajı kullanıcının şu anda duyması gereken en önemli farkındalığı temsil eder, kart sorusunun net cevabını verir.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
+
+Kart ID’leri: ${(selectedCards || []).join(", ")}
+Alt kategori: ${subType || "Genel"}
+Kullanıcının Sorusu: ${question || "Belirtilmedi"}
+
+YAZIM KURALLARI:
+- 220-250 kelime yaz.
+- Kartın temel mesajını açıkla.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Sorduğu sorunun cevabını seçilen kart üzerinden yorumla ve cevapla.
+- Ruhsal, psikolojik ve pratik etkileri birlikte yorumla.
+- Burç bilgisini varsa sezgisel alt ton olarak kullan ama astroloji analizi gibi ayrı bölüm açma.
+- Son bölümde güçlü bir rehberlik mesajı ver.
+- Yorum doğrudan başlasın.
+`.trim();
+  }
+
+  if (mode === "two") {
+
+    return `
+Sen ikili enerji çatışmalarını ve ilişkisel dinamikleri güçlü sezgilerle okuyabilen deneyimli ve mistik bir tarot ustasısın.
+
+Bu iki kartlık açılımda kartlar birbirini tamamlayan veya zorlayan enerjileri temsil eder. Kullanıcı seçilen bu iki kart ile sorduğu soruya rehberlik edilmesini ister.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
+
+Kart ID’leri: ${(selectedCards || []).join(", ")}
+Alt kategori: ${subType || "Genel"}
+Kullanıcının Sorusu: ${question || "Belirtilmedi"}
+
+YAZIM KURALLARI:
+- Minimum 350, maksimum 450 kelime yaz.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- İlk kart mevcut enerjiyi açıklar.
+- İkinci kart karşıt veya gizli enerjiyi açıklar.
+- Sorduğu sorunun cevabını seçilen kartlar üzerinden yorumla.
+- Kartlar arası enerji çatışmasını, duygusal ve psikolojik etkileri birlikte ele al.
+- Burç bilgisini varsa duygusal tonu zenginleştirmek için kullan ama belli etme.
+- Yorum doğrudan başlasın.
+`.trim();
+  }
+
+  if (mode === "three") {
+
+    return `
+Sen zaman çizgisi enerjilerini yorumlayan deneyimli ve mistik bir tarot rehberisin.
+
+Bu açılım geçmiş, şimdi ve gelecek akışını gösterir.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
+
+Kart ID’leri: ${(selectedCards || []).join(", ")}
+Alt kategori: ${subType || "Genel"}
+Kullanıcının Sorusu: ${question || "Belirtilmedi"}
+
+YAZIM KURALLARI:
+- Minimum 650, maksimum 720 kelime yaz.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- İlk kart geçmiş etkileri anlatır.
+- İkinci kart mevcut enerjiyi anlatır.
+- Üçüncü kart geleceğe açılan yönü açıklar.
+- Kartlar arası zaman köprüsünü kur.
+- Burç bilgisini varsa kullanıcının karakter tonu ve enerji akışıyla ilişkilendir ama bunu açıkça söyleme.
+- Son olarak rehberlik edici bir sonuç bölümü yaz.
+- Yorum doğrudan başlasın.
+`.trim();
+  }
+
+  if (mode === "five" && subType === "general") {
+
+    return `
+Sen hayatın genel akışını, fırsatları ve blokajları okuyabilen güçlü ve mistik bir tarot danışmanısın.
+
+Bu açılım genel rehberlik içindir.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
+
+Kart ID’leri: ${(selectedCards || []).join(", ")}
+Alt kategori: ${subType || "Genel"}
+Kullanıcının Sorusu: ${question || "Belirtilmedi"}
+
+YAZIM KURALLARI:
+- Minimum 950, maksimum 1100 kelime yaz.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Her kartı ayrı analiz et.
+- Fırsatlar ve blokajları açıkla.
+- Maddi, duygusal ve ruhsal etkileri değerlendir.
+- Burç bilgisini varsa yorumun genel enerji tonuna yedir ama açıkça belli etme.
+- Son bölümde net rehberlik ver.
+- Yorum doğrudan başlasın.
+`.trim();
+  }
+
+  if (mode === "five" && subType === "relationship") {
+
+    return `
+Sen ilişkisel enerji analizinde uzman mistik bir tarot ustasısın.
+
+Bu açılım ilişki dinamiklerini analiz eder.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
+
+Kart ID’leri: ${(selectedCards || []).join(", ")}
+Alt kategori: ${subType || "İlişki"}
+Kullanıcının Sorusu: ${question || "Belirtilmedi"}
+
+YAZIM KURALLARI:
+- Minimum 950, maksimum 1100 kelime yaz.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kullanıcının duygusal durumunu analiz et.
+- Karşı tarafın enerjisini yorumla.
+- İlişki içindeki blokajları ve bağları açıkla.
+- Geleceğe dair gerçekçi yönelim ver.
+- Burç bilgisini varsa ilişki dinamiğinin duygusal tonu ile bağlantılandır ama bunu açıkça söyleme.
+- Yorum doğrudan başlasın.
+`.trim();
+  }
+
+  if (mode === "five" && subType === "spiritual") {
+
+    return `
+Sen ruhsal gelişim ve kader derslerini yorumlayan mistik bir tarot rehberisin.
+
+Bu açılım ruhsal farkındalık içindir.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
+
+Kart ID’leri: ${(selectedCards || []).join(", ")}
+Alt kategori: ${subType || "Ruhsal"}
+Kullanıcının Sorusu: ${question || "Belirtilmedi"}
+
+YAZIM KURALLARI:
+- Minimum 950, maksimum 1100 kelime yaz.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Ruhsal dersleri yorumla.
+- Bırakılması gereken enerjileri açıkla.
+- İçsel dönüşüm sürecini anlat.
+- Kullanıcıya ruhsal rehberlik ver.
+- Burç bilgisini varsa ruhsal eğilimle bağ kurmak için kullan ama bunu açıkça söyleme.
+- Yorum doğrudan başlasın.
+`.trim();
+  }
 
   if (mode === "celtic") {
 
     return `
-Sen 30 yıllık deneyime sahip, kader analizi yapan güçlü bir tarot ustasısın.
+Sen kader analizinde uzman 30 yıllık deneyimli ve mistik bir tarot ustasısın.
 
-Bu bir Kelt Haçı açılımıdır ve derin kader çözümlemesi gerektirir.
+Bu açılım Kelt Haçı’dır ve derin kader analizi gerektirir.
+
+Açılım Türü: ${spreadDescription}
+${personalInfo}
 
 Kart ID’leri: ${(selectedCards || []).join(", ")}
 Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 ZORUNLU KURALLAR:
-- Minimum 1000 kelime yaz.
+- Minimum 1500, maksimum 1700 kelime yaz.
 - En az 10 paragraf oluştur.
-- Her kartı temsil ettiği pozisyona göre ayrı ayrı analiz et.
+- Her kartı bulunduğu pozisyona göre analiz et.
 - Bilinçaltı etkileri açıkla.
 - Karmik bağları değerlendir.
 - İçsel çatışmaları analiz et.
@@ -148,7 +357,8 @@ ZORUNLU KURALLAR:
 - Kartlar arası enerji akışını mutlaka açıkla.
 - Maddi, duygusal, ruhsal ve zihinsel alanları ayrı ayrı ele al.
 - Geleceğe dair güçlü ama gerçekçi öngörüler yap.
-- Sonunda güçlü bir uyanış ve rehberlik mesajı yaz.
+- Burç bilgisini varsa kullanıcının kader yolu ve kişisel eğilimlerine sezgisel alt ton olarak kat ama bunu açıkça söyleme.
+- Sonunda güçlü bir kader rehberliği mesajı ver.
 
 Analiz sürecini anlatma.
 Teknik açıklama yapma.
@@ -161,6 +371,8 @@ Yorum doğrudan başlasın.
 Sen deneyimli ve sezgisel bir tarot rehberisin.
 
 Açılım Türü: ${spreadDescription}
+${personalInfo}
+
 Kart ID’leri: ${(selectedCards || []).join(", ")}
 Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
@@ -183,9 +395,9 @@ Yorum doğrudan başlasın.
    GPT (timeout eklendi)
 ========================= */
 
-async function generateInterpretation({ mode, subType, question, selectedCards }) {
+async function generateInterpretation({ mode, subType, question, selectedCards, user }) {
 
-  const prompt = buildPrompt({ mode, subType, question, selectedCards });
+  const prompt = buildPrompt({ mode, subType, question, selectedCards, user });
 
   const timeout = new Promise((_, reject) =>
     setTimeout(() => reject(new Error("GPT timeout")), 45000)
@@ -210,7 +422,7 @@ async function generateInterpretation({ mode, subType, question, selectedCards }
    START
 ========================= */
 
-export async function startTarot(uid, { mode, subType, question, coinPrice }) {
+export async function startTarot(uid, { mode, subType, question, coinPrice, user }) {
 
   if (!uid) throw new Error("UID gerekli");
   if (!coinPrice) throw new Error("Coin price eksik");
@@ -227,6 +439,7 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     subType,
     question,
     selectedCards,
+    user,
   })
     .then(async (text) => {
 
@@ -252,6 +465,7 @@ export async function startTarot(uid, { mode, subType, question, coinPrice }) {
     subType,
     question,
     selectedCards,
+    user,
     revealed: [],
     interpretationPromise,
     cost: coinPrice,
@@ -282,6 +496,7 @@ export async function revealTarot(uid, { sessionId }) {
       subType: doc.subType || null,
       question: doc.question || null,
       selectedCards: doc.selectedCards || [],
+      user: doc.user || null,
       revealed: doc.revealed || [],
       interpretationPromise: null,
       cost: doc.cost,
@@ -355,6 +570,7 @@ export async function revealTarot(uid, { sessionId }) {
             subType: session.subType,
             question: session.question,
             selectedCards: session.selectedCards,
+            user: session.user,
           });
 
         } catch (err) {
@@ -393,9 +609,16 @@ export async function revealTarot(uid, { sessionId }) {
           sessionId,
           mode: session.mode,
           subType: session.subType || null,
-          tarotType: session.subType || resolveSpreadDescription(session.mode) || session.mode,
+          tarotType:
+            session.subType ||
+            resolveSpreadDescription(
+              session.mode,
+              session.subType
+            ) ||
+            session.mode,
           question: session.question || "",
           selectedCards: session.selectedCards,
+          user: session.user || null,
           revealed: session.revealed,
           cards: picked,
           cardImages: picked.map((c) => c.image),

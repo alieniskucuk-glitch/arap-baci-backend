@@ -227,6 +227,7 @@ TEK KARTLIK
 NET CEVAP
 açılımıdır.
 
+Açılan kart üzerinden kullanıcının sorusunu yanıtla.
 KULLANICI:
 
 İsim:
@@ -251,10 +252,12 @@ ${question || "Genel rehberlik"}
 
 Kurallar:
 
+- kart numarasından asla bahsetme. 
+- Teknik terimler kullanma
 - Yoruma direkt başla
 - Kartın ana mesajına odaklan
 - Net cevap ver
-- Kısa ama güçlü yaz
+- 300 ile 500 token arasında yaz.
 `;
   }
 
@@ -274,6 +277,8 @@ Bu açılım:
 2 KARTLIK
 DETAYLI REHBERLİK
 açılımıdır.
+
+kullanıcının sorusunu iki kart üzerinden detaylı şekilde yanıtla.
 
 KULLANICI:
 
@@ -307,6 +312,9 @@ Kurallar:
 - İkinci kart çözüm sunar
 - Kartları ayrı yorumla
 - Sonunda birleşik ilahi mesaj ver
+- Kart numarasından asla bahsetme. 
+- Teknik terimler kulanma.
+- 550 ile 750 token aralığında yaz.
 `;
   }
 
@@ -361,6 +369,9 @@ Kurallar:
 - Geleceği açıkla
 - Zaman akışını bağla
 - Ruhsal gelişimi vurgula
+- Kart numarasından asla bahsetme.
+- Teknik terimler kulanma.
+- 800 ile 1100 token aralığında yaz.
 `;
   }
 

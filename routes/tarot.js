@@ -16,24 +16,61 @@ const router = express.Router();
 
 router.post(
   "/start",
+
   auth,
+
   coinCheck("TAROT"),
+
   async (req, res) => {
     try {
-      const uid = req.user?.uid;
+
+      const uid =
+        req.user?.uid;
+
       if (!uid) {
-        return res.status(401).json({ error: "Token gerekli" });
+        return res.status(401)
+          .json({
+            error:
+              "Token gerekli"
+          });
       }
 
-      const data = await startTarot(uid, {
-        ...req.body,
-        coinPrice: req.coinPrice,
-      });
+      const data =
+        await startTarot(
+          uid,
+          {
+            ...req.body,
+
+            coinPrice:
+              req.coinPrice,
+
+            user: {
+              name:
+                req.user.name,
+
+              zodiac:
+                req.user.zodiac,
+
+              gender:
+                req.user.gender,
+            }
+          }
+        );
 
       res.json(data);
+
     } catch (e) {
-      console.error("TAROT START ERROR:", e);
-      res.status(400).json({ error: e.message });
+
+      console.error(
+        "TAROT START ERROR:",
+        e
+      );
+
+      res.status(400)
+        .json({
+          error:
+            e.message
+        });
     }
   }
 );
@@ -44,19 +81,57 @@ router.post(
 
 router.post(
   "/reveal",
+
   auth,
+
   async (req, res) => {
     try {
-      const uid = req.user?.uid;
+
+      const uid =
+        req.user?.uid;
+
       if (!uid) {
-        return res.status(401).json({ error: "Token gerekli" });
+        return res.status(401)
+          .json({
+            error:
+              "Token gerekli"
+          });
       }
 
-      const data = await revealTarot(uid, req.body);
+      const data =
+        await revealTarot(
+          uid,
+
+          {
+            ...req.body,
+
+            user: {
+              name:
+                req.user.name,
+
+              zodiac:
+                req.user.zodiac,
+
+              gender:
+                req.user.gender,
+            }
+          }
+        );
+
       res.json(data);
+
     } catch (e) {
-      console.error("TAROT REVEAL ERROR:", e);
-      res.status(400).json({ error: e.message });
+
+      console.error(
+        "TAROT REVEAL ERROR:",
+        e
+      );
+
+      res.status(400)
+        .json({
+          error:
+            e.message
+        });
     }
   }
 );
