@@ -168,7 +168,7 @@ Burç: ${user?.zodiac || ""}
 Cinsiyet: ${user?.gender || ""}
 
 Kişiselleştirme Kuralları:
-- Kullanıcının ismi varsa yorum içinde doğal şekilde en az bir kez hitap et.
+- Fal içinde kullanıcının adını doğal akışa uygun şekilde 1 veya 2 kez kullan. 
 - Burç bilgisini varsa sezgisel alt ton olarak kullan ama burç yorumu yaptığını belli etme.
 - Astroloji analizi gibi ayrı bölüm açma.
 - Cinsiyet bilgisini yalnızca hitap tonunu yumuşatmak için kullan, doğrudan cinsiyet vurgusu yapma.
@@ -197,6 +197,11 @@ YAZIM KURALLARI:
 - Burç bilgisini varsa sezgisel alt ton olarak kullan ama astroloji analizi gibi ayrı bölüm açma.
 - Son bölümde güçlü bir rehberlik mesajı ver.
 - Yorum doğrudan başlasın.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 `.trim();
   }
 
@@ -223,6 +228,11 @@ YAZIM KURALLARI:
 - Kartlar arası enerji çatışmasını, duygusal ve psikolojik etkileri birlikte ele al.
 - Burç bilgisini varsa duygusal tonu zenginleştirmek için kullan ama belli etme.
 - Yorum doğrudan başlasın.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 `.trim();
   }
 
@@ -250,6 +260,11 @@ YAZIM KURALLARI:
 - Burç bilgisini varsa kullanıcının karakter tonu ve enerji akışıyla ilişkilendir ama bunu açıkça söyleme.
 - Son olarak rehberlik edici bir sonuç bölümü yaz.
 - Yorum doğrudan başlasın.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 `.trim();
   }
 
@@ -276,6 +291,11 @@ YAZIM KURALLARI:
 - Burç bilgisini varsa yorumun genel enerji tonuna yedir ama açıkça belli etme.
 - Son bölümde net rehberlik ver.
 - Yorum doğrudan başlasın.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 `.trim();
   }
 
@@ -302,6 +322,11 @@ YAZIM KURALLARI:
 - Geleceğe dair gerçekçi yönelim ver.
 - Burç bilgisini varsa ilişki dinamiğinin duygusal tonu ile bağlantılandır ama bunu açıkça söyleme.
 - Yorum doğrudan başlasın.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 `.trim();
   }
 
@@ -328,6 +353,11 @@ YAZIM KURALLARI:
 - Kullanıcıya ruhsal rehberlik ver.
 - Burç bilgisini varsa ruhsal eğilimle bağ kurmak için kullan ama bunu açıkça söyleme.
 - Yorum doğrudan başlasın.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 `.trim();
   }
 
@@ -359,6 +389,11 @@ ZORUNLU KURALLAR:
 - Geleceğe dair güçlü ama gerçekçi öngörüler yap.
 - Burç bilgisini varsa kullanıcının kader yolu ve kişisel eğilimlerine sezgisel alt ton olarak kat ama bunu açıkça söyleme.
 - Sonunda güçlü bir kader rehberliği mesajı ver.
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi, sıcak, gizemli bir dil kullan ama fazla abartma, deneyimli falcı tonu kullan.
 
 Analiz sürecini anlatma.
 Teknik açıklama yapma.

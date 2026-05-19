@@ -252,6 +252,12 @@ ${question || "Genel rehberlik"}
 
 Kurallar:
 
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Fal içinde kullanıcının adını doğal akışa uygun şekilde 1 veya 2 kez kullan. 
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi ol ama Fazla değil, deneyimli falcı tonu kullan.
 - kart numarasından asla bahsetme. 
 - Teknik terimler kullanma
 - Yoruma direkt başla
@@ -308,6 +314,12 @@ ${cards[1].title}
 
 Kurallar:
 
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Fal içinde kullanıcının adını doğal akışa uygun şekilde 1 veya 2 kez kullan. 
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi ol ama Fazla değil, deneyimli falcı tonu kullan.
 - İlk kart ana enerjiyi anlatır
 - İkinci kart çözüm sunar
 - Kartları ayrı yorumla
@@ -363,7 +375,12 @@ Gelecek:
 ${cards[2].title}
 
 Kurallar:
-
+- ASLA “canım”, “güzelim”, “enerjini hissettim”, “mistik yolculuk”, “auran”, “okyanus gibi ruhun” gibi klişe ifadeler kullanma.
+- Fal içinde kullanıcının adını doğal akışa uygun şekilde 1 veya 2 kez kullan. 
+- Genel kişilik analizi yapma.
+- Kullanıcıyı övme.
+- Her yorum benzersiz olsun.
+- Samimi ol ama Fazla değil, deneyimli falcı tonu kullan.
 - Geçmiş enerjiyi anlat
 - Şimdiki durumu yorumla
 - Geleceği açıkla
