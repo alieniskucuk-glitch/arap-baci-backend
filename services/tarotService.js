@@ -241,7 +241,7 @@ Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
-- Minimum 650, maksimum 720 kelime yaz.
+- Minimum 550, maksimum 650 kelime yaz.
 - Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - İlk kart geçmiş etkileri anlatır.
 - İkinci kart mevcut enerjiyi anlatır.
@@ -268,7 +268,7 @@ Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
-- Minimum 950, maksimum 1100 kelime yaz.
+- Minimum 950, maksimum 1200 kelime yaz.
 - Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - Her kartı ayrı analiz et.
 - Fırsatlar ve blokajları açıkla.
@@ -294,7 +294,7 @@ Alt kategori: ${subType || "İlişki"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
-- Minimum 950, maksimum 1100 kelime yaz.
+- Minimum 950, maksimum 1200 kelime yaz.
 - Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - Kullanıcının duygusal durumunu analiz et.
 - Karşı tarafın enerjisini yorumla.
@@ -320,7 +320,7 @@ Alt kategori: ${subType || "Ruhsal"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
-- Minimum 950, maksimum 1100 kelime yaz.
+- Minimum 950, maksimum 1200 kelime yaz.
 - Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
 - Ruhsal dersleri yorumla.
 - Bırakılması gereken enerjileri açıkla.
@@ -346,7 +346,7 @@ Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 ZORUNLU KURALLAR:
-- Minimum 1500, maksimum 1700 kelime yaz.
+- Minimum 1700, maksimum 1900 kelime yaz.
 - En az 10 paragraf oluştur.
 - Her kartı bulunduğu pozisyona göre analiz et.
 - Bilinçaltı etkileri açıkla.
@@ -378,7 +378,7 @@ Alt kategori: ${subType || "Genel"}
 Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 - Her kart için ayrı paragraf yaz.
-- Minimum 500 kelime olsun.
+- Minimum 800 kelime olsun.
 - Kartları tek tek analiz et.
 - Kartlar arası enerji bağlantısını açıkla.
 - Ruhsal ve psikolojik boyutu değerlendir.
