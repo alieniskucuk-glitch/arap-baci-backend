@@ -117,7 +117,7 @@ router.post("/fullcreat", auth, async (req, res) => {
         dailyCoin: 0,
 
         rewardCount: 0,
-        lastRewardDate: null,
+        rewardDate: null,
 
         isPremium: false,
         profileCompleted: true,

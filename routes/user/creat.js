@@ -53,7 +53,7 @@ router.post("/creat", auth, async (req, res) => {
         dailyCoin: 0,
 
         rewardCount: 0,
-        lastRewardDate: null,
+        rewardDate: null,
 
         isPremium: false,
 
@@ -78,7 +78,10 @@ router.post("/creat", auth, async (req, res) => {
     });
 
   } catch (err) {
-    console.error("CREAT ERROR:", err?.message || err);
+    console.error(
+      "CREAT ERROR:",
+      err?.message || err,
+    );
 
     return res.status(500).json({
       error: "Sunucu hatası",
