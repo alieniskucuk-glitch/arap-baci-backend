@@ -13,62 +13,136 @@ router.post("/creat", auth, async (req, res) => {
     const uid = req.user?.uid;
 
     if (!uid) {
-      return res.status(401).json({ error: "Token gerekli" });
+      return res.status(401).json({
+        error: "Token gerekli",
+      });
     }
 
     const email = req.user?.email || null;
 
-    const userRef = db.collection("users").doc(uid);
+    const userRef =
+      db.collection("users").doc(uid);
 
     let created = false;
     let profileCompleted = false;
 
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(userRef);
+    await db.runTransaction(
+      async (tx) => {
+        const snap =
+          await tx.get(userRef);
 
-      /* =========================
-         USER VARSA
-      ========================= */
-      if (snap.exists) {
-        const data = snap.data() || {};
+        /* =========================
+           USER VARSA
+        ========================= */
 
-        // email boşsa ve şimdi geldiyse yaz
-        if (!data.email && email) {
-          tx.update(userRef, { email });
+        if (snap.exists) {
+          const data =
+            snap.data() || {};
+
+          const updates = {};
+
+          // email yoksa ekle
+          if (
+            !data.email &&
+            email
+          ) {
+            updates.email = email;
+          }
+
+          // eksik alanları tamamla
+          if (
+            data.rewardCount ===
+            undefined
+          ) {
+            updates.rewardCount = 0;
+          }
+
+          if (
+            data
+              .lastRewardDate ===
+            undefined
+          ) {
+            updates.lastRewardDate =
+              null;
+          }
+
+          if (
+            data.dailyCoin ===
+            undefined
+          ) {
+            updates.dailyCoin = 0;
+          }
+
+          if (
+            Object.keys(updates)
+              .length >
+            0
+          ) {
+            tx.update(
+              userRef,
+              updates,
+            );
+          }
+
+          profileCompleted =
+            data.profileCompleted ===
+            true;
+
+          return;
         }
 
-        profileCompleted = data.profileCompleted === true;
-        return;
-      }
+        /* =========================
+           USER YOKSA OLUŞTUR
+        ========================= */
 
-      /* =========================
-         USER YOKSA OLUŞTUR
-      ========================= */
-      tx.set(userRef, {
-        uid,
-        email,
-        abCoin: 10,
-        isPremium: false,
-        profileCompleted: false,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
+        tx.set(userRef, {
+          uid,
 
-      created = true;
-      profileCompleted = false;
-    });
+          email,
+
+          abCoin: 10,
+
+          dailyCoin: 0,
+
+          rewardCount: 0,
+
+          lastRewardDate: null,
+
+          isPremium: false,
+
+          profileCompleted:
+            false,
+
+          createdAt:
+            admin.firestore
+              .FieldValue.serverTimestamp(),
+        });
+
+        created = true;
+
+        profileCompleted = false;
+      },
+    );
 
     /* =========================
-       RESPONSE (TEMİZ)
+       RESPONSE
     ========================= */
+
     return res.json({
       success: true,
+
       created,
+
       profileCompleted,
+
       uid,
     });
-
   } catch (err) {
-    console.error("CREAT ERROR:", err?.message || err);
+    console.error(
+      "CREAT ERROR:",
+      err?.message || err,
+    );
+
     return res.status(500).json({
       error: "Sunucu hatası",
     });
