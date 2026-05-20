@@ -19,6 +19,8 @@ import userFullCreat from "./routes/user/fullcreat.js";
 import userEdit from "./routes/user/edit.js";
 import userPremium from "./routes/user/premium.js";
 import userRefresh from "./routes/user/refresh.js";
+import userDelete from "./routes/user/delete.js";
+
 import rewardRoutes from "./routes/reward.js";
 
 const app = express();
@@ -62,6 +64,7 @@ app.use("/user", userFullCreat);
 app.use("/user", userEdit);
 app.use("/user", userPremium);
 app.use("/user", userRefresh);
+app.use("/user", userDelete);
 
 /* =========================
    SERVER
@@ -69,11 +72,29 @@ app.use("/user", userRefresh);
 const PORT = process.env.PORT || 10000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log("🔮 Arap Bacı backend çalışıyor:", PORT);
+  console.log(
+    "🔮 Arap Bacı backend çalışıyor:",
+    PORT
+  );
 
   console.log("ENV CHECK:");
-  console.log("OPENAI:", !!process.env.OPENAI_API_KEY);
-  console.log("FIREBASE_PROJECT_ID:", !!process.env.FIREBASE_PROJECT_ID);
-  console.log("FIREBASE_CLIENT_EMAIL:", !!process.env.FIREBASE_CLIENT_EMAIL);
-  console.log("FIREBASE_PRIVATE_KEY:", !!process.env.FIREBASE_PRIVATE_KEY);
+  console.log(
+    "OPENAI:",
+    !!process.env.OPENAI_API_KEY
+  );
+
+  console.log(
+    "FIREBASE_PROJECT_ID:",
+    !!process.env.FIREBASE_PROJECT_ID
+  );
+
+  console.log(
+    "FIREBASE_CLIENT_EMAIL:",
+    !!process.env.FIREBASE_CLIENT_EMAIL
+  );
+
+  console.log(
+    "FIREBASE_PRIVATE_KEY:",
+    !!process.env.FIREBASE_PRIVATE_KEY
+  );
 });

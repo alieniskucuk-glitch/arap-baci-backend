@@ -13,135 +13,72 @@ router.post("/creat", auth, async (req, res) => {
     const uid = req.user?.uid;
 
     if (!uid) {
-      return res.status(401).json({
-        error: "Token gerekli",
-      });
+      return res.status(401).json({ error: "Token gerekli" });
     }
 
     const email = req.user?.email || null;
 
-    const userRef =
-      db.collection("users").doc(uid);
+    const userRef = db.collection("users").doc(uid);
 
     let created = false;
     let profileCompleted = false;
 
-    await db.runTransaction(
-      async (tx) => {
-        const snap =
-          await tx.get(userRef);
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(userRef);
 
-        /* =========================
-           USER VARSA
-        ========================= */
+      /* =========================
+         USER VARSA
+      ========================= */
+      if (snap.exists) {
+        const data = snap.data() || {};
 
-        if (snap.exists) {
-          const data =
-            snap.data() || {};
-
-          const updates = {};
-
-          // email yoksa ekle
-          if (
-            !data.email &&
-            email
-          ) {
-            updates.email = email;
-          }
-
-          // eksik alanları tamamla
-          if (
-            data.rewardCount ===
-            undefined
-          ) {
-            updates.rewardCount = 0;
-          }
-
-          if (
-            data
-              .lastRewardDate ===
-            undefined
-          ) {
-            updates.lastRewardDate =
-              null;
-          }
-
-          if (
-            data.dailyCoin ===
-            undefined
-          ) {
-            updates.dailyCoin = 0;
-          }
-
-          if (
-            Object.keys(updates)
-              .length >
-            0
-          ) {
-            tx.update(
-              userRef,
-              updates,
-            );
-          }
-
-          profileCompleted =
-            data.profileCompleted ===
-            true;
-
-          return;
+        // email boşsa ve şimdi geldiyse yaz
+        if (!data.email && email) {
+          tx.update(userRef, { email });
         }
 
-        /* =========================
-           USER YOKSA OLUŞTUR
-        ========================= */
+        profileCompleted = data.profileCompleted === true;
+        return;
+      }
 
-        tx.set(userRef, {
-          uid,
+      /* =========================
+         USER YOKSA OLUŞTUR
+      ========================= */
+      tx.set(userRef, {
+        uid,
+        email,
 
-          email,
+        abCoin: 10,
 
-          abCoin: 10,
+        dailyCoin: 0,
 
-          dailyCoin: 0,
+        rewardCount: 0,
+        lastRewardDate: null,
 
-          rewardCount: 0,
+        isPremium: false,
 
-          lastRewardDate: null,
+        profileCompleted: false,
 
-          isPremium: false,
+        createdAt:
+          admin.firestore.FieldValue.serverTimestamp(),
+      });
 
-          profileCompleted:
-            false,
-
-          createdAt:
-            admin.firestore
-              .FieldValue.serverTimestamp(),
-        });
-
-        created = true;
-
-        profileCompleted = false;
-      },
-    );
+      created = true;
+      profileCompleted = false;
+    });
 
     /* =========================
-       RESPONSE
+       RESPONSE (TEMİZ)
     ========================= */
-
     return res.json({
       success: true,
-
       created,
-
       profileCompleted,
-
       uid,
     });
+
   } catch (err) {
-    console.error(
-      "CREAT ERROR:",
-      err?.message || err,
-    );
+    console.error("CREAT ERROR:", err?.message || err);
 
     return res.status(500).json({
       error: "Sunucu hatası",
