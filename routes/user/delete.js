@@ -180,7 +180,7 @@ nodemailer
 .createTransport({
 
 host:
-"mail.arapbaci.com",
+"arapbaci.com",
 
 port:465,
 
