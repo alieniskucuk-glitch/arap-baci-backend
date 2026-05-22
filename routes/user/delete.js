@@ -1,6 +1,5 @@
 import express from "express";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 
 import auth from "../../middleware/auth.js";
 import { db, admin } from "../../config/firebase.js";
@@ -11,226 +10,344 @@ const router = express.Router();
    HELPERS
 ========================= */
 
-async function deleteUserData(uid) {
+async function deleteUserData(uid){
+
   await db
     .collection("users")
     .doc(uid)
     .delete();
 
   const collections = [
+
     "falHistory",
     "tarotHistory",
     "dreamHistory",
     "melekHistory",
     "elFalHistory",
     "uyumHistory",
-    "sessions",
+    "sessions"
+
   ];
 
-  for (const name of collections) {
+  for(const name of collections){
+
     const snap = await db
       .collection(name)
-      .where("uid", "==", uid)
+      .where(
+        "uid",
+        "==",
+        uid
+      )
       .get();
 
-    if (snap.empty) {
+    if(
+      snap.empty
+    ){
       continue;
     }
 
-    const batch = db.batch();
+    const batch =
+      db.batch();
 
-    snap.docs.forEach((doc) => {
-      batch.delete(doc.ref);
+    snap.docs.forEach(
+      doc=>{
+
+      batch.delete(
+        doc.ref
+      );
+
     });
 
     await batch.commit();
+
   }
 
   await admin
     .auth()
     .deleteUser(uid);
+
 }
 
 /* =========================
    APP DELETE
-   POST /user/delete
 ========================= */
 
-router.post("/delete", auth, async (req, res) => {
-  try {
-    const uid = req.user?.uid;
+router.post(
+"/delete",
+auth,
+async(req,res)=>{
 
-    if (!uid) {
-      return res.status(401).json({
-        error: "Token gerekli",
-      });
-    }
+try{
 
-    await deleteUserData(uid);
+const uid =
+req.user?.uid;
 
-    return res.json({
-      success: true,
-      message: "Hesap silindi",
-    });
-  } catch (e) {
-    console.error("APP DELETE ERROR:", e);
+if(!uid){
 
-    return res.status(500).json({
-      error: "Hesap silinemedi",
-    });
-  }
+return res
+.status(401)
+.json({
+
+error:
+"Token gerekli"
+
+});
+
+}
+
+await deleteUserData(
+uid
+);
+
+return res.json({
+
+success:true,
+
+message:
+"Hesap silindi"
+
+});
+
+}
+catch(e){
+
+console.error(
+"APP DELETE ERROR:",
+e
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Hesap silinemedi"
+
+});
+
+}
+
 });
 
 /* =========================
    WEB REQUEST
-   POST /user/request-delete
 ========================= */
 
-router.post("/request-delete", async (req, res) => {
-  try {
-    const email = String(req.body?.email || "")
-      .trim()
-      .toLowerCase();
+router.post(
+"/request-delete",
+async(req,res)=>{
 
-    if (!email) {
-      return res.status(400).json({
-        error: "Mail gerekli",
-      });
-    }
+try{
 
-    const user = await admin
-      .auth()
-      .getUserByEmail(email);
+const email =
+String(
+req.body?.email || ""
+)
+.trim()
+.toLowerCase();
 
-    const token = crypto
-      .randomBytes(32)
-      .toString("hex");
+if(!email){
 
-    await db
-      .collection("deleteRequests")
-      .doc(token)
-      .set({
-        uid: user.uid,
-        email,
-        used: false,
-        createdAt: Date.now(),
-      });
+return res
+.status(400)
+.json({
 
-    const transporter = nodemailer.createTransport({
-      host: "mail.arapbaci.com",
-      port: 587,
-      secure: false,
+error:
+"Mail gerekli"
 
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
+});
 
-      tls: {
-        rejectUnauthorized: false,
-      },
+}
 
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-    });
+const user =
+await admin
+.auth()
+.getUserByEmail(
+email
+);
 
-    const link =
-      `https://arapbaci.com/confirm-delete.html?token=${token}`;
+const token =
+crypto
+.randomBytes(32)
+.toString(
+"hex"
+);
 
-    await transporter.sendMail({
-      from: `"Arap Bacı" <${process.env.MAIL_USER}>`,
-      to: email,
-      subject: "Arap Bacı Hesap Silme",
-      html: `
-        <h2>Arap Bacı</h2>
+await db
+.collection(
+"deleteRequests"
+)
+.doc(token)
+.set({
 
-        <p>
-          Arap Bacı hesabınızı silmek için aşağıdaki bağlantıya tıklayın.
-        </p>
+uid:user.uid,
 
-        <p>
-          <a href="${link}">
-            Hesabı Sil
-          </a>
-        </p>
+email,
 
-        <p>
-          Bu işlem hesabınızı ve ilişkili verilerinizi kalıcı olarak siler.
-        </p>
-      `,
-    });
+used:false,
 
-    return res.json({
-      success: true,
-      message: "Silme bağlantısı gönderildi",
-    });
-  } catch (e) {
-    console.error("DELETE MAIL ERROR:", {
-      message: e.message,
-      code: e.code,
-      command: e.command,
-      response: e.response,
-      responseCode: e.responseCode,
-      stack: e.stack,
-    });
+createdAt:
+Date.now()
 
-    return res.status(500).json({
-      error: "Mail gönderilemedi",
-    });
-  }
+});
+
+const continueUrl =
+
+`https://arapbaci.com/confirm-delete.html?token=${token}`;
+
+const verifyLink =
+
+await admin
+.auth()
+.generateEmailVerificationLink(
+
+email,
+
+{
+
+url:
+continueUrl
+
+}
+
+);
+
+return res.json({
+
+success:true,
+
+message:
+verifyLink
+
+});
+
+}
+catch(e){
+
+console.error(
+"REQUEST DELETE ERROR:",
+e
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Doğrulama oluşturulamadı"
+
+});
+
+}
+
 });
 
 /* =========================
    WEB CONFIRM
-   POST /user/confirm-delete
 ========================= */
 
-router.post("/confirm-delete", async (req, res) => {
-  try {
-    const token = String(req.body?.token || "").trim();
+router.post(
+"/confirm-delete",
+async(req,res)=>{
 
-    if (!token) {
-      return res.status(400).json({
-        error: "Token gerekli",
-      });
-    }
+try{
 
-    const ref = db
-      .collection("deleteRequests")
-      .doc(token);
+const token =
+String(
+req.body?.token || ""
+)
+.trim();
 
-    const snap = await ref.get();
+if(!token){
 
-    if (!snap.exists) {
-      return res.status(400).json({
-        error: "Geçersiz token",
-      });
-    }
+return res
+.status(400)
+.json({
 
-    const data = snap.data();
+error:
+"Token gerekli"
 
-    if (!data?.uid) {
-      return res.status(400).json({
-        error: "Geçersiz istek",
-      });
-    }
+});
 
-    await deleteUserData(data.uid);
+}
 
-    await ref.delete();
+const ref =
+db
+.collection(
+"deleteRequests"
+)
+.doc(token);
 
-    return res.json({
-      success: true,
-      message: "Hesap silindi",
-    });
-  } catch (e) {
-    console.error("CONFIRM DELETE ERROR:", e);
+const snap =
+await ref.get();
 
-    return res.status(500).json({
-      error: "Silinemedi",
-    });
-  }
+if(
+!snap.exists
+){
+
+return res
+.status(400)
+.json({
+
+error:
+"Geçersiz token"
+
+});
+
+}
+
+const data =
+snap.data();
+
+if(
+!data?.uid
+){
+
+return res
+.status(400)
+.json({
+
+error:
+"Geçersiz istek"
+
+});
+
+}
+
+await deleteUserData(
+data.uid
+);
+
+await ref.delete();
+
+return res.json({
+
+success:true,
+
+message:
+"Hesap silindi"
+
+});
+
+}
+catch(e){
+
+console.error(
+"CONFIRM DELETE ERROR:",
+e
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Silinemedi"
+
+});
+
+}
+
 });
 
 export default router;
