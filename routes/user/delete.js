@@ -1,5 +1,6 @@
 import express from "express";
 import crypto from "crypto";
+import nodemailer from "nodemailer";
 
 import auth from "../../middleware/auth.js";
 import { db, admin } from "../../config/firebase.js";
@@ -191,33 +192,81 @@ Date.now()
 
 });
 
-const continueUrl =
+const transporter =
+nodemailer
+.createTransport({
 
-`https://arapbaci.com/confirm-delete.html?token=${token}`;
+service:
+"gmail",
 
-const verifyLink =
+auth:{
 
-await admin
-.auth()
-.generateEmailVerificationLink(
+user:
+process.env.MAIL_USER,
 
-email,
-
-{
-
-url:
-continueUrl
+pass:
+process.env.MAIL_PASS
 
 }
 
-);
+});
+
+const link =
+
+`https://arapbaci.com/confirm-delete.html?token=${token}`;
+
+await transporter
+.sendMail({
+
+from:
+
+`"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
+
+to:email,
+
+subject:
+"Arap Bacı Hesap Silme",
+
+html:`
+
+<h2>
+
+Arap Bacı
+
+</h2>
+
+<p>
+
+Hesabınızı silmek için aşağıdaki bağlantıya tıklayın:
+
+</p>
+
+<p>
+
+<a href="${link}">
+
+HESABI SİL
+
+</a>
+
+</p>
+
+<p>
+
+Bu işlem geri alınamaz.
+
+</p>
+
+`
+
+});
 
 return res.json({
 
 success:true,
 
 message:
-verifyLink
+"Silme maili gönderildi"
 
 });
 
@@ -225,7 +274,7 @@ verifyLink
 catch(e){
 
 console.error(
-"REQUEST DELETE ERROR:",
+"DELETE MAIL ERROR:",
 e
 );
 
@@ -234,7 +283,7 @@ return res
 .json({
 
 error:
-"Doğrulama oluşturulamadı"
+"Mail gönderilemedi"
 
 });
 
@@ -298,21 +347,6 @@ error:
 
 const data =
 snap.data();
-
-if(
-!data?.uid
-){
-
-return res
-.status(400)
-.json({
-
-error:
-"Geçersiz istek"
-
-});
-
-}
 
 await deleteUserData(
 data.uid
