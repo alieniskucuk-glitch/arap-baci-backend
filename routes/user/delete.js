@@ -121,37 +121,53 @@ router.post("/request-delete", async (req, res) => {
 
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
-      port: 587,
-      secure: false,
-      requireTLS: true,
+
+      port: 465,
+      secure: true,
 
       auth: {
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
       },
 
-      connectionTimeout: 30000,
-      greetingTimeout: 30000,
-      socketTimeout: 30000,
-
-      tls: {
-        rejectUnauthorized: false,
-      },
+      connectionTimeout: 60000,
+      greetingTimeout: 60000,
+      socketTimeout: 60000,
     });
 
-    await transporter.verify();
+    try {
+      await transporter.verify();
 
-    console.log("GMAIL OK");
+      console.log(
+        "SMTP OK"
+      );
+    } catch (e) {
+      console.error(
+        "SMTP VERIFY ERROR:",
+        e
+      );
+
+      throw e;
+    }
 
     await transporter.sendMail({
-      from: `"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
+      from:
+        `"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
+
       to: email,
-      subject: "Arap Bacı Hesap Silme",
+
+      subject:
+        "Arap Bacı Hesap Silme",
+
       html: `
-        <h2>Arap Bacı</h2>
+        <h2>
+          Arap Bacı
+        </h2>
 
         <p>
-          Hesabınızı silmek için aşağıdaki bağlantıya tıklayın:
+          Hesabınızı silmek için
+          aşağıdaki bağlantıya
+          tıklayın:
         </p>
 
         <p>
@@ -168,13 +184,19 @@ router.post("/request-delete", async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Silme maili gönderildi",
+      message:
+        "Silme maili gönderildi",
     });
+
   } catch (e) {
-    console.error("DELETE MAIL ERROR:", e);
+    console.error(
+      "DELETE MAIL ERROR:",
+      e
+    );
 
     return res.status(500).json({
-      error: "Mail gönderilemedi",
+      error:
+        "Mail gönderilemedi",
     });
   }
 });
@@ -186,47 +208,64 @@ router.post("/request-delete", async (req, res) => {
 
 router.post("/confirm-delete", async (req, res) => {
   try {
-    const token = String(req.body?.token || "").trim();
+    const token = String(
+      req.body?.token || ""
+    ).trim();
 
     if (!token) {
       return res.status(400).json({
-        error: "Token gerekli",
+        error:
+          "Token gerekli",
       });
     }
 
     const ref = db
-      .collection("deleteRequests")
+      .collection(
+        "deleteRequests"
+      )
       .doc(token);
 
-    const snap = await ref.get();
+    const snap =
+      await ref.get();
 
     if (!snap.exists) {
       return res.status(400).json({
-        error: "Geçersiz token",
+        error:
+          "Geçersiz token",
       });
     }
 
-    const data = snap.data();
+    const data =
+      snap.data();
 
     if (!data?.uid) {
       return res.status(400).json({
-        error: "Geçersiz istek",
+        error:
+          "Geçersiz istek",
       });
     }
 
-    await deleteUserData(data.uid);
+    await deleteUserData(
+      data.uid
+    );
 
     await ref.delete();
 
     return res.json({
       success: true,
-      message: "Hesap silindi",
+      message:
+        "Hesap silindi",
     });
+
   } catch (e) {
-    console.error("CONFIRM DELETE ERROR:", e);
+    console.error(
+      "CONFIRM DELETE ERROR:",
+      e
+    );
 
     return res.status(500).json({
-      error: "Silinemedi",
+      error:
+        "Silinemedi",
     });
   }
 });
