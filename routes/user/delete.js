@@ -91,6 +91,7 @@ router.post("/delete", auth, async (req, res) => {
 
 router.post("/request-delete", async (req, res) => {
   try {
+
     const email = String(
       req.body?.email || ""
     )
@@ -140,9 +141,20 @@ router.post("/request-delete", async (req, res) => {
       !!process.env.MAIL_PASS
     );
 
+    console.log(
+      "MAIL PASS LENGTH:",
+      process.env.MAIL_PASS?.length
+    );
+
     const transporter =
       nodemailer.createTransport({
-        service: "gmail",
+
+        host:
+          "smtp.gmail.com",
+
+        port: 465,
+
+        secure: true,
 
         auth: {
           user:
@@ -153,6 +165,9 @@ router.post("/request-delete", async (req, res) => {
             process.env
               .MAIL_PASS,
         },
+
+        logger: true,
+        debug: true,
 
         connectionTimeout:
           120000,
@@ -165,22 +180,47 @@ router.post("/request-delete", async (req, res) => {
       });
 
     try {
-      await transporter.verify();
+
+      const info =
+        await transporter.verify();
 
       console.log(
-        "SMTP OK"
+        "SMTP OK:",
+        info
       );
 
     } catch (e) {
+
       console.error(
-        "SMTP VERIFY ERROR:",
+        "VERIFY FULL:",
         e
+      );
+
+      console.error(
+        "CODE:",
+        e.code
+      );
+
+      console.error(
+        "COMMAND:",
+        e.command
+      );
+
+      console.error(
+        "RESPONSE:",
+        e.response
+      );
+
+      console.error(
+        "STACK:",
+        e.stack
       );
 
       throw e;
     }
 
     await transporter.sendMail({
+
       from:
         `"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
 
@@ -190,7 +230,9 @@ router.post("/request-delete", async (req, res) => {
         "Arap Bacı Hesap Silme",
 
       html: `
-        <h2>Arap Bacı</h2>
+        <h2>
+          Arap Bacı
+        </h2>
 
         <p>
           Hesabınızı silmek için
@@ -218,6 +260,7 @@ router.post("/request-delete", async (req, res) => {
     });
 
   } catch (e) {
+
     console.error(
       "DELETE MAIL ERROR:",
       e
@@ -236,6 +279,7 @@ router.post("/request-delete", async (req, res) => {
 
 router.post("/confirm-delete", async (req, res) => {
   try {
+
     const token = String(
       req.body?.token || ""
     ).trim();
@@ -286,6 +330,7 @@ router.post("/confirm-delete", async (req, res) => {
     });
 
   } catch (e) {
+
     console.error(
       "CONFIRM DELETE ERROR:",
       e
