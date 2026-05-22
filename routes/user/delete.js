@@ -53,7 +53,6 @@ async function deleteUserData(uid) {
 
 /* =========================
    APP DELETE
-   POST /user/delete
 ========================= */
 
 router.post("/delete", auth, async (req, res) => {
@@ -72,68 +71,98 @@ router.post("/delete", auth, async (req, res) => {
       success: true,
       message: "Hesap silindi",
     });
+
   } catch (e) {
-    console.error("APP DELETE ERROR:", e);
+    console.error(
+      "APP DELETE ERROR:",
+      e
+    );
 
     return res.status(500).json({
-      error: "Hesap silinemedi",
+      error:
+        "Hesap silinemedi",
     });
   }
 });
 
 /* =========================
    WEB REQUEST
-   POST /user/request-delete
 ========================= */
 
 router.post("/request-delete", async (req, res) => {
   try {
-    const email = String(req.body?.email || "")
+    const email = String(
+      req.body?.email || ""
+    )
       .trim()
       .toLowerCase();
 
     if (!email) {
       return res.status(400).json({
-        error: "Mail gerekli",
+        error:
+          "Mail gerekli",
       });
     }
 
     const user = await admin
       .auth()
-      .getUserByEmail(email);
+      .getUserByEmail(
+        email
+      );
 
     const token = crypto
       .randomBytes(32)
       .toString("hex");
 
     await db
-      .collection("deleteRequests")
+      .collection(
+        "deleteRequests"
+      )
       .doc(token)
       .set({
         uid: user.uid,
         email,
         used: false,
-        createdAt: Date.now(),
+        createdAt:
+          Date.now(),
       });
 
     const link =
       `https://arapbaci.com/confirm-delete.html?token=${token}`;
 
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
+    console.log(
+      "MAIL USER:",
+      process.env.MAIL_USER
+    );
 
-      port: 465,
-      secure: true,
+    console.log(
+      "MAIL PASS EXISTS:",
+      !!process.env.MAIL_PASS
+    );
 
-      auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-      },
+    const transporter =
+      nodemailer.createTransport({
+        service: "gmail",
 
-      connectionTimeout: 60000,
-      greetingTimeout: 60000,
-      socketTimeout: 60000,
-    });
+        auth: {
+          user:
+            process.env
+              .MAIL_USER,
+
+          pass:
+            process.env
+              .MAIL_PASS,
+        },
+
+        connectionTimeout:
+          120000,
+
+        greetingTimeout:
+          120000,
+
+        socketTimeout:
+          120000,
+      });
 
     try {
       await transporter.verify();
@@ -141,6 +170,7 @@ router.post("/request-delete", async (req, res) => {
       console.log(
         "SMTP OK"
       );
+
     } catch (e) {
       console.error(
         "SMTP VERIFY ERROR:",
@@ -160,9 +190,7 @@ router.post("/request-delete", async (req, res) => {
         "Arap Bacı Hesap Silme",
 
       html: `
-        <h2>
-          Arap Bacı
-        </h2>
+        <h2>Arap Bacı</h2>
 
         <p>
           Hesabınızı silmek için
@@ -177,7 +205,8 @@ router.post("/request-delete", async (req, res) => {
         </p>
 
         <p>
-          Bu işlem geri alınamaz.
+          Bu işlem geri
+          alınamaz.
         </p>
       `,
     });
@@ -203,7 +232,6 @@ router.post("/request-delete", async (req, res) => {
 
 /* =========================
    WEB CONFIRM
-   POST /user/confirm-delete
 ========================= */
 
 router.post("/confirm-delete", async (req, res) => {
