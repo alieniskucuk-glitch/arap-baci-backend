@@ -12,6 +12,7 @@ const router = express.Router();
 ========================= */
 
 async function deleteUserData(uid) {
+
   await db
     .collection("users")
     .doc(uid)
@@ -28,319 +29,437 @@ async function deleteUserData(uid) {
   ];
 
   for (const name of collections) {
+
     const snap = await db
       .collection(name)
-      .where("uid", "==", uid)
+      .where(
+        "uid",
+        "==",
+        uid
+      )
       .get();
 
     if (snap.empty) {
       continue;
     }
 
-    const batch = db.batch();
+    const batch =
+      db.batch();
 
-    snap.docs.forEach((doc) => {
-      batch.delete(doc.ref);
+    snap.docs.forEach(
+      (doc) => {
+
+      batch.delete(
+        doc.ref
+      );
+
     });
 
     await batch.commit();
+
   }
 
   await admin
     .auth()
     .deleteUser(uid);
+
 }
 
 /* =========================
    APP DELETE
 ========================= */
 
-router.post("/delete", auth, async (req, res) => {
-  try {
-    const uid = req.user?.uid;
+router.post(
+"/delete",
+auth,
 
-    if (!uid) {
-      return res.status(401).json({
-        error: "Token gerekli",
-      });
-    }
+async (
+req,
+res
+)=>{
 
-    await deleteUserData(uid);
+try{
 
-    return res.json({
-      success: true,
-      message: "Hesap silindi",
-    });
+const uid =
+req.user?.uid;
 
-  } catch (e) {
-    console.error(
-      "APP DELETE ERROR:",
-      e
-    );
+if(!uid){
 
-    return res.status(500).json({
-      error:
-        "Hesap silinemedi",
-    });
-  }
+return res
+.status(401)
+.json({
+
+error:
+"Token gerekli"
+
+});
+
+}
+
+await deleteUserData(
+uid
+);
+
+return res.json({
+
+success:true,
+
+message:
+"Hesap silindi"
+
+});
+
+}
+catch(e){
+
+console.error(
+"APP DELETE ERROR:",
+e
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Hesap silinemedi"
+
+});
+
+}
+
 });
 
 /* =========================
    WEB REQUEST
 ========================= */
 
-router.post("/request-delete", async (req, res) => {
-  try {
+router.post(
+"/request-delete",
 
-    const email = String(
-      req.body?.email || ""
-    )
-      .trim()
-      .toLowerCase();
+async(
+req,
+res
+)=>{
 
-    if (!email) {
-      return res.status(400).json({
-        error:
-          "Mail gerekli",
-      });
-    }
+try{
 
-    const user = await admin
-      .auth()
-      .getUserByEmail(
-        email
-      );
+const email =
+String(
+req.body?.email
+||""
+)
 
-    const token = crypto
-      .randomBytes(32)
-      .toString("hex");
+.trim()
 
-    await db
-      .collection(
-        "deleteRequests"
-      )
-      .doc(token)
-      .set({
-        uid: user.uid,
-        email,
-        used: false,
-        createdAt:
-          Date.now(),
-      });
+.toLowerCase();
 
-    const link =
-      `https://arapbaci.com/confirm-delete.html?token=${token}`;
+if(!email){
 
-    console.log(
-      "MAIL USER:",
-      process.env.MAIL_USER
-    );
+return res
+.status(400)
+.json({
 
-    console.log(
-      "MAIL PASS EXISTS:",
-      !!process.env.MAIL_PASS
-    );
+error:
+"Mail gerekli"
 
-    console.log(
-      "MAIL PASS LENGTH:",
-      process.env.MAIL_PASS?.length
-    );
+});
 
-    const transporter =
-      nodemailer.createTransport({
+}
 
-        host:
-          "smtp.gmail.com",
+const user =
+await admin
+.auth()
+.getUserByEmail(
+email
+);
 
-        port: 465,
+const token =
+crypto
 
-        secure: true,
+.randomBytes(
+32
+)
 
-        auth: {
-          user:
-            process.env
-              .MAIL_USER,
+.toString(
+"hex"
+);
 
-          pass:
-            process.env
-              .MAIL_PASS,
-        },
+await db
 
-        logger: true,
-        debug: true,
+.collection(
+"deleteRequests"
+)
 
-        connectionTimeout:
-          120000,
+.doc(
+token
+)
 
-        greetingTimeout:
-          120000,
+.set({
 
-        socketTimeout:
-          120000,
-      });
+uid:
+user.uid,
 
-    try {
+email,
 
-      const info =
-        await transporter.verify();
+used:false,
 
-      console.log(
-        "SMTP OK:",
-        info
-      );
+createdAt:
+Date.now()
 
-    } catch (e) {
+});
 
-      console.error(
-        "VERIFY FULL:",
-        e
-      );
+const link =
 
-      console.error(
-        "CODE:",
-        e.code
-      );
+`https://arapbaci.com/confirm-delete.html?token=${token}`;
 
-      console.error(
-        "COMMAND:",
-        e.command
-      );
+const transporter =
 
-      console.error(
-        "RESPONSE:",
-        e.response
-      );
+nodemailer
+.createTransport({
 
-      console.error(
-        "STACK:",
-        e.stack
-      );
+host:
+"smtp.gmail.com",
 
-      throw e;
-    }
+port:465,
 
-    await transporter.sendMail({
+secure:true,
 
-      from:
-        `"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
+auth:{
 
-      to: email,
+user:
+process.env
+.MAIL_USER,
 
-      subject:
-        "Arap Bacı Hesap Silme",
+pass:
+process.env
+.MAIL_PASS
 
-      html: `
-        <h2>
-          Arap Bacı
-        </h2>
+},
 
-        <p>
-          Hesabınızı silmek için
-          aşağıdaki bağlantıya
-          tıklayın:
-        </p>
+connectionTimeout:
+120000,
 
-        <p>
-          <a href="${link}">
-            HESABI SİL
-          </a>
-        </p>
+greetingTimeout:
+120000,
 
-        <p>
-          Bu işlem geri
-          alınamaz.
-        </p>
-      `,
-    });
+socketTimeout:
+120000
 
-    return res.json({
-      success: true,
-      message:
-        "Silme maili gönderildi",
-    });
+});
 
-  } catch (e) {
+await transporter.sendMail({
 
-    console.error(
-      "DELETE MAIL ERROR:",
-      e
-    );
+from:
 
-    return res.status(500).json({
-      error:
-        "Mail gönderilemedi",
-    });
-  }
+`"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
+
+to:
+email,
+
+subject:
+"Arap Bacı Hesap Silme",
+
+html:`
+
+<h2>
+Arap Bacı
+</h2>
+
+<p>
+
+Hesabınızı silmek için
+aşağıdaki bağlantıya
+tıklayın:
+
+</p>
+
+<p>
+
+<a href="${link}">
+
+HESABI SİL
+
+</a>
+
+</p>
+
+<p>
+
+Bu işlem geri
+alınamaz.
+
+</p>
+
+`
+
+});
+
+return res.json({
+
+success:true,
+
+message:
+
+"Silme maili gönderildi"
+
+});
+
+}
+catch(e){
+
+console.error(
+
+"DELETE MAIL ERROR:",
+
+e
+
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Mail gönderilemedi"
+
+});
+
+}
+
 });
 
 /* =========================
    WEB CONFIRM
 ========================= */
 
-router.post("/confirm-delete", async (req, res) => {
-  try {
+router.post(
 
-    const token = String(
-      req.body?.token || ""
-    ).trim();
+"/confirm-delete",
 
-    if (!token) {
-      return res.status(400).json({
-        error:
-          "Token gerekli",
-      });
-    }
+async(
+req,
+res
+)=>{
 
-    const ref = db
-      .collection(
-        "deleteRequests"
-      )
-      .doc(token);
+try{
 
-    const snap =
-      await ref.get();
+const token =
 
-    if (!snap.exists) {
-      return res.status(400).json({
-        error:
-          "Geçersiz token",
-      });
-    }
+String(
 
-    const data =
-      snap.data();
+req.body?.token
+||""
 
-    if (!data?.uid) {
-      return res.status(400).json({
-        error:
-          "Geçersiz istek",
-      });
-    }
+)
 
-    await deleteUserData(
-      data.uid
-    );
+.trim();
 
-    await ref.delete();
+if(!token){
 
-    return res.json({
-      success: true,
-      message:
-        "Hesap silindi",
-    });
+return res
+.status(400)
+.json({
 
-  } catch (e) {
+error:
+"Token gerekli"
 
-    console.error(
-      "CONFIRM DELETE ERROR:",
-      e
-    );
+});
 
-    return res.status(500).json({
-      error:
-        "Silinemedi",
-    });
-  }
+}
+
+const ref =
+
+db
+
+.collection(
+"deleteRequests"
+)
+
+.doc(
+token
+);
+
+const snap =
+
+await ref.get();
+
+if(
+!snap.exists
+){
+
+return res
+.status(400)
+.json({
+
+error:
+
+"Geçersiz token"
+
+});
+
+}
+
+const data =
+
+snap.data();
+
+if(
+!data?.uid
+){
+
+return res
+.status(400)
+.json({
+
+error:
+
+"Geçersiz istek"
+
+});
+
+}
+
+await deleteUserData(
+
+data.uid
+
+);
+
+await ref.delete();
+
+return res.json({
+
+success:true,
+
+message:
+
+"Hesap silindi"
+
+});
+
+}
+catch(e){
+
+console.error(
+
+"CONFIRM DELETE ERROR:",
+
+e
+
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Silinemedi"
+
+});
+
+}
+
 });
 
 export default router;
