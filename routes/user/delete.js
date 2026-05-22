@@ -12,7 +12,6 @@ const router = express.Router();
 ========================= */
 
 async function deleteUserData(uid) {
-
   await db
     .collection("users")
     .doc(uid)
@@ -29,483 +28,319 @@ async function deleteUserData(uid) {
   ];
 
   for (const name of collections) {
-
     const snap = await db
       .collection(name)
-      .where(
-        "uid",
-        "==",
-        uid
-      )
+      .where("uid", "==", uid)
       .get();
 
     if (snap.empty) {
       continue;
     }
 
-    const batch =
-      db.batch();
+    const batch = db.batch();
 
-    snap.docs.forEach(
-      (doc) => {
-
-      batch.delete(
-        doc.ref
-      );
-
+    snap.docs.forEach((doc) => {
+      batch.delete(doc.ref);
     });
 
     await batch.commit();
-
   }
 
   await admin
     .auth()
     .deleteUser(uid);
-
 }
 
 /* =========================
    APP DELETE
 ========================= */
 
-router.post(
-"/delete",
-auth,
+router.post("/delete", auth, async (req, res) => {
+  try {
+    const uid = req.user?.uid;
 
-async (
-req,
-res
-)=>{
+    if (!uid) {
+      return res.status(401).json({
+        error: "Token gerekli",
+      });
+    }
 
-try{
+    await deleteUserData(uid);
 
-const uid =
-req.user?.uid;
+    return res.json({
+      success: true,
+      message: "Hesap silindi",
+    });
 
-if(!uid){
+  } catch (e) {
+    console.error(
+      "APP DELETE ERROR:",
+      e
+    );
 
-return res
-.status(401)
-.json({
-
-error:
-"Token gerekli"
-
-});
-
-}
-
-await deleteUserData(
-uid
-);
-
-return res.json({
-
-success:true,
-
-message:
-"Hesap silindi"
-
-});
-
-}
-catch(e){
-
-console.error(
-"APP DELETE ERROR:",
-e
-);
-
-return res
-.status(500)
-.json({
-
-error:
-"Hesap silinemedi"
-
-});
-
-}
-
+    return res.status(500).json({
+      error:
+        "Hesap silinemedi",
+    });
+  }
 });
 
 /* =========================
    WEB REQUEST
 ========================= */
 
-router.post(
-"/request-delete",
-
-async(
-req,
-res
-)=>{
-
-try{
-
-const email =
-String(
-req.body?.email
-||""
-)
-
-.trim()
-
-.toLowerCase();
-
-if(!email){
-
-return res
-.status(400)
-.json({
-
-error:
-"Mail gerekli"
-
-});
-
-}
-
-const user =
-await admin
-.auth()
-.getUserByEmail(
-email
-);
-
-const token =
-crypto
-
-.randomBytes(
-32
-)
-
-.toString(
-"hex"
-);
-
-await db
-
-.collection(
-"deleteRequests"
-)
-
-.doc(
-token
-)
-
-.set({
-
-uid:
-user.uid,
-
-email,
-
-used:false,
-
-createdAt:
-Date.now()
-
-});
-
-const link =
-
-`https://arapbaci.com/confirm-delete.html?token=${token}`;
-
-const transporter =
-
-nodemailer
-.createTransport({
-
-service:
-"gmail",
-
-auth:{
-
-user:
-process.env
-.MAIL_USER,
-
-pass:
-
-String(
-
-process.env
-.MAIL_PASS
-
-)
-
-.replaceAll(
-" ",
-""
-)
-
-},
-
-pool:true,
-
-maxConnections:
-1,
-
-connectionTimeout:
-180000,
-
-greetingTimeout:
-180000,
-
-socketTimeout:
-180000
-
-});
-
-let sent=false;
-
-for(
-let i=0;
-i<3;
-i++
-){
-
-try{
-
-await transporter
-.sendMail({
-
-from:
-
-`"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
-
-to:
-email,
-
-subject:
-"Arap Bacı Hesap Silme",
-
-html:`
-
-<h2>
-
-Arap Bacı
-
-</h2>
-
-<p>
-
-Hesabınızı silmek için
-aşağıdaki bağlantıya
-tıklayın:
-
-</p>
-
-<p>
-
-<a href="${link}">
-
-HESABI SİL
-
-</a>
-
-</p>
-
-<p>
-
-Bu işlem geri
-alınamaz.
-
-</p>
-
-`
-
-});
-
-sent=true;
-
-break;
-
-}
-catch(e){
-
-console.log(
-"MAIL RETRY:",
-i+1
-);
-
-if(i===2){
-
-throw e;
-
-}
-
-}
-
-}
-
-return res.json({
-
-success:true,
-
-message:
-
-"Silme maili gönderildi"
-
-});
-
-}
-catch(e){
-
-console.error(
-
-"DELETE MAIL ERROR:",
-
-e
-
-);
-
-return res
-.status(500)
-.json({
-
-error:
-"Mail gönderilemedi"
-
-});
-
-}
-
+router.post("/request-delete", async (req, res) => {
+  try {
+
+    const email = String(
+      req.body?.email || ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (!email) {
+      return res.status(400).json({
+        error:
+          "Mail gerekli",
+      });
+    }
+
+    const user = await admin
+      .auth()
+      .getUserByEmail(
+        email
+      );
+
+    const token = crypto
+      .randomBytes(32)
+      .toString("hex");
+
+    await db
+      .collection(
+        "deleteRequests"
+      )
+      .doc(token)
+      .set({
+        uid: user.uid,
+        email,
+        used: false,
+        createdAt:
+          Date.now(),
+      });
+
+    const link =
+      `https://arapbaci.com/confirm-delete.html?token=${token}`;
+
+    console.log(
+      "MAIL USER:",
+      process.env.MAIL_USER
+    );
+
+    console.log(
+      "MAIL PASS EXISTS:",
+      !!process.env.MAIL_PASS
+    );
+
+    console.log(
+      "MAIL PASS LENGTH:",
+      process.env.MAIL_PASS?.length
+    );
+
+    const transporter =
+      nodemailer.createTransport({
+
+        host:
+          "smtp.gmail.com",
+
+        port: 465,
+
+        secure: true,
+
+        auth: {
+          user:
+            process.env
+              .MAIL_USER,
+
+          pass:
+            process.env
+              .MAIL_PASS,
+        },
+
+        logger: true,
+        debug: true,
+
+        connectionTimeout:
+          120000,
+
+        greetingTimeout:
+          120000,
+
+        socketTimeout:
+          120000,
+      });
+
+    try {
+
+      const info =
+        await transporter.verify();
+
+      console.log(
+        "SMTP OK:",
+        info
+      );
+
+    } catch (e) {
+
+      console.error(
+        "VERIFY FULL:",
+        e
+      );
+
+      console.error(
+        "CODE:",
+        e.code
+      );
+
+      console.error(
+        "COMMAND:",
+        e.command
+      );
+
+      console.error(
+        "RESPONSE:",
+        e.response
+      );
+
+      console.error(
+        "STACK:",
+        e.stack
+      );
+
+      throw e;
+    }
+
+    await transporter.sendMail({
+
+      from:
+        `"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
+
+      to: email,
+
+      subject:
+        "Arap Bacı Hesap Silme",
+
+      html: `
+        <h2>
+          Arap Bacı
+        </h2>
+
+        <p>
+          Hesabınızı silmek için
+          aşağıdaki bağlantıya
+          tıklayın:
+        </p>
+
+        <p>
+          <a href="${link}">
+            HESABI SİL
+          </a>
+        </p>
+
+        <p>
+          Bu işlem geri
+          alınamaz.
+        </p>
+      `,
+    });
+
+    return res.json({
+      success: true,
+      message:
+        "Silme maili gönderildi",
+    });
+
+  } catch (e) {
+
+    console.error(
+      "DELETE MAIL ERROR:",
+      e
+    );
+
+    return res.status(500).json({
+      error:
+        "Mail gönderilemedi",
+    });
+  }
 });
 
 /* =========================
    WEB CONFIRM
 ========================= */
 
-router.post(
+router.post("/confirm-delete", async (req, res) => {
+  try {
 
-"/confirm-delete",
+    const token = String(
+      req.body?.token || ""
+    ).trim();
 
-async(
-req,
-res
-)=>{
+    if (!token) {
+      return res.status(400).json({
+        error:
+          "Token gerekli",
+      });
+    }
 
-try{
+    const ref = db
+      .collection(
+        "deleteRequests"
+      )
+      .doc(token);
 
-const token =
+    const snap =
+      await ref.get();
 
-String(
+    if (!snap.exists) {
+      return res.status(400).json({
+        error:
+          "Geçersiz token",
+      });
+    }
 
-req.body?.token
-||""
+    const data =
+      snap.data();
 
-)
+    if (!data?.uid) {
+      return res.status(400).json({
+        error:
+          "Geçersiz istek",
+      });
+    }
 
-.trim();
+    await deleteUserData(
+      data.uid
+    );
 
-if(!token){
+    await ref.delete();
 
-return res
-.status(400)
-.json({
+    return res.json({
+      success: true,
+      message:
+        "Hesap silindi",
+    });
 
-error:
-"Token gerekli"
+  } catch (e) {
 
-});
+    console.error(
+      "CONFIRM DELETE ERROR:",
+      e
+    );
 
-}
-
-const ref =
-
-db
-
-.collection(
-"deleteRequests"
-)
-
-.doc(
-token
-);
-
-const snap =
-
-await ref.get();
-
-if(
-!snap.exists
-){
-
-return res
-.status(400)
-.json({
-
-error:
-
-"Geçersiz token"
-
-});
-
-}
-
-const data =
-
-snap.data();
-
-if(
-!data?.uid
-){
-
-return res
-.status(400)
-.json({
-
-error:
-
-"Geçersiz istek"
-
-});
-
-}
-
-await deleteUserData(
-
-data.uid
-
-);
-
-await ref.delete();
-
-return res.json({
-
-success:true,
-
-message:
-
-"Hesap silindi"
-
-});
-
-}
-catch(e){
-
-console.error(
-
-"CONFIRM DELETE ERROR:",
-
-e
-
-);
-
-return res
-.status(500)
-.json({
-
-error:
-"Silinemedi"
-
-});
-
-}
-
+    return res.status(500).json({
+      error:
+        "Silinemedi",
+    });
+  }
 });
 
 export default router;
