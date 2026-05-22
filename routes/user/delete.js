@@ -13,14 +13,10 @@ const router = express.Router();
 
 async function deleteUserData(uid){
 
-  /* USERS */
-
   await db
     .collection("users")
     .doc(uid)
     .delete();
-
-  /* HISTORY */
 
   const collections = [
 
@@ -59,8 +55,6 @@ async function deleteUserData(uid){
 
   }
 
-  /* AUTH */
-
   await admin
     .auth()
     .deleteUser(uid);
@@ -69,7 +63,6 @@ async function deleteUserData(uid){
 
 /* =========================
    APP DELETE
-   POST /user/delete
 ========================= */
 
 router.post(
@@ -128,7 +121,6 @@ error:
 
 /* =========================
    WEB REQUEST
-   POST /user/request-delete
 ========================= */
 
 router.post(
@@ -188,7 +180,7 @@ nodemailer
 .createTransport({
 
 host:
-"srvc38.trwww.com",
+"webmail.arapbaci.com",
 
 port:465,
 
@@ -197,14 +189,35 @@ secure:true,
 auth:{
 
 user:
-"support@arapbaci.com",
+process.env.MAIL_USER,
 
 pass:
 process.env.MAIL_PASS
 
-}
+},
+
+tls:{
+
+rejectUnauthorized:false
+
+},
+
+connectionTimeout:
+30000,
+
+greetingTimeout:
+30000,
+
+socketTimeout:
+30000
 
 });
+
+await transporter.verify();
+
+console.log(
+"SMTP OK"
+);
 
 const link =
 
@@ -213,7 +226,8 @@ const link =
 await transporter.sendMail({
 
 from:
-'"Arap Bacı" <support@arapbaci.com>',
+
+`"Arap Bacı" <${process.env.MAIL_USER}>`,
 
 to:email,
 
@@ -262,7 +276,10 @@ message:
 }
 catch(e){
 
-console.error(e);
+console.error(
+"DELETE MAIL ERROR:",
+e
+);
 
 return res
 .status(500)
@@ -279,7 +296,6 @@ error:
 
 /* =========================
    WEB CONFIRM
-   POST /user/confirm-delete
 ========================= */
 
 router.post(
