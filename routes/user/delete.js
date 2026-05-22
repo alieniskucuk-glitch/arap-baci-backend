@@ -218,12 +218,8 @@ const transporter =
 nodemailer
 .createTransport({
 
-host:
-"smtp.gmail.com",
-
-port:465,
-
-secure:true,
+service:
+"gmail",
 
 auth:{
 
@@ -232,23 +228,49 @@ process.env
 .MAIL_USER,
 
 pass:
+
+String(
+
 process.env
 .MAIL_PASS
 
+)
+
+.replaceAll(
+" ",
+""
+)
+
 },
 
+pool:true,
+
+maxConnections:
+1,
+
 connectionTimeout:
-120000,
+180000,
 
 greetingTimeout:
-120000,
+180000,
 
 socketTimeout:
-120000
+180000
 
 });
 
-await transporter.sendMail({
+let sent=false;
+
+for(
+let i=0;
+i<3;
+i++
+){
+
+try{
+
+await transporter
+.sendMail({
 
 from:
 
@@ -263,7 +285,9 @@ subject:
 html:`
 
 <h2>
+
 Arap Bacı
+
 </h2>
 
 <p>
@@ -294,6 +318,28 @@ alınamaz.
 `
 
 });
+
+sent=true;
+
+break;
+
+}
+catch(e){
+
+console.log(
+"MAIL RETRY:",
+i+1
+);
+
+if(i===2){
+
+throw e;
+
+}
+
+}
+
+}
 
 return res.json({
 
