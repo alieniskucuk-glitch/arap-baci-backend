@@ -43,18 +43,26 @@ async function deleteUserData(uid) {
       continue;
     }
 
-    const batch = db.batch();
+    const batch =
+      db.batch();
 
-    snap.docs.forEach((doc) => {
-      batch.delete(doc.ref);
+    snap.docs.forEach(
+      (doc) => {
+
+      batch.delete(
+        doc.ref
+      );
+
     });
 
     await batch.commit();
+
   }
 
   await admin
     .auth()
     .deleteUser(uid);
+
 }
 
 /* =========================
@@ -137,6 +145,7 @@ res
 try{
 
 const email =
+
 String(
 req.body?.email
 ||""
@@ -160,6 +169,7 @@ error:
 }
 
 const user =
+
 await admin
 .auth()
 .getUserByEmail(
@@ -206,31 +216,17 @@ const link =
 
 `https://arapbaci.com/confirm-delete.html?token=${token}`;
 
-console.log(
-"MAIL USER:",
-process.env
-.MAIL_USER
-);
-
-console.log(
-"MAIL PASS EXISTS:",
-!!process.env
-.MAIL_PASS
-);
-
 const transporter =
 
 nodemailer
 .createTransport({
 
 host:
-"smtp-relay.brevo.com",
+"smtp.gmail.com",
 
-port:587,
+port:465,
 
-secure:false,
-
-requireTLS:true,
+secure:true,
 
 auth:{
 
@@ -239,53 +235,42 @@ process.env
 .MAIL_USER,
 
 pass:
+
+String(
+
 process.env
 .MAIL_PASS
+
+)
+
+.replaceAll(
+" ",
+""
+)
 
 },
 
 tls:{
 
-rejectUnauthorized:
-false
+family:4
 
 },
 
-logger:true,
+pool:true,
 
-debug:true,
+maxConnections:
+1,
 
 connectionTimeout:
-30000,
+180000,
 
 greetingTimeout:
-30000,
+180000,
 
 socketTimeout:
-30000
+180000
 
 });
-
-try{
-
-await transporter
-.verify();
-
-console.log(
-"BREVO OK"
-);
-
-}
-catch(e){
-
-console.error(
-"VERIFY ERROR:",
-e
-);
-
-throw e;
-
-}
 
 await transporter
 .sendMail({
@@ -342,6 +327,7 @@ return res.json({
 success:true,
 
 message:
+
 "Silme maili gönderildi"
 
 });
@@ -350,8 +336,11 @@ message:
 catch(e){
 
 console.error(
+
 "DELETE MAIL ERROR:",
+
 e
+
 );
 
 return res
@@ -416,6 +405,7 @@ token
 );
 
 const snap =
+
 await ref.get();
 
 if(
