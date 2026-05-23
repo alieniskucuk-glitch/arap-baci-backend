@@ -12,6 +12,7 @@ const router = express.Router();
 ========================= */
 
 async function deleteUserData(uid) {
+
   await db
     .collection("users")
     .doc(uid)
@@ -31,7 +32,11 @@ async function deleteUserData(uid) {
 
     const snap = await db
       .collection(name)
-      .where("uid", "==", uid)
+      .where(
+        "uid",
+        "==",
+        uid
+      )
       .get();
 
     if (snap.empty) {
@@ -56,36 +61,65 @@ async function deleteUserData(uid) {
    APP DELETE
 ========================= */
 
-router.post("/delete", auth, async (req, res) => {
-  try {
+router.post(
+"/delete",
+auth,
 
-    const uid = req.user?.uid;
+async(
+req,
+res
+)=>{
 
-    if (!uid) {
-      return res.status(401).json({
-        error: "Token gerekli",
-      });
-    }
+try{
 
-    await deleteUserData(uid);
+const uid =
+req.user?.uid;
 
-    return res.json({
-      success: true,
-      message: "Hesap silindi",
-    });
+if(!uid){
 
-  } catch (e) {
+return res
+.status(401)
+.json({
 
-    console.error(
-      "APP DELETE ERROR:",
-      e
-    );
+error:
+"Token gerekli"
 
-    return res.status(500).json({
-      error:
-      "Hesap silinemedi",
-    });
-  }
+});
+
+}
+
+await deleteUserData(
+uid
+);
+
+return res.json({
+
+success:true,
+
+message:
+"Hesap silindi"
+
+});
+
+}
+catch(e){
+
+console.error(
+"APP DELETE ERROR:",
+e
+);
+
+return res
+.status(500)
+.json({
+
+error:
+"Hesap silinemedi"
+
+});
+
+}
+
 });
 
 /* =========================
@@ -133,6 +167,7 @@ email
 );
 
 const token =
+
 crypto
 
 .randomBytes(
@@ -177,11 +212,11 @@ nodemailer
 .createTransport({
 
 host:
-"smtp.gmail.com",
+"smtp-relay.brevo.com",
 
-port:465,
+port:587,
 
-secure:true,
+secure:false,
 
 auth:{
 
@@ -190,36 +225,19 @@ process.env
 .MAIL_USER,
 
 pass:
-
-String(
 process.env
 .MAIL_PASS
-)
-
-.replaceAll(
-" ",
-""
-)
 
 },
-
-tls:{
-family:4
-},
-
-pool:true,
-
-maxConnections:
-1,
 
 connectionTimeout:
-180000,
+120000,
 
 greetingTimeout:
-180000,
+120000,
 
 socketTimeout:
-180000
+120000
 
 });
 
@@ -318,10 +336,12 @@ res
 try{
 
 const token =
+
 String(
 req.body?.token
 ||""
 )
+
 .trim();
 
 if(!token){
@@ -337,10 +357,14 @@ error:
 
 }
 
-const ref = db
+const ref =
+
+db
+
 .collection(
 "deleteRequests"
 )
+
 .doc(
 token
 );
