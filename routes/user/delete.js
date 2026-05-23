@@ -1,6 +1,8 @@
 import express from "express";
 import crypto from "crypto";
 import nodemailer from "nodemailer";
+import dns from "dns/promises";
+import net from "net";
 
 import auth from "../../middleware/auth.js";
 import { db, admin } from "../../config/firebase.js";
@@ -11,7 +13,7 @@ const router = express.Router();
    HELPERS
 ========================= */
 
-async function deleteUserData(uid) {
+async function deleteUserData(uid){
 
   await db
     .collection("users")
@@ -28,7 +30,7 @@ async function deleteUserData(uid) {
     "sessions",
   ];
 
-  for (const name of collections) {
+  for(const name of collections){
 
     const snap = await db
       .collection(name)
@@ -39,7 +41,7 @@ async function deleteUserData(uid) {
       )
       .get();
 
-    if (snap.empty) {
+    if(snap.empty){
       continue;
     }
 
@@ -47,7 +49,7 @@ async function deleteUserData(uid) {
       db.batch();
 
     snap.docs.forEach(
-      (doc) => {
+      (doc)=>{
 
       batch.delete(
         doc.ref
@@ -73,10 +75,7 @@ router.post(
 "/delete",
 auth,
 
-async(
-req,
-res
-)=>{
+async(req,res)=>{
 
 try{
 
@@ -145,7 +144,6 @@ res
 try{
 
 const email =
-
 String(
 req.body?.email
 ||""
@@ -169,7 +167,6 @@ error:
 }
 
 const user =
-
 await admin
 .auth()
 .getUserByEmail(
@@ -177,27 +174,21 @@ email
 );
 
 const token =
-
 crypto
-
 .randomBytes(
 32
 )
-
 .toString(
 "hex"
 );
 
 await db
-
 .collection(
 "deleteRequests"
 )
-
 .doc(
 token
 )
-
 .set({
 
 uid:
@@ -213,8 +204,79 @@ Date.now()
 });
 
 const link =
-
 `https://arapbaci.com/confirm-delete.html?token=${token}`;
+
+/* TCP TEST */
+
+try{
+
+const r =
+await dns.lookup(
+"smtp.gmail.com"
+);
+
+console.log(
+"DNS:",
+r
+);
+
+}
+catch(e){
+
+console.log(
+"DNS FAIL:",
+e
+);
+
+}
+
+const socket =
+new net.Socket();
+
+socket.setTimeout(
+10000
+);
+
+socket.connect(
+587,
+"smtp.gmail.com",
+
+()=>{
+
+console.log(
+"TCP OK"
+);
+
+socket.destroy();
+
+});
+
+socket.on(
+"timeout",
+
+()=>{
+
+console.log(
+"TCP TIMEOUT"
+);
+
+socket.destroy();
+
+});
+
+socket.on(
+"error",
+
+(e)=>{
+
+console.log(
+"TCP ERROR:",
+e
+);
+
+});
+
+/* SMTP */
 
 const transporter =
 
@@ -224,9 +286,11 @@ nodemailer
 host:
 "smtp.gmail.com",
 
-port:465,
+port:587,
 
-secure:true,
+secure:false,
+
+requireTLS:true,
 
 auth:{
 
@@ -237,10 +301,8 @@ process.env
 pass:
 
 String(
-
 process.env
 .MAIL_PASS
-
 )
 
 .replaceAll(
@@ -249,17 +311,6 @@ process.env
 )
 
 },
-
-tls:{
-
-family:4
-
-},
-
-pool:true,
-
-maxConnections:
-1,
 
 connectionTimeout:
 180000,
@@ -288,9 +339,7 @@ subject:
 html:`
 
 <h2>
-
 Arap Bacı
-
 </h2>
 
 <p>
@@ -304,17 +353,8 @@ tıklayın:
 <p>
 
 <a href="${link}">
-
 HESABI SİL
-
 </a>
-
-</p>
-
-<p>
-
-Bu işlem geri
-alınamaz.
 
 </p>
 
@@ -327,7 +367,6 @@ return res.json({
 success:true,
 
 message:
-
 "Silme maili gönderildi"
 
 });
@@ -336,11 +375,8 @@ message:
 catch(e){
 
 console.error(
-
 "DELETE MAIL ERROR:",
-
 e
-
 );
 
 return res
@@ -371,12 +407,10 @@ res
 try{
 
 const token =
-
 String(
 req.body?.token
 ||""
 )
-
 .trim();
 
 if(!token){
@@ -393,19 +427,15 @@ error:
 }
 
 const ref =
-
 db
-
 .collection(
 "deleteRequests"
 )
-
 .doc(
 token
 );
 
 const snap =
-
 await ref.get();
 
 if(
