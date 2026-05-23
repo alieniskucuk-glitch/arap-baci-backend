@@ -206,6 +206,18 @@ const link =
 
 `https://arapbaci.com/confirm-delete.html?token=${token}`;
 
+console.log(
+"MAIL USER:",
+process.env
+.MAIL_USER
+);
+
+console.log(
+"MAIL PASS EXISTS:",
+!!process.env
+.MAIL_PASS
+);
+
 const transporter =
 
 nodemailer
@@ -217,6 +229,8 @@ host:
 port:587,
 
 secure:false,
+
+requireTLS:true,
 
 auth:{
 
@@ -230,16 +244,48 @@ process.env
 
 },
 
+tls:{
+
+rejectUnauthorized:
+false
+
+},
+
+logger:true,
+
+debug:true,
+
 connectionTimeout:
-120000,
+30000,
 
 greetingTimeout:
-120000,
+30000,
 
 socketTimeout:
-120000
+30000
 
 });
+
+try{
+
+await transporter
+.verify();
+
+console.log(
+"BREVO OK"
+);
+
+}
+catch(e){
+
+console.error(
+"VERIFY ERROR:",
+e
+);
+
+throw e;
+
+}
 
 await transporter
 .sendMail({
