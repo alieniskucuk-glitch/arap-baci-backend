@@ -215,7 +215,13 @@ Bu işlem geri alınamaz.
 
 const message = [
 
-`From: Arap Bacı <${process.env.GOOGLE_MAIL_USER}>`,
+`From: =?UTF-8?B?${Buffer.from(
+"Arap Bacı"
+).toString(
+"base64"
+)}?= <${process.env.GOOGLE_MAIL_USER}>`,
+
+
 `To: ${email}`,
 `Subject: =?UTF-8?B?${Buffer.from(
 "Arap Bacı Hesap Silme"
