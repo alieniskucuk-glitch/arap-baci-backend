@@ -1,11 +1,33 @@
 import express from "express";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
+import { google } from "googleapis";
 
 import auth from "../../middleware/auth.js";
 import { db, admin } from "../../config/firebase.js";
 
 const router = express.Router();
+
+/* =========================
+   GMAIL API
+========================= */
+
+const OAuth2 = google.auth.OAuth2;
+
+const oauth2Client = new OAuth2(
+  process.env.GOOGLE_CLIENT_ID,
+  process.env.GOOGLE_CLIENT_SECRET,
+  process.env.GOOGLE_REDIRECT_URI
+);
+
+oauth2Client.setCredentials({
+  refresh_token:
+    process.env.MAIL_REFRESH_TOKEN
+});
+
+const gmail = google.gmail({
+  version: "v1",
+  auth: oauth2Client
+});
 
 /* =========================
    HELPERS
@@ -25,7 +47,7 @@ async function deleteUserData(uid){
     "melekHistory",
     "elFalHistory",
     "uyumHistory",
-    "sessions",
+    "sessions"
   ];
 
   for(const name of collections){
@@ -43,16 +65,10 @@ async function deleteUserData(uid){
       continue;
     }
 
-    const batch =
-      db.batch();
+    const batch = db.batch();
 
-    snap.docs.forEach(
-      (doc)=>{
-
-      batch.delete(
-        doc.ref
-      );
-
+    snap.docs.forEach(doc=>{
+      batch.delete(doc.ref);
     });
 
     await batch.commit();
@@ -73,10 +89,7 @@ router.post(
 "/delete",
 auth,
 
-async(
-req,
-res
-)=>{
+async(req,res)=>{
 
 try{
 
@@ -88,25 +101,16 @@ if(!uid){
 return res
 .status(401)
 .json({
-
-error:
-"Token gerekli"
-
+error:"Token gerekli"
 });
 
 }
 
-await deleteUserData(
-uid
-);
+await deleteUserData(uid);
 
 return res.json({
-
 success:true,
-
-message:
-"Hesap silindi"
-
+message:"Hesap silindi"
 });
 
 }
@@ -120,10 +124,8 @@ e
 return res
 .status(500)
 .json({
-
 error:
 "Hesap silinemedi"
-
 });
 
 }
@@ -137,22 +139,16 @@ error:
 router.post(
 "/request-delete",
 
-async(
-req,
-res
-)=>{
+async(req,res)=>{
 
 try{
 
 const email =
-
 String(
-req.body?.email
-||""
+req.body?.email || ""
 )
 
 .trim()
-
 .toLowerCase();
 
 if(!email){
@@ -160,16 +156,12 @@ if(!email){
 return res
 .status(400)
 .json({
-
-error:
-"Mail gerekli"
-
+error:"Mail gerekli"
 });
 
 }
 
 const user =
-
 await admin
 .auth()
 .getUserByEmail(
@@ -177,32 +169,18 @@ email
 );
 
 const token =
-
 crypto
-
-.randomBytes(
-32
-)
-
-.toString(
-"hex"
-);
+.randomBytes(32)
+.toString("hex");
 
 await db
-
 .collection(
 "deleteRequests"
 )
-
-.doc(
-token
-)
-
+.doc(token)
 .set({
 
-uid:
-user.uid,
-
+uid:user.uid,
 email,
 
 used:false,
@@ -213,99 +191,68 @@ Date.now()
 });
 
 const link =
-
 `https://arapbaci.com/confirm-delete.html?token=${token}`;
 
-const transporter =
+const html = `
 
-nodemailer
-.createTransport({
-
-host:
-"smtp.gmail.com",
-
-port:465,
-
-secure:true,
-
-auth:{
-
-user:
-process.env
-.MAIL_USER,
-
-pass:
-
-String(
-process.env
-.MAIL_PASS
-)
-
-.replaceAll(
-" ",
-""
-)
-
-},
-
-connectionTimeout:
-20000,
-
-greetingTimeout:
-20000,
-
-socketTimeout:
-20000
-
-});
-
-await transporter
-.sendMail({
-
-from:
-
-`"Arap Bacı Destek" <${process.env.MAIL_USER}>`,
-
-to:
-email,
-
-subject:
-"Arap Bacı Hesap Silme",
-
-html:`
-
-<h2>
-
-Arap Bacı
-
-</h2>
+<h2>Arap Bacı</h2>
 
 <p>
-
-Hesabınızı silmek için
-aşağıdaki bağlantıya
-tıklayın:
-
+Hesabınızı silmek için aşağıdaki bağlantıya tıklayın:
 </p>
 
 <p>
-
 <a href="${link}">
-
 HESABI SİL
-
 </a>
-
 </p>
 
 <p>
-
-Bu işlem geri
-alınamaz.
-
+Bu işlem geri alınamaz.
 </p>
 
-`
+`;
+
+const message = [
+
+`From: Arap Bacı <${process.env.GOOGLE_MAIL_USER}>`,
+`To: ${email}`,
+`Subject: =?UTF-8?B?${Buffer.from(
+"Arap Bacı Hesap Silme"
+).toString(
+"base64"
+)}?=`,
+
+"MIME-Version: 1.0",
+"Content-Type: text/html; charset=utf-8",
+"",
+html
+
+].join("\n");
+
+const encodedMessage =
+Buffer
+.from(message)
+
+.toString(
+"base64"
+)
+
+.replace(/\+/g,"-")
+.replace(/\//g,"_")
+.replace(/=+$/,"");
+
+await gmail
+.users
+.messages
+.send({
+
+userId:"me",
+
+requestBody:{
+raw:
+encodedMessage
+}
 
 });
 
@@ -314,7 +261,6 @@ return res.json({
 success:true,
 
 message:
-
 "Silme maili gönderildi"
 
 });
@@ -323,11 +269,8 @@ message:
 catch(e){
 
 console.error(
-
 "DELETE MAIL ERROR:",
-
 e
-
 );
 
 return res
@@ -350,18 +293,13 @@ error:
 router.post(
 "/confirm-delete",
 
-async(
-req,
-res
-)=>{
+async(req,res)=>{
 
 try{
 
 const token =
-
 String(
-req.body?.token
-||""
+req.body?.token || ""
 )
 
 .trim();
@@ -380,24 +318,16 @@ error:
 }
 
 const ref =
-
 db
-
 .collection(
 "deleteRequests"
 )
-
-.doc(
-token
-);
+.doc(token);
 
 const snap =
-
 await ref.get();
 
-if(
-!snap.exists
-){
+if(!snap.exists){
 
 return res
 .status(400)
@@ -413,9 +343,7 @@ error:
 const data =
 snap.data();
 
-if(
-!data?.uid
-){
+if(!data?.uid){
 
 return res
 .status(400)

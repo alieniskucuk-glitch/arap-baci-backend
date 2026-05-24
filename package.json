@@ -18,6 +18,7 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "firebase-admin": "^13.6.0",
+    "googleapis": "^172.0.0",
     "multer": "^2.0.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^6.10.1",
