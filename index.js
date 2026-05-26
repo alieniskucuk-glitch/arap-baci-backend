@@ -23,6 +23,8 @@ import userDelete from "./routes/user/delete.js";
 
 import rewardRoutes from "./routes/reward.js";
 
+import premiumVerifyRoute from "./routes/premium/verify.js";
+
 const app = express();
 
 /* =========================
@@ -56,6 +58,8 @@ app.use("/ruh-esi", ruhEsiRoutes);
 app.use("/melek", melekRoutes);
 app.use("/tarot", tarotRoutes);
 app.use("/reward", rewardRoutes);
+
+app.use("/premium", premiumVerifyRoute);
 
 /* ================= USER ================= */
 app.use("/user", userCreat);
