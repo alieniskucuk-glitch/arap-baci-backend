@@ -1,5 +1,5 @@
-const express = require("express");
-const admin = require("firebase-admin");
+import express from "express";
+import admin from "firebase-admin";
 
 const router = express.Router();
 
@@ -56,7 +56,6 @@ router.post("/start", async (req, res) => {
 
     await db.runTransaction(async (tx) => {
       const snap = await tx.get(userRef);
-
       const now = admin.firestore.FieldValue.serverTimestamp();
 
       if (!snap.exists) {
@@ -95,7 +94,7 @@ router.post("/start", async (req, res) => {
           },
           {
             merge: true,
-          },
+          }
         );
 
         responseData = {
@@ -122,7 +121,7 @@ router.post("/start", async (req, res) => {
         },
         {
           merge: true,
-        },
+        }
       );
 
       responseData = {
@@ -149,4 +148,4 @@ router.post("/start", async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
