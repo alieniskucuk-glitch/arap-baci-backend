@@ -82,39 +82,14 @@ router.post("/start", async (req, res) => {
       }
 
       const data = snap.data() || {};
-      const guestBonusGiven = data.guestBonusGiven === true;
 
-      if (guestBonusGiven) {
-        tx.set(
-          userRef,
-          {
-            isGuest: true,
-            profileCompleted: true,
-            updatedAt: now,
-          },
-          {
-            merge: true,
-          }
-        );
-
-        responseData = {
-          isGuest: true,
-          abCoin: Number(data.abCoin || 0),
-          dailyCoin: Number(data.dailyCoin || 0),
-          profileCompleted: true,
-          bonusGivenNow: false,
-        };
-
-        return;
-      }
+      const currentAbCoin = Number(data.abCoin || 0);
+      const currentDailyCoin = Number(data.dailyCoin || 0);
 
       tx.set(
         userRef,
         {
-          uid,
           isGuest: true,
-          abCoin: 5,
-          dailyCoin: 0,
           profileCompleted: true,
           guestBonusGiven: true,
           updatedAt: now,
@@ -126,10 +101,10 @@ router.post("/start", async (req, res) => {
 
       responseData = {
         isGuest: true,
-        abCoin: 5,
-        dailyCoin: 0,
+        abCoin: currentAbCoin,
+        dailyCoin: currentDailyCoin,
         profileCompleted: true,
-        bonusGivenNow: true,
+        bonusGivenNow: false,
       };
     });
 
