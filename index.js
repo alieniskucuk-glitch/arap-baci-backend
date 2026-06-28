@@ -20,6 +20,7 @@ import userEdit from "./routes/user/edit.js";
 import userPremium from "./routes/user/premium.js";
 import userRefresh from "./routes/user/refresh.js";
 import userDelete from "./routes/user/delete.js";
+import userGuest from "./routes/user/guest.js";
 
 import rewardRoutes from "./routes/reward.js";
 
@@ -60,6 +61,9 @@ app.use("/tarot", tarotRoutes);
 app.use("/reward", rewardRoutes);
 
 app.use("/premium", premiumVerifyRoute);
+
+/* ================= GUEST ================= */
+app.use("/guest", userGuest);
 
 /* ================= USER ================= */
 app.use("/user", userCreat);
