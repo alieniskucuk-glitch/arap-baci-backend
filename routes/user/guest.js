@@ -13,6 +13,15 @@ function getBearerToken(req) {
   return authHeader.replace("Bearer ", "").trim();
 }
 
+function cleanGuestDeviceId(value) {
+  if (!value) return "";
+
+  return String(value)
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]/g, "")
+    .slice(0, 120);
+}
+
 router.post("/start", async (req, res) => {
   try {
     const token = getBearerToken(req);
@@ -49,23 +58,49 @@ router.post("/start", async (req, res) => {
       });
     }
 
+    const guestDeviceId = cleanGuestDeviceId(req.body?.guestDeviceId);
+
+    if (!guestDeviceId) {
+      return res.status(400).json({
+        success: false,
+        error: "GUEST_DEVICE_ID_MISSING",
+        message: "Misafir cihaz bilgisi bulunamadı",
+      });
+    }
+
     const db = admin.firestore();
+
     const userRef = db.collection("users").doc(uid);
+    const guestDeviceRef = db.collection("guest_devices").doc(guestDeviceId);
 
     let responseData = null;
 
     await db.runTransaction(async (tx) => {
-      const snap = await tx.get(userRef);
       const now = admin.firestore.FieldValue.serverTimestamp();
 
-      if (!snap.exists) {
+      const userSnap = await tx.get(userRef);
+      const guestDeviceSnap = await tx.get(guestDeviceRef);
+
+      if (!guestDeviceSnap.exists) {
         tx.set(userRef, {
           uid,
           isGuest: true,
+          guestDeviceId,
           abCoin: 5,
           dailyCoin: 0,
           profileCompleted: true,
           guestBonusGiven: true,
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        tx.set(guestDeviceRef, {
+          guestDeviceId,
+          uid,
+          firstUid: uid,
+          bonusGiven: true,
+          abCoin: 5,
+          dailyCoin: 0,
           createdAt: now,
           updatedAt: now,
         });
@@ -81,17 +116,62 @@ router.post("/start", async (req, res) => {
         return;
       }
 
-      const data = snap.data() || {};
+      const guestDeviceData = guestDeviceSnap.data() || {};
+      const previousUid = String(
+        guestDeviceData.uid || guestDeviceData.firstUid || ""
+      );
 
-      const currentAbCoin = Number(data.abCoin || 0);
-      const currentDailyCoin = Number(data.dailyCoin || 0);
+      let previousUserSnap = null;
+
+      if (previousUid && previousUid !== uid) {
+        previousUserSnap = await tx.get(
+          db.collection("users").doc(previousUid)
+        );
+      }
+
+      const currentData = userSnap.exists ? userSnap.data() || {} : {};
+      const previousData =
+        previousUserSnap && previousUserSnap.exists
+          ? previousUserSnap.data() || {}
+          : {};
+
+      const sourceData = userSnap.exists ? currentData : previousData;
+
+      const currentAbCoin = Number(sourceData.abCoin || 0);
+      const currentDailyCoin = Number(sourceData.dailyCoin || 0);
+
+      const safeAbCoin = Number.isFinite(currentAbCoin) ? currentAbCoin : 0;
+      const safeDailyCoin = Number.isFinite(currentDailyCoin)
+        ? currentDailyCoin
+        : 0;
+
+      const userPayload = {
+        uid,
+        isGuest: true,
+        guestDeviceId,
+        abCoin: safeAbCoin,
+        dailyCoin: safeDailyCoin,
+        profileCompleted: true,
+        guestBonusGiven: true,
+        updatedAt: now,
+      };
+
+      if (!userSnap.exists) {
+        userPayload.createdAt = now;
+      }
+
+      tx.set(userRef, userPayload, {
+        merge: true,
+      });
 
       tx.set(
-        userRef,
+        guestDeviceRef,
         {
-          isGuest: true,
-          profileCompleted: true,
-          guestBonusGiven: true,
+          guestDeviceId,
+          uid,
+          bonusGiven: true,
+          abCoin: safeAbCoin,
+          dailyCoin: safeDailyCoin,
           updatedAt: now,
         },
         {
@@ -101,8 +181,8 @@ router.post("/start", async (req, res) => {
 
       responseData = {
         isGuest: true,
-        abCoin: currentAbCoin,
-        dailyCoin: currentDailyCoin,
+        abCoin: safeAbCoin,
+        dailyCoin: safeDailyCoin,
         profileCompleted: true,
         bonusGivenNow: false,
       };
