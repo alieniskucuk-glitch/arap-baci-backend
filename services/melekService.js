@@ -264,6 +264,8 @@ Kurallar:
 - Kartın ana mesajına odaklan
 - Net cevap ver
 - 300 ile 500 token arasında yaz.
+- Kullanıcıyı memnun etmek için yorumu olumluya çevirme; ne görüyorsan onu dengeli ve dürüst yorumla. Olumsuz işaretleri yumuşatma, her falı umut veren bir sonuca bağlama.
+
 `;
   }
 
@@ -327,6 +329,8 @@ Kurallar:
 - Kart numarasından asla bahsetme. 
 - Teknik terimler kulanma.
 - 550 ile 750 token aralığında yaz.
+- Kullanıcıyı memnun etmek için yorumu olumluya çevirme; ne görüyorsan onu dengeli ve dürüst yorumla. Olumsuz işaretleri yumuşatma, her falı umut veren bir sonuca bağlama.
+
 `;
   }
 
@@ -389,6 +393,8 @@ Kurallar:
 - Kart numarasından asla bahsetme.
 - Teknik terimler kulanma.
 - 800 ile 1100 token aralığında yaz.
+- Kullanıcıyı memnun etmek için yorumu olumluya çevirme; ne görüyorsan onu dengeli ve dürüst yorumla. Olumsuz işaretleri yumuşatma, her falı umut veren bir sonuca bağlama.
+
 `;
   }
 

@@ -172,6 +172,8 @@ Kişiselleştirme Kuralları:
 - Burç bilgisini varsa sezgisel alt ton olarak kullan ama burç yorumu yaptığını belli etme.
 - Astroloji analizi gibi ayrı bölüm açma.
 - Cinsiyet bilgisini yalnızca hitap tonunu yumuşatmak için kullan, doğrudan cinsiyet vurgusu yapma.
+- Kullanıcıyı memnun etmek için yorumu olumluya çevirme; ne görüyorsan onu dengeli ve dürüst yorumla. Olumsuz işaretleri yumuşatma, her falı umut veren bir sonuca bağlama.
+
 `.trim();
 
   if (mode === "one") {
@@ -191,7 +193,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 YAZIM KURALLARI:
 - 220-250 kelime yaz.
 - Kartın temel mesajını açıkla.
-- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - Sorduğu sorunun cevabını seçilen kart üzerinden yorumla ve cevapla.
 - Ruhsal, psikolojik ve pratik etkileri birlikte yorumla.
 - Burç bilgisini varsa sezgisel alt ton olarak kullan ama astroloji analizi gibi ayrı bölüm açma.
@@ -221,7 +223,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
 - Minimum 350, maksimum 450 kelime yaz.
-- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - İlk kart mevcut enerjiyi açıklar.
 - İkinci kart karşıt veya gizli enerjiyi açıklar.
 - Sorduğu sorunun cevabını seçilen kartlar üzerinden yorumla.
@@ -252,7 +254,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
 - Minimum 550, maksimum 650 kelime yaz.
-- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - İlk kart geçmiş etkileri anlatır.
 - İkinci kart mevcut enerjiyi anlatır.
 - Üçüncü kart geleceğe açılan yönü açıklar.
@@ -284,7 +286,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
 - Minimum 950, maksimum 1200 kelime yaz.
-- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - Her kartı ayrı analiz et.
 - Fırsatlar ve blokajları açıkla.
 - Maddi, duygusal ve ruhsal etkileri değerlendir.
@@ -315,7 +317,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
 - Minimum 950, maksimum 1200 kelime yaz.
-- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - Kullanıcının duygusal durumunu analiz et.
 - Karşı tarafın enerjisini yorumla.
 - İlişki içindeki blokajları ve bağları açıkla.
@@ -346,7 +348,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 
 YAZIM KURALLARI:
 - Minimum 950, maksimum 1200 kelime yaz.
-- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - Ruhsal dersleri yorumla.
 - Bırakılması gereken enerjileri açıkla.
 - İçsel dönüşüm sürecini anlat.
@@ -378,6 +380,7 @@ Kullanıcının Sorusu: ${question || "Belirtilmedi"}
 ZORUNLU KURALLAR:
 - Minimum 1700, maksimum 1900 kelime yaz.
 - En az 10 paragraf oluştur.
+- Kart ID’si veya kartın nasıl analiz edildiği gibi bilgilerden kesinlikle bahsetme.gerekirse kartın ismini kullanabilirsin.
 - Her kartı bulunduğu pozisyona göre analiz et.
 - Bilinçaltı etkileri açıkla.
 - Karmik bağları değerlendir.
