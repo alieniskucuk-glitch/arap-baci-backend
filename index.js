@@ -26,6 +26,10 @@ import rewardRoutes from "./routes/reward.js";
 
 import premiumVerifyRoute from "./routes/premium/verify.js";
 
+import {
+  startDailyHoroscopeNotificationService,
+} from "./services/dailyHoroscopeNotificationService.js";
+
 const app = express();
 
 /* =========================
@@ -105,4 +109,13 @@ app.listen(PORT, "0.0.0.0", () => {
     "FIREBASE_PRIVATE_KEY:",
     !!process.env.FIREBASE_PRIVATE_KEY
   );
+
+  try {
+    startDailyHoroscopeNotificationService();
+  } catch (error) {
+    console.error(
+      "GÜNLÜK BURÇ BİLDİRİM SERVİSİ BAŞLATILAMADI:",
+      error
+    );
+  }
 });
