@@ -147,3 +147,125 @@ doğrudan yazılmamalı.
 
   return extractText(r);
 }
+
+/* =========================
+   KEHANET KASASI
+   - Mevcut fal üretimini değiştirmez
+   - Ayrı yardımcı çağrıdır
+========================= */
+
+export async function generateFalPrediction(
+  falText
+) {
+  const cleanFal =
+    String(falText || "").trim();
+
+  if (!cleanFal) {
+    return {
+      prediction: null,
+      checkAfterDays: null,
+    };
+  }
+
+  const predictionRequest =
+    openai.responses.create({
+      model: "gpt-4.1-mini",
+
+      input: [
+        {
+          role: "system",
+          content: `
+Verilen kahve falı yorumundan
+Kehanet Kasası için
+tek bir gelecek öngörüsü çıkar.
+
+Kurallar:
+
+- Fal metninde olmayan yeni bir olay uydurma.
+- Yalnızca geleceğe yönelik en net ve sonradan kontrol edilebilir öngörüyü seç.
+- prediction tek, açık ve kısa bir cümle olsun.
+- checkAfterDays tam sayı olsun.
+- checkAfterDays 1 ile 30 arasında olmalı.
+- Fal metnindeki zaman ifadesi varsa ona göre belirle.
+- Açıklama, markdown veya ek metin yazma.
+
+SADECE şu JSON formatında cevap ver:
+
+{
+  "prediction": "öngörü",
+  "checkAfterDays": 7
+}
+`,
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "input_text",
+              text:
+                `KAHVE FALI:\n\n${cleanFal}`,
+            },
+          ],
+        },
+      ],
+
+      max_output_tokens: 180,
+    });
+
+  const timeout = new Promise(
+    (_, reject) => {
+      setTimeout(
+        () => reject(
+          new Error(
+            "Prediction timeout"
+          )
+        ),
+        10000
+      );
+    }
+  );
+
+  const response =
+    await Promise.race([
+      predictionRequest,
+      timeout,
+    ]);
+
+  const raw =
+    extractText(response)
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+  const parsed =
+    JSON.parse(raw);
+
+  const prediction =
+    typeof parsed.prediction === "string"
+      ? parsed.prediction.trim()
+      : "";
+
+  const checkAfterDays =
+    Number.parseInt(
+      parsed.checkAfterDays,
+      10
+    );
+
+  if (
+    !prediction ||
+    !Number.isInteger(
+      checkAfterDays
+    ) ||
+    checkAfterDays < 1 ||
+    checkAfterDays > 30
+  ) {
+    throw new Error(
+      "Geçersiz prediction cevabı"
+    );
+  }
+
+  return {
+    prediction,
+    checkAfterDays,
+  };
+}

@@ -2,7 +2,10 @@ import express from "express";
 import multer from "multer";
 import crypto from "crypto";
 
-import { generateFal } from "../services/falService.js";
+import {
+  generateFal,
+  generateFalPrediction,
+} from "../services/falService.js";
 
 import auth from "../middleware/auth.js";
 import coinCheck from "../middleware/coinCheck.js";
@@ -72,9 +75,30 @@ router.post(
         }
       );
 
+      let prediction = null;
+      let checkAfterDays = null;
+
+      try {
+        const predictionData =
+          await generateFalPrediction(full);
+
+        prediction =
+          predictionData?.prediction || null;
+
+        checkAfterDays =
+          predictionData?.checkAfterDays || null;
+      } catch (predictionError) {
+        console.error(
+          "FAL PREDICTION ERROR:",
+          predictionError
+        );
+      }
+
       falStore.set(id, {
         status: "done",
         full,
+        prediction,
+        checkAfterDays,
       });
 
     } catch (err) {

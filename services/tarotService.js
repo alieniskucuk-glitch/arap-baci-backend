@@ -456,6 +456,125 @@ async function generateInterpretation({ mode, subType, question, selectedCards, 
   return (completion?.choices?.[0]?.message?.content || "").trim();
 }
 
+
+/* =========================
+   KEHANET KASASI
+   - Mevcut tarot kayıt akışından sonra çalışır
+========================= */
+
+async function generateTarotPrediction(
+  interpretation
+) {
+  const cleanInterpretation =
+    String(interpretation || "").trim();
+
+  if (!cleanInterpretation) {
+    return {
+      prediction: null,
+      checkAfterDays: null,
+    };
+  }
+
+  const predictionRequest =
+    openai.chat.completions.create({
+      model: "gpt-4.1-mini",
+      messages: [
+        {
+          role: "system",
+          content: `
+Verilen tarot yorumundan
+Kehanet Kasası için
+tek bir gelecek öngörüsü çıkar.
+
+Kurallar:
+
+- Tarot yorumunda olmayan yeni bir olay uydurma.
+- Yalnızca geleceğe yönelik en net ve sonradan kontrol edilebilir öngörüyü seç.
+- prediction tek, açık ve kısa bir cümle olsun.
+- checkAfterDays tam sayı olsun.
+- checkAfterDays 1 ile 30 arasında olmalı.
+- Yorumdaki zaman ifadesi varsa ona göre belirle.
+- Açıklama, markdown veya ek metin yazma.
+
+SADECE şu JSON formatında cevap ver:
+
+{
+  "prediction": "öngörü",
+  "checkAfterDays": 7
+}
+`.trim(),
+        },
+        {
+          role: "user",
+          content:
+            `TAROT YORUMU:\n\n${cleanInterpretation}`,
+        },
+      ],
+      temperature: 0.2,
+    });
+
+  const timeout = new Promise(
+    (_, reject) => {
+      setTimeout(
+        () => reject(
+          new Error(
+            "Tarot prediction timeout"
+          )
+        ),
+        10000
+      );
+    }
+  );
+
+  const completion =
+    await Promise.race([
+      predictionRequest,
+      timeout,
+    ]);
+
+  const raw =
+    (
+      completion
+        ?.choices?.[0]
+        ?.message?.content || ""
+    )
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+  const parsed =
+    JSON.parse(raw);
+
+  const prediction =
+    typeof parsed.prediction === "string"
+      ? parsed.prediction.trim()
+      : "";
+
+  const checkAfterDays =
+    Number.parseInt(
+      parsed.checkAfterDays,
+      10
+    );
+
+  if (
+    !prediction ||
+    !Number.isInteger(
+      checkAfterDays
+    ) ||
+    checkAfterDays < 1 ||
+    checkAfterDays > 30
+  ) {
+    throw new Error(
+      "Geçersiz tarot prediction cevabı"
+    );
+  }
+
+  return {
+    prediction,
+    checkAfterDays,
+  };
+}
+
 /* =========================
    START
 ========================= */
@@ -679,12 +798,50 @@ export async function revealTarot(uid, { sessionId }) {
         interpretation,
       });
 
+      let prediction = null;
+      let checkAfterDays = null;
+
+      try {
+        const predictionData =
+          await generateTarotPrediction(
+            interpretation
+          );
+
+        prediction =
+          predictionData?.prediction || null;
+
+        checkAfterDays =
+          predictionData?.checkAfterDays || null;
+
+        if (
+          prediction &&
+          Number.isInteger(checkAfterDays) &&
+          checkAfterDays > 0
+        ) {
+          await updateSessionDoc(
+            uid,
+            sessionId,
+            {
+              prediction,
+              checkAfterDays,
+            }
+          );
+        }
+      } catch (predictionError) {
+        console.error(
+          "TAROT PREDICTION ERROR:",
+          predictionError
+        );
+      }
+
       sessionStore.delete(sessionId);
 
       return {
         picked,
         interpretation,
         remainingCoin,
+        prediction,
+        checkAfterDays,
       };
     }
 
