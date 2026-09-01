@@ -5,6 +5,7 @@ import crypto from "crypto";
 import {
   generateFal,
   generateFalPrediction,
+  generateFalInsights,
 } from "../services/falService.js";
 
 import auth from "../middleware/auth.js";
@@ -38,7 +39,9 @@ router.post(
 
     try {
       if (!req.files?.length) {
-        return res.status(400).json({ error: "Fotoğraf gerekli" });
+        return res.status(400).json({
+          error: "Fotoğraf gerekli"
+        });
       }
 
       const uid = req.user.uid;
@@ -63,7 +66,9 @@ router.post(
       );
 
       if (!full) {
-        throw new Error("Fal boş geldi");
+        throw new Error(
+          "Fal boş geldi"
+        );
       }
 
       await decreaseCoin(
@@ -75,30 +80,89 @@ router.post(
         }
       );
 
+      /* =========================
+         KEHANET KASASI
+      ========================= */
+
       let prediction = null;
       let checkAfterDays = null;
 
       try {
         const predictionData =
-          await generateFalPrediction(full);
+          await generateFalPrediction(
+            full
+          );
 
         prediction =
-          predictionData?.prediction || null;
+          predictionData?.prediction ||
+          null;
 
         checkAfterDays =
-          predictionData?.checkAfterDays || null;
-      } catch (predictionError) {
+          predictionData
+            ?.checkAfterDays ||
+          null;
+
+      } catch (
+        predictionError
+      ) {
         console.error(
           "FAL PREDICTION ERROR:",
           predictionError
         );
       }
 
+      /* =========================
+         SEMBOL HARİTASI
+         +
+         MİSTİK YIL
+
+         Mevcut fal/prediction
+         akışından bağımsız.
+      ========================= */
+
+      let insights = {
+        symbols: [],
+        themes: [],
+        primaryTheme: null,
+      };
+
+      try {
+        insights =
+          await generateFalInsights(
+            full
+          );
+
+      } catch (
+        insightsError
+      ) {
+        console.error(
+          "FAL INSIGHTS ERROR:",
+          insightsError
+        );
+      }
+
+      /* =========================
+         STORE RESULT
+      ========================= */
+
       falStore.set(id, {
         status: "done",
+
         full,
+
         prediction,
+
         checkAfterDays,
+
+        symbols:
+          insights?.symbols || [],
+
+        themes:
+          insights?.themes || [],
+
+        primaryTheme:
+          insights?.primaryTheme ||
+          null,
       });
 
     } catch (err) {
@@ -118,18 +182,25 @@ router.post(
    POLLING
 ========================= */
 
-router.get("/:id", (req, res) => {
-  const f = falStore.get(
-    req.params.id
-  );
+router.get(
+  "/:id",
+  (req, res) => {
+    const f =
+      falStore.get(
+        req.params.id
+      );
 
-  if (!f) {
-    return res.status(404).json({
-      error: "Bulunamadı",
-    });
+    if (!f) {
+      return res
+        .status(404)
+        .json({
+          error:
+            "Bulunamadı",
+        });
+    }
+
+    res.json(f);
   }
-
-  res.json(f);
-});
+);
 
 export default router;

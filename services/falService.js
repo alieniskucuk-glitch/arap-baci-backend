@@ -269,3 +269,423 @@ SADECE şu JSON formatında cevap ver:
     checkAfterDays,
   };
 }
+
+/* =========================
+   SEMBOL HARİTASI + MİSTİK YIL
+   - Mevcut kahve falı akışından bağımsızdır
+   - Hata verirse çalışan falı etkilemez
+========================= */
+
+function normalizeInsightId(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+export async function generateFalInsights(
+  falText
+) {
+  const cleanFal =
+    String(falText || "").trim();
+
+  if (!cleanFal) {
+    return {
+      symbols: [],
+      themes: [],
+      primaryTheme: null,
+    };
+  }
+
+  try {
+
+    const insightsRequest =
+      openai.responses.create({
+
+        model:
+          "gpt-4.1-mini",
+
+        input: [
+          {
+            role:
+              "system",
+
+            content: `
+Verilen kahve falı yorumundan
+Kişisel Sembol Haritası ve
+Benim Mistik Yılım için
+yapılandırılmış veri çıkar.
+
+ÖNEMLİ:
+
+Kahve falı yorum metni,
+fincan görselleri analiz edilerek
+oluşturulmuştur.
+
+SEMBOL KURALLARI:
+
+- Yalnızca fal yorumunda
+fincanda gerçekten görüldüğü
+belirtilen şekil, figür,
+işaret veya sembolleri çıkar.
+
+- Falcının mecazi anlatım için
+kullandığı kelimeleri sembol sayma.
+
+Örnek:
+
+"Fincanın kenarında kuş figürü var"
+ise Kuş semboldür.
+
+Ama:
+
+"Özgür bir kuş gibi hissedeceksin"
+denmiş fakat fincanda kuş görülmemişse
+Kuş sembol değildir.
+
+- Hayvan figürleri sembol olabilir.
+- İnsan siluetleri sembol olabilir.
+- Harfler sembol olabilir.
+- Sayılar sembol olabilir.
+- Nesneler sembol olabilir.
+- Yol, kapı, anahtar, kalp, yıldız,
+kuş, balık, ağaç, yüzük gibi
+fincanda gerçekten görülen şekiller
+sembol olabilir.
+
+- Yorumda görülmediği halde
+sembol uydurma.
+
+- Aynı sembolü birden fazla
+kez ekleme.
+
+- En fazla 10 sembol çıkar.
+
+- name kısa ve Türkçe olsun.
+
+- meaning sembolün bu fal içindeki
+anlamını tek kısa cümleyle anlatsın.
+
+TEMA KURALLARI:
+
+- themes falın gerçekten
+baskın konularını temsil etsin.
+
+- En fazla 5 tema çıkar.
+
+- Tema isimleri kısa ve
+tekrar kullanılabilir olsun.
+
+Tercih edilen tema örnekleri:
+
+Aşk
+İlişki
+Aile
+Kariyer
+Para
+Değişim
+Karar
+Yeni Başlangıç
+Yolculuk
+Haber
+Geçmiş
+Güven
+Çatışma
+Fırsat
+Bekleyiş
+Sosyal Hayat
+Ruhsal Gelişim
+İçsel Dönüşüm
+
+- Aynı anlama gelen
+birden fazla tema üretme.
+
+- primaryTheme,
+themes içindeki en baskın
+tek tema olmalı.
+
+- Tema yoksa
+themes boş dizi olsun.
+
+- Tema yoksa
+primaryTheme null olsun.
+
+Açıklama yazma.
+Markdown yazma.
+Kod bloğu yazma.
+Ek metin yazma.
+
+SADECE şu JSON formatında cevap ver:
+
+{
+  "symbols": [
+    {
+      "name": "Kuş",
+      "meaning": "Yaklaşan bir haberi temsil ediyor."
+    }
+  ],
+  "themes": [
+    "Haber",
+    "Değişim"
+  ],
+  "primaryTheme": "Haber"
+}
+`,
+          },
+
+          {
+            role:
+              "user",
+
+            content: [
+              {
+                type:
+                  "input_text",
+
+                text:
+                  `KAHVE FALI:\n\n${cleanFal}`,
+              },
+            ],
+          },
+        ],
+
+        max_output_tokens:
+          500,
+      });
+
+    const timeout =
+      new Promise(
+        (_, reject) => {
+
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  "Fal insights timeout"
+                )
+              ),
+            10000
+          );
+        }
+      );
+
+    const response =
+      await Promise.race([
+        insightsRequest,
+        timeout,
+      ]);
+
+    const raw =
+      extractText(response)
+        .replace(
+          /```json/gi,
+          ""
+        )
+        .replace(
+          /```/g,
+          ""
+        )
+        .trim();
+
+    if (!raw) {
+      throw new Error(
+        "Boş fal insight cevabı"
+      );
+    }
+
+    const parsed =
+      JSON.parse(raw);
+
+    /* =========================
+       SYMBOLS
+    ========================= */
+
+    const symbolMap =
+      new Map();
+
+    if (
+      Array.isArray(
+        parsed.symbols
+      )
+    ) {
+      for (
+        const item
+        of parsed.symbols
+      ) {
+
+        const name =
+          typeof item?.name ===
+          "string"
+            ? item.name.trim()
+            : "";
+
+        if (!name) {
+          continue;
+        }
+
+        const id =
+          normalizeInsightId(
+            name
+          );
+
+        if (
+          !id ||
+          symbolMap.has(id)
+        ) {
+          continue;
+        }
+
+        const meaning =
+          typeof item?.meaning ===
+          "string"
+            ? item.meaning.trim()
+            : "";
+
+        symbolMap.set(
+          id,
+          {
+            id,
+            name,
+            meaning,
+          }
+        );
+
+        if (
+          symbolMap.size >= 10
+        ) {
+          break;
+        }
+      }
+    }
+
+    /* =========================
+       THEMES
+    ========================= */
+
+    const themeMap =
+      new Map();
+
+    if (
+      Array.isArray(
+        parsed.themes
+      )
+    ) {
+      for (
+        const item
+        of parsed.themes
+      ) {
+
+        if (
+          typeof item !==
+          "string"
+        ) {
+          continue;
+        }
+
+        const theme =
+          item.trim();
+
+        if (!theme) {
+          continue;
+        }
+
+        const key =
+          theme
+            .toLocaleLowerCase(
+              "tr-TR"
+            );
+
+        if (
+          themeMap.has(key)
+        ) {
+          continue;
+        }
+
+        themeMap.set(
+          key,
+          theme
+        );
+
+        if (
+          themeMap.size >= 5
+        ) {
+          break;
+        }
+      }
+    }
+
+    const symbols =
+      Array.from(
+        symbolMap.values()
+      );
+
+    const themes =
+      Array.from(
+        themeMap.values()
+      );
+
+    /* =========================
+       PRIMARY THEME
+    ========================= */
+
+    const rawPrimaryTheme =
+      typeof parsed.primaryTheme ===
+      "string"
+        ? parsed.primaryTheme.trim()
+        : "";
+
+    let primaryTheme =
+      null;
+
+    if (
+      rawPrimaryTheme
+    ) {
+
+      const matchedTheme =
+        themes.find(
+          (theme) =>
+            theme.toLocaleLowerCase(
+              "tr-TR"
+            ) ===
+            rawPrimaryTheme.toLocaleLowerCase(
+              "tr-TR"
+            )
+        );
+
+      if (
+        matchedTheme
+      ) {
+        primaryTheme =
+          matchedTheme;
+      }
+    }
+
+    return {
+      symbols,
+      themes,
+      primaryTheme,
+    };
+
+  } catch (err) {
+
+    console.error(
+      "FAL INSIGHTS ERROR:",
+      err
+    );
+
+    return {
+      symbols: [],
+      themes: [],
+      primaryTheme: null,
+    };
+  }
+}

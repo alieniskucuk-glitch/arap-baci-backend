@@ -47,6 +47,320 @@ function isExpired(session) {
 }
 
 /* =========================
+   SEMBOL HARİTASI + MİSTİK YIL
+   - Mevcut Melek / Kehanet akışından bağımsızdır
+   - Hata verirse çalışan akışı etkilemez
+========================= */
+
+function normalizeInsightId(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+async function generateMelekInsights(
+  interpretation
+) {
+  const cleanInterpretation =
+    String(interpretation || "").trim();
+
+  if (!cleanInterpretation) {
+    return {
+      symbols: [],
+      themes: [],
+      primaryTheme: null,
+    };
+  }
+
+  try {
+    const insightsRequest =
+      openai.chat.completions.create({
+        model: "gpt-4.1-mini",
+
+        response_format: {
+          type: "json_object",
+        },
+
+        messages: [
+          {
+            role: "system",
+
+            content: `
+Verilen melek kartı yorumundan
+Kişisel Sembol Haritası ve
+Benim Mistik Yılım için
+yapılandırılmış veri çıkar.
+
+SEMBOL KURALLARI:
+
+- Yalnızca yorumda gerçekten sembolik anlam taşıyan işaret, nesne veya arketipleri çıkar.
+- Sıradan kullanılan kelimeleri sembol olarak alma.
+- Yorumda olmayan sembol uydurma.
+- En fazla 6 sembol çıkar.
+- Aynı sembolü birden fazla kez ekleme.
+- name kısa ve Türkçe olsun.
+- meaning sembolün bu melek yorumundaki anlamını tek kısa cümleyle anlatsın.
+
+TEMA KURALLARI:
+
+- themes yalnızca yorumun gerçekten baskın konularını içersin.
+- En fazla 5 tema çıkar.
+- Tema isimlerini kısa ve tekrar kullanılabilir biçimde yaz.
+- Örnekler: Aşk, İlişki, Aile, Kariyer, Para, Değişim, Karar, Güven, Ruhsal Gelişim, İçsel Dönüşüm, Yeni Başlangıç.
+- Aynı anlama gelen birden fazla tema üretme.
+- primaryTheme themes içindeki en baskın tek tema olmalı.
+- Tema yoksa themes boş dizi ve primaryTheme null olsun.
+
+Açıklama yazma.
+Markdown yazma.
+Ek metin yazma.
+
+SADECE şu JSON formatında cevap ver:
+
+{
+  "symbols": [
+    {
+      "name": "Işık",
+      "meaning": "Netleşme ve rehberliği temsil ediyor."
+    }
+  ],
+  "themes": [
+    "Ruhsal Gelişim",
+    "Karar"
+  ],
+  "primaryTheme": "Ruhsal Gelişim"
+}
+`.trim(),
+          },
+
+          {
+            role: "user",
+
+            content:
+              `MELEK YORUMU:\n\n${cleanInterpretation}`,
+          },
+        ],
+
+        temperature: 0.15,
+      });
+
+    const timeout =
+      new Promise(
+        (_, reject) => {
+          setTimeout(
+            () =>
+              reject(
+                new Error(
+                  "Melek insights timeout"
+                )
+              ),
+            10000
+          );
+        }
+      );
+
+    const completion =
+      await Promise.race([
+        insightsRequest,
+        timeout,
+      ]);
+
+    const raw =
+      String(
+        completion
+          ?.choices?.[0]
+          ?.message?.content || ""
+      )
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
+
+    if (!raw) {
+      throw new Error(
+        "Boş melek insight cevabı"
+      );
+    }
+
+    const parsed =
+      JSON.parse(raw);
+
+    const symbolMap =
+      new Map();
+
+    if (
+      Array.isArray(
+        parsed.symbols
+      )
+    ) {
+      for (
+        const item
+        of parsed.symbols
+      ) {
+        const name =
+          typeof item?.name ===
+          "string"
+            ? item.name.trim()
+            : "";
+
+        if (!name) {
+          continue;
+        }
+
+        const id =
+          normalizeInsightId(name);
+
+        if (
+          !id ||
+          symbolMap.has(id)
+        ) {
+          continue;
+        }
+
+        const meaning =
+          typeof item?.meaning ===
+          "string"
+            ? item.meaning.trim()
+            : "";
+
+        symbolMap.set(
+          id,
+          {
+            id,
+            name,
+            meaning,
+          }
+        );
+
+        if (
+          symbolMap.size >= 6
+        ) {
+          break;
+        }
+      }
+    }
+
+    const themeMap =
+      new Map();
+
+    if (
+      Array.isArray(
+        parsed.themes
+      )
+    ) {
+      for (
+        const item
+        of parsed.themes
+      ) {
+        if (
+          typeof item !==
+          "string"
+        ) {
+          continue;
+        }
+
+        const theme =
+          item.trim();
+
+        if (!theme) {
+          continue;
+        }
+
+        const key =
+          theme.toLocaleLowerCase(
+            "tr-TR"
+          );
+
+        if (
+          themeMap.has(key)
+        ) {
+          continue;
+        }
+
+        themeMap.set(
+          key,
+          theme
+        );
+
+        if (
+          themeMap.size >= 5
+        ) {
+          break;
+        }
+      }
+    }
+
+    const symbols =
+      Array.from(
+        symbolMap.values()
+      );
+
+    const themes =
+      Array.from(
+        themeMap.values()
+      );
+
+    const rawPrimaryTheme =
+      typeof parsed.primaryTheme ===
+      "string"
+        ? parsed.primaryTheme.trim()
+        : "";
+
+    let primaryTheme =
+      null;
+
+    if (
+      rawPrimaryTheme
+    ) {
+      const matchedTheme =
+        themes.find(
+          (theme) =>
+            theme.toLocaleLowerCase(
+              "tr-TR"
+            ) ===
+            rawPrimaryTheme.toLocaleLowerCase(
+              "tr-TR"
+            )
+        );
+
+      if (
+        matchedTheme
+      ) {
+        primaryTheme =
+          matchedTheme;
+      }
+    }
+
+    return {
+      symbols,
+      themes,
+      primaryTheme,
+    };
+
+  } catch (err) {
+    console.error(
+      "MELEK INSIGHTS ERROR:",
+      err
+    );
+
+    return {
+      symbols: [],
+      themes: [],
+      primaryTheme: null,
+    };
+  }
+}
+
+/* =========================
    START
 ========================= */
 
@@ -59,21 +373,50 @@ export async function startMelek(uid, body) {
   const cards = [];
 
   if (mode === "standard") {
-    cards.push(randomFromRange(33, 53, used));
+    cards.push(
+      randomFromRange(
+        33,
+        53,
+        used
+      )
+    );
   }
 
   if (mode === "deep") {
-    const c1 = randomFromRange(33, 53, used);
+    const c1 =
+      randomFromRange(
+        33,
+        53,
+        used
+      );
+
     used.add(c1.id);
 
-    const c2 = randomFromRange(0, 32, used);
+    const c2 =
+      randomFromRange(
+        0,
+        32,
+        used
+      );
 
-    cards.push(c1, c2);
+    cards.push(
+      c1,
+      c2
+    );
   }
 
   if (mode === "zaman") {
-    for (let i = 0; i < 3; i++) {
-      const c = randomFromRange(0, 53, used);
+    for (
+      let i = 0;
+      i < 3;
+      i++
+    ) {
+      const c =
+        randomFromRange(
+          0,
+          53,
+          used
+        );
 
       used.add(c.id);
 
@@ -81,45 +424,75 @@ export async function startMelek(uid, body) {
     }
   }
 
-  const sessionId = crypto.randomUUID();
+  const sessionId =
+    crypto.randomUUID();
 
-  const interpretationPromise = generateInterpretation(
-    mode,
-    question,
-    cards,
-    body.user
-  ).catch(() => null);
+  const interpretationPromise =
+    generateInterpretation(
+      mode,
+      question,
+      cards,
+      body.user
+    ).catch(() => null);
 
-  sessionStore.set(sessionId, {
-    uid,
-    mode,
-    question: question || null,
-    cards,
-    revealed: [],
-    interpretationPromise,
-    createdAt: Date.now(),
-  });
+  sessionStore.set(
+    sessionId,
+    {
+      uid,
+      mode,
+      question:
+        question || null,
+      cards,
+      revealed: [],
+      interpretationPromise,
+      createdAt:
+        Date.now(),
+    }
+  );
 
-  return { sessionId, cardCount };
+  return {
+    sessionId,
+    cardCount,
+  };
 }
 
 /* =========================
    REVEAL
 ========================= */
 
-export async function revealMelek(uid, body) {
-  const { sessionId } = body;
+export async function revealMelek(
+  uid,
+  body
+) {
+  const {
+    sessionId
+  } = body;
 
-  const session = sessionStore.get(sessionId);
+  const session =
+    sessionStore.get(
+      sessionId
+    );
 
-  if (!session)
-    throw new Error("Session bulunamadı");
+  if (!session) {
+    throw new Error(
+      "Session bulunamadı"
+    );
+  }
 
-  if (session.uid !== uid)
-    throw new Error("Yetkisiz erişim");
+  if (
+    session.uid !== uid
+  ) {
+    throw new Error(
+      "Yetkisiz erişim"
+    );
+  }
 
-  if (isExpired(session)) {
-    sessionStore.delete(sessionId);
+  if (
+    isExpired(session)
+  ) {
+    sessionStore.delete(
+      sessionId
+    );
 
     throw new Error(
       "Session süresi doldu"
@@ -139,15 +512,22 @@ export async function revealMelek(uid, body) {
   }
 
   const card =
-    session.cards[nextIndex];
+    session.cards[
+      nextIndex
+    ];
 
-  session.revealed.push(card);
+  session.revealed.push(
+    card
+  );
 
   const picked =
     session.revealed.map(
       (c) => ({
-        title: c.title,
-        image: c.image,
+        title:
+          c.title,
+
+        image:
+          c.image,
       })
     );
 
@@ -155,11 +535,13 @@ export async function revealMelek(uid, body) {
     session.revealed.length ===
     session.cards.length
   ) {
-
     const interpretation =
-      await session.interpretationPromise;
+      await session
+        .interpretationPromise;
 
-    if (!interpretation) {
+    if (
+      !interpretation
+    ) {
       throw new Error(
         "Yorum üretilemedi"
       );
@@ -175,11 +557,16 @@ export async function revealMelek(uid, body) {
         uid,
         price,
         "MELEK",
-        { sessionId }
+        {
+          sessionId
+        }
       );
 
-    let prediction = null;
-    let checkAfterDays = null;
+    let prediction =
+      null;
+
+    let checkAfterDays =
+      null;
 
     try {
       const predictionData =
@@ -188,14 +575,42 @@ export async function revealMelek(uid, body) {
         );
 
       prediction =
-        predictionData?.prediction || null;
+        predictionData
+          ?.prediction ||
+        null;
 
       checkAfterDays =
-        predictionData?.checkAfterDays || null;
-    } catch (predictionError) {
+        predictionData
+          ?.checkAfterDays ||
+        null;
+
+    } catch (
+      predictionError
+    ) {
       console.error(
         "MELEK PREDICTION ERROR:",
         predictionError
+      );
+    }
+
+    let insights = {
+      symbols: [],
+      themes: [],
+      primaryTheme: null,
+    };
+
+    try {
+      insights =
+        await generateMelekInsights(
+          interpretation
+        );
+
+    } catch (
+      insightsError
+    ) {
+      console.error(
+        "MELEK INSIGHTS ERROR:",
+        insightsError
       );
     }
 
@@ -205,10 +620,23 @@ export async function revealMelek(uid, body) {
 
     return {
       picked,
+
       interpretation,
+
       remainingCoin,
+
       prediction,
+
       checkAfterDays,
+
+      symbols:
+        insights.symbols,
+
+      themes:
+        insights.themes,
+
+      primaryTheme:
+        insights.primaryTheme,
     };
   }
 
@@ -229,15 +657,15 @@ async function generateInterpretation(
   cards,
   user = {}
 ) {
-
   let prompt = "";
 
   /* =========================
      1 KART
   ========================= */
 
-  if (mode === "standard") {
-
+  if (
+    mode === "standard"
+  ) {
     prompt = `
 Sen Arap Bacı uygulamasında
 ilahi rehberlik sunan
@@ -296,8 +724,9 @@ Kurallar:
      2 KART
   ========================= */
 
-  if (mode === "deep") {
-
+  if (
+    mode === "deep"
+  ) {
     prompt = `
 Sen Arap Bacı uygulamasında
 derin rehberlik veren
@@ -361,8 +790,9 @@ Kurallar:
      ZAMAN
   ========================= */
 
-  if (mode === "zaman") {
-
+  if (
+    mode === "zaman"
+  ) {
     prompt = `
 Sen Arap Bacı uygulamasında
 zaman akışı yorumlayan
@@ -423,25 +853,29 @@ Kurallar:
 
   const completion =
     await openai.chat.completions.create({
-
       model:
         "gpt-4.1-mini",
 
       messages: [
         {
-          role: "system",
+          role:
+            "system",
 
           content:
             "Sen mistik ama net konuşan, güçlü bir melek kartı rehberisin.",
         },
 
         {
-          role: "user",
-          content: prompt,
+          role:
+            "user",
+
+          content:
+            prompt,
         },
       ],
 
-      temperature: 0.85,
+      temperature:
+        0.85,
     });
 
   return completion
@@ -450,6 +884,7 @@ Kurallar:
     .content
     .trim();
 }
+
 /* =========================
    KEHANET KASASI
    - Mevcut melek yorumunu değiştirmez
@@ -460,22 +895,31 @@ async function generateMelekPrediction(
   interpretation
 ) {
   const cleanInterpretation =
-    String(interpretation || "").trim();
+    String(
+      interpretation || ""
+    ).trim();
 
-  if (!cleanInterpretation) {
+  if (
+    !cleanInterpretation
+  ) {
     return {
-      prediction: null,
-      checkAfterDays: null,
+      prediction:
+        null,
+
+      checkAfterDays:
+        null,
     };
   }
 
   const predictionRequest =
     openai.chat.completions.create({
-      model: "gpt-4.1-mini",
+      model:
+        "gpt-4.1-mini",
 
       messages: [
         {
-          role: "system",
+          role:
+            "system",
 
           content: `
 Verilen melek kartı yorumundan
@@ -502,28 +946,32 @@ SADECE şu JSON formatında cevap ver:
         },
 
         {
-          role: "user",
+          role:
+            "user",
 
           content:
             `MELEK YORUMU:\n\n${cleanInterpretation}`,
         },
       ],
 
-      temperature: 0.2,
+      temperature:
+        0.2,
     });
 
-  const timeout = new Promise(
-    (_, reject) => {
-      setTimeout(
-        () => reject(
-          new Error(
-            "Melek prediction timeout"
-          )
-        ),
-        10000
-      );
-    }
-  );
+  const timeout =
+    new Promise(
+      (_, reject) => {
+        setTimeout(
+          () =>
+            reject(
+              new Error(
+                "Melek prediction timeout"
+              )
+            ),
+          10000
+        );
+      }
+    );
 
   const completion =
     await Promise.race([
@@ -535,17 +983,25 @@ SADECE şu JSON formatında cevap ver:
     (
       completion
         ?.choices?.[0]
-        ?.message?.content || ""
+        ?.message?.content ||
+      ""
     )
-      .replace(/```json/gi, "")
-      .replace(/```/g, "")
+      .replace(
+        /```json/gi,
+        ""
+      )
+      .replace(
+        /```/g,
+        ""
+      )
       .trim();
 
   const parsed =
     JSON.parse(raw);
 
   const prediction =
-    typeof parsed.prediction === "string"
+    typeof parsed.prediction ===
+    "string"
       ? parsed.prediction.trim()
       : "";
 
