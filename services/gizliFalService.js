@@ -2,9 +2,9 @@ import crypto from "crypto";
 import openai from "../config/openai.js";
 import { db, admin } from "../config/firebase.js";
 import { decreaseCoin } from "../utils/coinManager.js";
+import { getTarotById } from "../utils/tarotDeck.js";
 
 const COLLECTION = "secretFortunes";
-const MAX_SELECTION_LENGTH = 2000;
 
 /* =========================
    HELPERS
@@ -50,74 +50,87 @@ function normalizeCode(value) {
 function validateSelection(
   selection
 ) {
-  if (
-    selection === undefined ||
-    selection === null
-  ) {
+  if (!Array.isArray(selection)) {
     throw new Error(
-      "Seçim gerekli"
+      "Geçersiz kart seçimi"
     );
   }
 
   if (
-    typeof selection !==
-      "string" &&
-    (
-      typeof selection !==
-        "object" ||
-      Array.isArray(
-        selection
-      )
+    selection.length !== 3
+  ) {
+    throw new Error(
+      "Tam olarak 3 kart seçmelisin"
+    );
+  }
+
+  const normalized =
+    [...selection];
+
+  if (
+    normalized.some(
+      (cardId) =>
+        typeof cardId !==
+          "number" ||
+        !Number.isInteger(cardId)
     )
   ) {
     throw new Error(
-      "Geçersiz seçim"
-    );
-  }
-
-  let serialized;
-
-  try {
-    serialized =
-      typeof selection ===
-      "string"
-        ? selection.trim()
-        : JSON.stringify(
-            selection
-          );
-  } catch {
-    throw new Error(
-      "Geçersiz seçim"
-    );
-  }
-
-  if (!serialized) {
-    throw new Error(
-      "Seçim gerekli"
+      "Geçersiz kart seçimi"
     );
   }
 
   if (
-    serialized.length >
-    MAX_SELECTION_LENGTH
+    new Set(normalized).size !== 3
   ) {
     throw new Error(
-      "Seçim verisi çok uzun"
+      "Aynı kart birden fazla seçilemez"
     );
   }
 
-  return selection;
+  for (const cardId of normalized) {
+    if (!getTarotById(cardId)) {
+      throw new Error(
+        `Kart bulunamadı: ${cardId}`
+      );
+    }
+  }
+
+  return normalized;
 }
 
-function serializeSelection(
+function cardsFromSelection(
   selection
 ) {
-  return typeof selection ===
-    "string"
-    ? selection
-    : JSON.stringify(
-        selection
-      );
+  return selection.map(
+    (cardId) => {
+      const card =
+        getTarotById(cardId);
+
+      if (!card) {
+        throw new Error(
+          `Kart bulunamadı: ${cardId}`
+        );
+      }
+
+      return {
+        id:
+          cardId,
+
+        name:
+          String(
+            card.title ||
+            card.name ||
+            ""
+          ).trim(),
+
+        image:
+          String(
+            card.image || ""
+          ).trim(),
+      };
+    }
+  );
 }
 
 async function createInviteCode() {
@@ -232,6 +245,16 @@ function statusResponse(
 async function generateResult(
   data
 ) {
+  const creatorCards =
+    cardsFromSelection(
+      data.creatorSelection
+    );
+
+  const inviteeCards =
+    cardsFromSelection(
+      data.inviteeSelection
+    );
+
   const request =
     openai
       .chat
@@ -283,8 +306,8 @@ SADECE JSON döndür:
     "meaning": "Sembolün ortak anlamı"
   },
   "sharedTheme": "Ortak tema",
-  "creatorEnergy": "1. kişinin enerjisi",
-  "inviteeEnergy": "2. kişinin enerjisi",
+  "creatorInterpretation": "1. kişinin seçtiği 3 karta dayalı yorumu",
+  "inviteeInterpretation": "2. kişinin seçtiği 3 karta dayalı yorumu",
   "jointInterpretation": "İki kişi arasındaki ortak ve detaylı fal yorumu"
 }
 `.trim(),
@@ -307,8 +330,8 @@ Cinsiyet:
 ${data.creator?.gender || ""}
 
 Gizli Seçim:
-${serializeSelection(
-  data.creatorSelection
+${JSON.stringify(
+  creatorCards
 )}
 
 
@@ -324,8 +347,8 @@ Cinsiyet:
 ${data.invitee?.gender || ""}
 
 Gizli Seçim:
-${serializeSelection(
-  data.inviteeSelection
+${JSON.stringify(
+  inviteeCards
 )}
 `.trim(),
           },
@@ -427,19 +450,27 @@ ${serializeSelection(
         ""
       ).trim(),
 
-    creatorEnergy:
+    creatorInterpretation:
       String(
+        parsed
+          ?.creatorInterpretation ||
         parsed
           ?.creatorEnergy ||
         ""
       ).trim(),
 
-    inviteeEnergy:
+    inviteeInterpretation:
       String(
+        parsed
+          ?.inviteeInterpretation ||
         parsed
           ?.inviteeEnergy ||
         ""
       ).trim(),
+
+    creatorCards,
+
+    inviteeCards,
 
     jointInterpretation:
       String(
@@ -470,10 +501,10 @@ ${serializeSelection(
       .sharedTheme ||
 
     !result
-      .creatorEnergy ||
+      .creatorInterpretation ||
 
     !result
-      .inviteeEnergy ||
+      .inviteeInterpretation ||
 
     !result
       .jointInterpretation
@@ -482,6 +513,12 @@ ${serializeSelection(
       "Geçersiz Gizli Fal cevabı"
     );
   }
+
+  result.creatorEnergy =
+    result.creatorInterpretation;
+
+  result.inviteeEnergy =
+    result.inviteeInterpretation;
 
   return result;
 }
@@ -526,6 +563,12 @@ async function saveHistory(
 
     sharedTheme:
       result.sharedTheme,
+
+    creatorCards:
+      result.creatorCards,
+
+    inviteeCards:
+      result.inviteeCards,
 
     status:
       "completed",
@@ -1147,18 +1190,9 @@ export async function submitSecretSelection(
   if (
     shouldFinalize
   ) {
-    try {
-      await finalizeSession(
-        sessionId
-      );
-
-    } catch (err) {
-
-      console.error(
-        "GIZLI FAL FINALIZE ERROR:",
-        err
-      );
-    }
+    await finalizeSession(
+      sessionId
+    );
   }
 
   const latest =
