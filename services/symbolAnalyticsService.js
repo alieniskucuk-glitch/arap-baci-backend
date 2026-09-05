@@ -2,7 +2,7 @@ import crypto from "crypto";
 
 import openai from "../config/openai.js";
 import { db, admin } from "../config/firebase.js";
-import { getTarotById } from "../utils/tarotDeck.js";
+import { getTarotById, tarotDeck } from "../utils/tarotDeck.js";
 import { PRICING } from "../utils/pricing.js";
 
 const configuredMysticYearCost =
@@ -38,6 +38,24 @@ const MONTHS = [
   "Kasım",
   "Aralık",
 ];
+
+const THEME_ONLY_IDS =
+  new Set([
+    "degisim",
+    "isik",
+    "ic-ses",
+    "istikrar",
+    "kirilma",
+    "ozgurluk",
+    "sinirlar",
+  ]);
+
+const CARD_ONLY_TYPES =
+  new Set([
+    "tarot",
+    "melek",
+    "gizli_fal",
+  ]);
 
 /* =========================
    ERROR
@@ -133,6 +151,30 @@ function slug(value) {
       /^-+|-+$/g,
       ""
     );
+}
+
+function insightName(
+  value
+) {
+  return typeof value ===
+    "object"
+    ? text(
+        value?.name ??
+        value?.title ??
+        value?.symbol ??
+        value?.label
+      )
+    : text(value);
+}
+
+function isThemeOnly(
+  value
+) {
+  return THEME_ONLY_IDS.has(
+    slug(
+      insightName(value)
+    )
+  );
 }
 
 /* =========================
@@ -361,6 +403,12 @@ function fortuneType(
 
     secret_fortune:
       "gizli_fal",
+
+    angel:
+      "melek",
+
+    angel_card:
+      "melek",
   };
 
   return (
@@ -404,16 +452,18 @@ function symbolsOf(
     const value
     of values
   ) {
+    if (
+      isThemeOnly(
+        value
+      )
+    ) {
+      continue;
+    }
+
     const name =
-      typeof value ===
-      "string"
-        ? text(value)
-        : text(
-            value?.name ??
-            value?.title ??
-            value?.symbol ??
-            value?.label
-          );
+      insightName(
+        value
+      );
 
     const id =
       slug(
@@ -461,6 +511,17 @@ function symbolsOf(
 function themesOf(
   data = {}
 ) {
+  const symbolThemes =
+    (
+      Array.isArray(
+        data.symbols
+      )
+        ? data.symbols
+        : []
+    ).filter(
+      isThemeOnly
+    );
+
   const values = [
     ...(
       Array.isArray(
@@ -477,6 +538,8 @@ function themesOf(
     data
       .secretFortuneResult
       ?.sharedTheme,
+
+    ...symbolThemes,
   ].filter(Boolean);
 
   const result = [];
@@ -489,14 +552,9 @@ function themesOf(
     of values
   ) {
     const name =
-      typeof value ===
-      "object"
-        ? text(
-            value?.name ??
-            value?.title ??
-            value?.label
-          )
-        : text(value);
+      insightName(
+        value
+      );
 
     const id =
       slug(name);
@@ -520,11 +578,12 @@ function themesOf(
 }
 
 /* =========================
-   TAROT CARD
+   CARD HELPERS
 ========================= */
 
-function cardOf(
-  value
+function plainCardOf(
+  value,
+  extraIdFields = []
 ) {
   if (
     value === null ||
@@ -533,6 +592,67 @@ function cardOf(
     return null;
   }
 
+  const isObject =
+    typeof value ===
+    "object";
+
+  const rawId =
+    isObject
+      ? value?.id ??
+        value?.cardId ??
+        extraIdFields
+          .map(
+            (field) =>
+              value?.[field]
+          )
+          .find(
+            (item) =>
+              item !== null &&
+              item !== undefined
+          )
+      : value;
+
+  const name =
+    isObject
+      ? text(
+          value?.title ??
+          value?.name ??
+          value?.cardName ??
+          value?.label
+        )
+      : /^\d+$/.test(
+            text(value)
+          )
+        ? ""
+        : text(value);
+
+  if (!name) {
+    return null;
+  }
+
+  return {
+    id:
+      text(rawId) ||
+      slug(name),
+
+    name,
+
+    image:
+      isObject
+        ? text(
+            value?.image ??
+            value?.imageName ??
+            value?.imageFile ??
+            value?.fileName ??
+            value?.asset
+          )
+        : "",
+  };
+}
+
+function tarotCardOf(
+  value
+) {
   const rawId =
     typeof value ===
     "object"
@@ -548,113 +668,85 @@ function cardOf(
       ? Number(rawId)
       : null;
 
+  let deckCard = null;
+
   if (
     numeric !== null
   ) {
-    try {
-      const card =
-        getTarotById(
-          numeric
-        );
-
-      if (card) {
-        return {
-          id:
-            String(
-              card.id ??
-              numeric
-            ),
-
-          name:
-            text(
-              (
-                typeof value ===
-                "object"
-                  ? value?.title ??
-                    value?.name
-                  : ""
-              ) ||
-              card.title ||
-              card.name ||
-              `Kart ${numeric}`
-            ),
-
-          image:
-            text(
-              (
-                typeof value ===
-                "object"
-                  ? value?.image
-                  : ""
-              ) ||
-              card.image
-            ),
-        };
-      }
-    } catch (_) {}
+    deckCard =
+      getTarotById(
+        numeric
+      ) ??
+      null;
   }
 
-  const name =
-    typeof value ===
-    "object"
-      ? text(
-          value?.title ??
-          value?.name ??
-          value?.cardName ??
-          value?.label
-        )
-      : text(value);
+  if (!deckCard) {
+    const rawName =
+      insightName(
+        value
+      );
 
-  if (!name) {
-    return null;
+    const nameId =
+      slug(
+        rawName
+      );
+
+    if (nameId) {
+      deckCard =
+        tarotDeck.find(
+          (card) =>
+            slug(
+              card?.name ??
+              card?.title
+            ) ===
+            nameId
+        ) ??
+        null;
+    }
   }
 
-  return {
-    id:
-      text(rawId) ||
-      slug(name),
+  if (deckCard) {
+    return {
+      id:
+        String(
+          deckCard.id
+        ),
 
-    name,
+      name:
+        text(
+          deckCard.name ??
+          deckCard.title
+        ),
 
-    image:
-      typeof value ===
-      "object"
-        ? text(
-            value?.image
-          )
-        : "",
-  };
+      image:
+        text(
+          deckCard.image
+        ),
+    };
+  }
+
+  return plainCardOf(
+    value,
+    ["tarotId"]
+  );
 }
 
-/* =========================
-   TAROT CARDS
-========================= */
-
-function tarotCardsOf(
-  data = {}
+function angelCardOf(
+  value
 ) {
-  const groups = [
-    data.cards,
+  return plainCardOf(
+    value,
+    [
+      "angelId",
+      "melekId",
+    ]
+  );
+}
 
-    data.picked,
-
-    data.tarotCards,
-
-    data.selectedCards,
-
-    data.creatorCards,
-
-    data.inviteeCards,
-
-    data
-      .secretFortuneResult
-      ?.creatorCards,
-
-    data
-      .secretFortuneResult
-      ?.inviteeCards,
-  ];
-
+function cardsFromGroups(
+  groups,
+  mapper
+) {
   const result = [];
 
   const seen =
@@ -678,7 +770,7 @@ function tarotCardsOf(
       of values
     ) {
       const card =
-        cardOf(
+        mapper(
           value
         );
 
@@ -710,6 +802,53 @@ function tarotCardsOf(
   }
 
   return result;
+}
+
+/* =========================
+   TAROT CARDS
+========================= */
+
+function tarotCardsOf(
+  data = {}
+) {
+  return cardsFromGroups(
+    [
+      data.cards,
+      data.picked,
+      data.tarotCards,
+      data.selectedCards,
+      data.creatorCards,
+      data.inviteeCards,
+      data
+        .secretFortuneResult
+        ?.creatorCards,
+      data
+        .secretFortuneResult
+        ?.inviteeCards,
+    ],
+    tarotCardOf
+  );
+}
+
+/* =========================
+   ANGEL CARDS
+========================= */
+
+function angelCardsOf(
+  data = {}
+) {
+  return cardsFromGroups(
+    [
+      data.cards,
+      data.picked,
+      data.angelCards,
+      data.melekCards,
+      data.selectedCards,
+      data.selectedAngelCards,
+      data.selectedMelekCards,
+    ],
+    angelCardOf
+  );
 }
 
 /* =========================
@@ -778,6 +917,9 @@ function aggregate(
   const cardMap =
     new Map();
 
+  const angelCardMap =
+    new Map();
+
   const typeMap =
     new Map();
 
@@ -805,6 +947,9 @@ function aggregate(
           0,
 
         tarotCardCount:
+          0,
+
+        angelCardCount:
           0,
       })
     );
@@ -909,19 +1054,33 @@ function aggregate(
     ).count++;
 
     const symbols =
-      symbolsOf(
-        data
-      );
+      CARD_ONLY_TYPES.has(
+        type
+      )
+        ? []
+        : symbolsOf(
+            data
+          );
 
     const themes =
       themesOf(
         data
       );
 
-    const cards =
-      tarotCardsOf(
-        data
-      );
+    const tarotCardsInRecord =
+      type === "tarot" ||
+      type === "gizli_fal"
+        ? tarotCardsOf(
+            data
+          )
+        : [];
+
+    const angelCardsInRecord =
+      type === "melek"
+        ? angelCardsOf(
+            data
+          )
+        : [];
 
     const primaryTheme =
       text(
@@ -931,7 +1090,8 @@ function aggregate(
     if (
       symbols.length ||
       themes.length ||
-      cards.length ||
+      tarotCardsInRecord.length ||
+      angelCardsInRecord.length ||
       primaryTheme
     ) {
       recordsWithInsights++;
@@ -1075,7 +1235,7 @@ function aggregate(
 
     for (
       const card
-      of cards
+      of tarotCardsInRecord
     ) {
       const key =
         text(
@@ -1088,6 +1248,44 @@ function aggregate(
       const entry =
         mapEntry(
           cardMap,
+          key,
+          () => ({
+            ...card,
+            count:
+              0,
+          })
+        );
+
+      entry.count++;
+
+      if (
+        !entry.image &&
+        card.image
+      ) {
+        entry.image =
+          card.image;
+      }
+    }
+
+    /* =========================
+       ANGEL
+    ========================= */
+
+    for (
+      const card
+      of angelCardsInRecord
+    ) {
+      const key =
+        text(
+          card.id
+        ) ||
+        slug(
+          card.name
+        );
+
+      const entry =
+        mapEntry(
+          angelCardMap,
           key,
           () => ({
             ...card,
@@ -1130,7 +1328,10 @@ function aggregate(
         themes.length;
 
       month.tarotCardCount +=
-        cards.length;
+        tarotCardsInRecord.length;
+
+      month.angelCardCount +=
+        angelCardsInRecord.length;
     }
   }
 
@@ -1177,6 +1378,11 @@ function aggregate(
   const tarotCards =
     sorted(
       cardMap
+    );
+
+  const angelCards =
+    sorted(
+      angelCardMap
     );
 
   const fortuneTypes =
@@ -1234,6 +1440,8 @@ function aggregate(
 
     tarotCards,
 
+    angelCards,
+
     fortuneTypes,
 
     topSymbol:
@@ -1247,6 +1455,10 @@ function aggregate(
 
     topTarotCard:
       tarotCards[0] ??
+      null,
+
+    topAngelCard:
+      angelCards[0] ??
       null,
 
     months:
@@ -1875,6 +2087,10 @@ async function chargeAndSaveMysticYear({
             analytics
               .topTarotCard,
 
+          topAngelCard:
+            analytics
+              .topAngelCard,
+
           busiestMonth:
             analytics
               .busiestMonth,
@@ -2010,6 +2226,14 @@ async function generateInterpretation(
           10
         ),
 
+    topAngelCards:
+      analytics
+        .angelCards
+        .slice(
+          0,
+          10
+        ),
+
     fortuneTypes:
       analytics
         .fortuneTypes,
@@ -2060,6 +2284,7 @@ KURALLAR:
 - 5-7 doğal paragraf yaz.
 - Tekrar eden sembol ve temaların yıl boyunca oluşturduğu ortak hikâyeyi açıkla.
 - Tarot kartları varsa ortak yönlerini değerlendir.
+- Melek kartları varsa ortak mesajlarını değerlendir.
 - Aylık değişim belirginse anlat.
 - En yoğun ayı doğal biçimde değerlendir.
 - Aynı düşünceyi farklı cümlelerle tekrar etme.
