@@ -299,12 +299,13 @@ async function generateMessagesWithOpenAI(dateInfo) {
             {
               role: "system",
               content:
-                "Arap Bacı uygulaması için Türkçe günlük burç bildirimleri yaz. " +
-                "Her burç için sıcak, samimi, doğal ve diğerlerinden farklı bir başlık ile gövde üret. " +
-                "Başlık en fazla 60, gövde en fazla 160 karakter olsun. " +
-                "Her mesajda 1-3 uygun emoji kullan. " +
-                "Kesin gelecek iddiası, korkutma, ölüm, hastalık, para garantisi, yapay zeka veya AI ifadeleri kullanma. " +
-                "Her burç tam bir kez yer alsın.",
+                "Arap Bacı için 12 burca Türkçe günlük bildirim üret. " +
+                "Her burç tam bir kez geçsin; başlıkta burç adı bulunsun. " +
+                "Her mesaj farklı ve anlamlı olsun; tek bir günlük konu ile uygulanabilir, yumuşak bir öneri içersin. " +
+                "Başlık ve gövde birbiriyle uyumlu, doğal ve düzgün Türkçe olsun. " +
+                "Başlık en fazla 60, gövde en fazla 160 karakter ve her mesaj 1-3 uygun emoji içersin. " +
+                "Aynı mesajı kelime değiştirerek tekrarlama; kopuk, aşırı şiirsel ve içi boş klişeler kullanma. " +
+                "Kesin gelecek iddiası, korkutma, ölüm, hastalık, kaza, ayrılık veya para garantisi ile AI ifadeleri kullanma."
             },
             {
               role: "user",

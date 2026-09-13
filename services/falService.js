@@ -312,7 +312,7 @@ export async function generateFalInsights(
       openai.responses.create({
 
         model:
-          "gpt-4.1-mini",
+          "gpt-5.4-mini",
 
         input: [
           {
