@@ -6,6 +6,8 @@ import {
   getSymbolAnalytics,
   getMysticYearAnalytics,
   interpretMysticYear,
+  getMysticMonthAnalytics,
+  interpretMysticMonth,
 } from "../services/symbolAnalyticsService.js";
 
 const router =
@@ -170,6 +172,95 @@ router.post(
         res,
         error,
         "Mistik Yılım yorumu oluşturulamadı"
+      );
+    }
+  }
+);
+
+/* =========================
+   MYSTIC MONTH STATS
+   GET /symbol-analytics/month?year=2026&month=9
+========================= */
+
+router.get(
+  "/month",
+
+  auth,
+
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const uid =
+        req.user?.uid;
+
+      const result =
+        await getMysticMonthAnalytics(
+          uid,
+          req.query?.year,
+          req.query?.month
+        );
+
+      return res.json(
+        result
+      );
+    } catch (
+      error
+    ) {
+      return errorResponse(
+        res,
+        error,
+        "Mistik Ayım verileri alınamadı"
+      );
+    }
+  }
+);
+
+/* =========================
+   MYSTIC MONTH INTERPRET
+   POST /symbol-analytics/month/interpret
+
+   BODY:
+   {
+     "year": 2026,
+     "month": 9
+   }
+
+   İlk üretim = 2 coin
+   Cache varsa tekrar coin yok
+========================= */
+
+router.post(
+  "/month/interpret",
+
+  auth,
+
+  async (
+    req,
+    res
+  ) => {
+    try {
+      const uid =
+        req.user?.uid;
+
+      const result =
+        await interpretMysticMonth(
+          uid,
+          req.body?.year,
+          req.body?.month
+        );
+
+      return res.json(
+        result
+      );
+    } catch (
+      error
+    ) {
+      return errorResponse(
+        res,
+        error,
+        "Mistik Ayım yorumu oluşturulamadı"
       );
     }
   }

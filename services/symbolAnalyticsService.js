@@ -21,6 +21,22 @@ const MYSTIC_YEAR_COST =
 const MYSTIC_YEAR_COLLECTION =
   "mysticYears";
 
+const configuredMysticMonthCost =
+  Number(
+    PRICING?.MISTIK_AY
+  );
+
+const MYSTIC_MONTH_COST =
+  Number.isFinite(
+    configuredMysticMonthCost
+  ) &&
+  configuredMysticMonthCost > 0
+    ? configuredMysticMonthCost
+    : 2;
+
+const MYSTIC_MONTH_COLLECTION =
+  "mysticMonths";
+
 const LOCK_TTL_MS =
   5 * 60 * 1000;
 
@@ -105,6 +121,19 @@ const yearRef = (
     )
     .doc(
       String(year)
+    );
+
+const monthRef = (
+  uid,
+  year,
+  month
+) =>
+  userRef(uid)
+    .collection(
+      MYSTIC_MONTH_COLLECTION
+    )
+    .doc(
+      `${year}-${String(month).padStart(2, "0")}`
     );
 
 /* =========================
@@ -332,6 +361,33 @@ function parseYear(
   }
 
   return year;
+}
+
+/* =========================
+   MONTH
+========================= */
+
+function parseMonth(
+  value
+) {
+  const month =
+    Number(value);
+
+  if (
+    !Number.isInteger(
+      month
+    ) ||
+    month < 1 ||
+    month > 12
+  ) {
+    throw new ServiceError(
+      "Geçersiz ay",
+      400,
+      "INVALID_MONTH"
+    );
+  }
+
+  return month;
 }
 
 /* =========================
@@ -2598,7 +2654,1033 @@ export async function interpretMysticYear(
   }
 }
 
+
+/* =========================
+   MYSTIC MONTH HELPERS
+========================= */
+
+function monthName(
+  month
+) {
+  return MONTHS[
+    month - 1
+  ] || "";
+}
+
+function monthRecords(
+  records,
+  year,
+  month
+) {
+  return records.filter(
+    (record) => {
+      if (!record.date) {
+        return false;
+      }
+
+      const parts =
+        istanbulParts(
+          record.date
+        );
+
+      return (
+        parts?.year === year &&
+        parts?.month === month
+      );
+    }
+  );
+}
+
+async function savedMonthInterpretation(
+  uid,
+  year,
+  month
+) {
+  const snapshot =
+    await monthRef(
+      uid,
+      year,
+      month
+    ).get();
+
+  if (
+    !snapshot.exists
+  ) {
+    return null;
+  }
+
+  const data =
+    snapshot.data() ||
+    {};
+
+  const interpretation =
+    text(
+      data.interpretation
+    );
+
+  if (
+    !interpretation
+  ) {
+    return null;
+  }
+
+  return {
+    year,
+
+    month,
+
+    interpretation,
+
+    cost:
+      Number(
+        data.cost
+      ) ||
+      MYSTIC_MONTH_COST,
+
+    remainingCoin:
+      data.remainingCoin ??
+      null,
+
+    createdAtMs:
+      Number(
+        data.createdAtMs
+      ) ||
+      null,
+
+    sourceHistoryCount:
+      Number(
+        data.sourceHistoryCount
+      ) ||
+      0,
+
+    cached:
+      true,
+  };
+}
+
+async function acquireMonthLock(
+  uid,
+  year,
+  month
+) {
+  const ref =
+    monthRef(
+      uid,
+      year,
+      month
+    );
+
+  const lockId =
+    crypto.randomUUID();
+
+  const now =
+    Date.now();
+
+  let cached =
+    null;
+
+  await db.runTransaction(
+    async (tx) => {
+      const snapshot =
+        await tx.get(
+          ref
+        );
+
+      const data =
+        snapshot.exists
+          ? snapshot.data() ||
+            {}
+          : {};
+
+      const interpretation =
+        text(
+          data.interpretation
+        );
+
+      if (
+        interpretation
+      ) {
+        cached = {
+          year,
+
+          month,
+
+          interpretation,
+
+          cost:
+            Number(
+              data.cost
+            ) ||
+            MYSTIC_MONTH_COST,
+
+          remainingCoin:
+            data.remainingCoin ??
+            null,
+
+          createdAtMs:
+            Number(
+              data.createdAtMs
+            ) ||
+            null,
+
+          sourceHistoryCount:
+            Number(
+              data.sourceHistoryCount
+            ) ||
+            0,
+
+          cached:
+            true,
+        };
+
+        return;
+      }
+
+      const activeLock =
+        text(
+          data.generationStatus
+        ) ===
+          "generating" &&
+        now -
+          (
+            Number(
+              data.generationStartedAtMs
+            ) ||
+            0
+          ) <
+          LOCK_TTL_MS;
+
+      if (
+        activeLock
+      ) {
+        throw new ServiceError(
+          "Mistik Ayım yorumu hazırlanıyor",
+          409,
+          "MYSTIC_MONTH_BUSY"
+        );
+      }
+
+      tx.set(
+        ref,
+        {
+          year,
+
+          month,
+
+          generationStatus:
+            "generating",
+
+          generationLockId:
+            lockId,
+
+          generationStartedAtMs:
+            now,
+
+          generationStartedAt:
+            admin
+              .firestore
+              .FieldValue
+              .serverTimestamp(),
+        },
+        {
+          merge:
+            true,
+        }
+      );
+    }
+  );
+
+  return {
+    lockId,
+    cached,
+  };
+}
+
+async function releaseMonthLock(
+  uid,
+  year,
+  month,
+  lockId,
+  message
+) {
+  try {
+    const ref =
+      monthRef(
+        uid,
+        year,
+        month
+      );
+
+    await db.runTransaction(
+      async (tx) => {
+        const snapshot =
+          await tx.get(
+            ref
+          );
+
+        if (
+          !snapshot.exists
+        ) {
+          return;
+        }
+
+        const data =
+          snapshot.data() ||
+          {};
+
+        if (
+          data.generationLockId !==
+          lockId
+        ) {
+          return;
+        }
+
+        tx.set(
+          ref,
+          {
+            generationStatus:
+              "error",
+
+            generationLockId:
+              null,
+
+            generationStartedAtMs:
+              null,
+
+            generationStartedAt:
+              null,
+
+            lastError:
+              text(message) ||
+              "Yorum üretilemedi",
+
+            lastErrorAt:
+              admin
+                .firestore
+                .FieldValue
+                .serverTimestamp(),
+          },
+          {
+            merge:
+              true,
+          }
+        );
+      }
+    );
+  } catch (
+    error
+  ) {
+    console.error(
+      "MYSTIC MONTH LOCK RELEASE ERROR:",
+      error
+    );
+  }
+}
+
+function ensureEnoughMonthCoin(
+  user = {}
+) {
+  const balance =
+    coinBalance(
+      user
+    );
+
+  if (
+    balance.totalCoin <
+    MYSTIC_MONTH_COST
+  ) {
+    throw new ServiceError(
+      "Yetersiz coin",
+      400,
+      "INSUFFICIENT_COIN"
+    );
+  }
+
+  return balance;
+}
+
+async function chargeAndSaveMysticMonth({
+  uid,
+  year,
+  month,
+  lockId,
+  interpretation,
+  analytics,
+}) {
+  const uRef =
+    userRef(
+      uid
+    );
+
+  const mRef =
+    monthRef(
+      uid,
+      year,
+      month
+    );
+
+  const createdAtMs =
+    Date.now();
+
+  const chargeId =
+    crypto.randomUUID();
+
+  let transactionResult =
+    null;
+
+  await db.runTransaction(
+    async (tx) => {
+      const userSnapshot =
+        await tx.get(
+          uRef
+        );
+
+      const monthSnapshot =
+        await tx.get(
+          mRef
+        );
+
+      if (
+        !userSnapshot.exists
+      ) {
+        throw new ServiceError(
+          "Kullanıcı bulunamadı",
+          404,
+          "USER_NOT_FOUND"
+        );
+      }
+
+      const currentMonthData =
+        monthSnapshot.exists
+          ? monthSnapshot.data() ||
+            {}
+          : {};
+
+      const alreadySaved =
+        text(
+          currentMonthData
+            .interpretation
+        );
+
+      if (
+        alreadySaved
+      ) {
+        transactionResult = {
+          success:
+            true,
+
+          year,
+
+          month,
+
+          interpretation:
+            alreadySaved,
+
+          cost:
+            Number(
+              currentMonthData.cost
+            ) ||
+            MYSTIC_MONTH_COST,
+
+          remainingCoin:
+            currentMonthData
+              .remainingCoin ??
+            null,
+
+          sourceHistoryCount:
+            Number(
+              currentMonthData
+                .sourceHistoryCount
+            ) ||
+            0,
+
+          createdAtMs:
+            Number(
+              currentMonthData
+                .createdAtMs
+            ) ||
+            null,
+
+          cached:
+            true,
+
+          charged:
+            false,
+        };
+
+        return;
+      }
+
+      if (
+        currentMonthData
+          .generationLockId !==
+        lockId
+      ) {
+        throw new ServiceError(
+          "Mistik Ayım oturumu değişti, tekrar deneyin",
+          409,
+          "MYSTIC_MONTH_LOCK_CHANGED"
+        );
+      }
+
+      const user =
+        userSnapshot.data() ||
+        {};
+
+      const balance =
+        coinBalance(
+          user
+        );
+
+      if (
+        balance.totalCoin <
+        MYSTIC_MONTH_COST
+      ) {
+        throw new ServiceError(
+          "Yetersiz coin",
+          400,
+          "INSUFFICIENT_COIN"
+        );
+      }
+
+      const dailyUsed =
+        Math.min(
+          balance.dailyCoin,
+          MYSTIC_MONTH_COST
+        );
+
+      const abUsed =
+        MYSTIC_MONTH_COST -
+        dailyUsed;
+
+      const newDailyCoin =
+        balance.dailyCoin -
+        dailyUsed;
+
+      const newAbCoin =
+        balance.abCoin -
+        abUsed;
+
+      const remainingCoin =
+        newDailyCoin +
+        newAbCoin;
+
+      tx.update(
+        uRef,
+        {
+          dailyCoin:
+            newDailyCoin,
+
+          abCoin:
+            newAbCoin,
+        }
+      );
+
+      tx.set(
+        mRef,
+        {
+          year,
+
+          month,
+
+          interpretation,
+
+          cost:
+            MYSTIC_MONTH_COST,
+
+          remainingCoin,
+
+          sourceHistoryCount:
+            analytics
+              .totalFortunes,
+
+          topSymbol:
+            analytics
+              .topSymbol,
+
+          topTheme:
+            analytics
+              .topTheme,
+
+          topTarotCard:
+            analytics
+              .topTarotCard,
+
+          topAngelCard:
+            analytics
+              .topAngelCard,
+
+          createdAtMs,
+
+          createdAt:
+            admin
+              .firestore
+              .FieldValue
+              .serverTimestamp(),
+
+          generationStatus:
+            "completed",
+
+          generationLockId:
+            null,
+
+          generationStartedAtMs:
+            null,
+
+          generationStartedAt:
+            null,
+
+          lastError:
+            null,
+
+          chargeId,
+
+          chargedAtMs:
+            createdAtMs,
+
+          chargedAt:
+            admin
+              .firestore
+              .FieldValue
+              .serverTimestamp(),
+
+          version:
+            1,
+        },
+        {
+          merge:
+            true,
+        }
+      );
+
+      transactionResult = {
+        success:
+          true,
+
+        year,
+
+        month,
+
+        interpretation,
+
+        cost:
+          MYSTIC_MONTH_COST,
+
+        remainingCoin,
+
+        sourceHistoryCount:
+          analytics
+            .totalFortunes,
+
+        createdAtMs,
+
+        cached:
+          false,
+
+        charged:
+          true,
+      };
+    }
+  );
+
+  if (
+    !transactionResult
+  ) {
+    throw new ServiceError(
+      "Mistik Ayım kaydedilemedi",
+      500,
+      "MYSTIC_MONTH_SAVE_FAILED"
+    );
+  }
+
+  return transactionResult;
+}
+
+async function generateMonthInterpretation(
+  analytics,
+  user = {},
+  month
+) {
+  const promptData = {
+    year:
+      analytics.year,
+
+    month,
+
+    monthName:
+      monthName(month),
+
+    totalFortunes:
+      analytics.totalFortunes,
+
+    topSymbols:
+      analytics
+        .symbols
+        .slice(
+          0,
+          12
+        ),
+
+    topThemes:
+      analytics
+        .themes
+        .slice(
+          0,
+          10
+        ),
+
+    topPrimaryThemes:
+      analytics
+        .primaryThemes
+        .slice(
+          0,
+          8
+        ),
+
+    topTarotCards:
+      analytics
+        .tarotCards
+        .slice(
+          0,
+          10
+        ),
+
+    topAngelCards:
+      analytics
+        .angelCards
+        .slice(
+          0,
+          10
+        ),
+
+    fortuneTypes:
+      analytics
+        .fortuneTypes,
+  };
+
+  const prompt = `
+Sen Arap Bacı uygulamasındaki deneyimli bir fal yorumcususun.
+
+Kullanıcının ${monthName(month)} ${analytics.year} ayı boyunca oluşan gerçek fal geçmişi özetini yorumla.
+
+Yalnızca verilen bilgilere dayan.
+
+Veride olmayan sembol, kart, olay veya kesin gelecek iddiası uydurma.
+
+KULLANICI:
+
+İsim:
+${text(user.name)}
+
+Burç:
+${text(user.zodiac)}
+
+Cinsiyet:
+${text(user.gender)}
+
+Burcu yalnızca arka planda kişiselleştirme için kullan.
+
+Burç adını veya astrolojiden yararlandığını söyleme.
+
+AYLIK ÖZET:
+
+${JSON.stringify(
+  promptData,
+  null,
+  2
+)}
+
+KURALLAR:
+
+- Türkçe yaz.
+- Başlık kullanma.
+- 4-6 doğal paragraf yaz.
+- Tekrar eden sembol ve temaların bu ay oluşturduğu ortak hikâyeyi açıkla.
+- Tarot kartları varsa ortak yönlerini değerlendir.
+- Melek kartları varsa ortak mesajlarını değerlendir.
+- Aynı düşünceyi farklı cümlelerle tekrar etme.
+- Kesin olacak veya kesin yaşayacaksın gibi ifadeler kullanma.
+- "yapay zeka", "algoritma", "veri seti" gibi teknik ifadeler kullanma.
+- "canım", "güzelim", "auran", "enerjini hissettim" gibi klişe ifadeler kullanma.
+- Kullanıcıyı övme.
+- Genel kişilik analizi yapma.
+- Son paragrafta ayın ana mesajını kısa ve güçlü biçimde toparla.
+- Yaklaşık 350-550 kelime yaz.
+`.trim();
+
+  const response =
+    await openai
+      .responses
+      .create({
+        model:
+          "gpt-4.1-mini",
+
+        input:
+          prompt,
+
+        max_output_tokens:
+          1100,
+      });
+
+  const result =
+    text(
+      response.output_text
+    );
+
+  if (!result) {
+    throw new ServiceError(
+      "Mistik Ayım yorumu üretilemedi",
+      500,
+      "MONTH_INTERPRETATION_FAILED"
+    );
+  }
+
+  return result;
+}
+
+/* =========================
+   MYSTIC MONTH STATS
+========================= */
+
+export async function getMysticMonthAnalytics(
+  uid,
+  requestedYear,
+  requestedMonth
+) {
+  if (!uid) {
+    throw new ServiceError(
+      "UID gerekli",
+      401,
+      "AUTH_REQUIRED"
+    );
+  }
+
+  const year =
+    parseYear(
+      requestedYear
+    );
+
+  const month =
+    parseMonth(
+      requestedMonth
+    );
+
+  const records =
+    await loadHistory(
+      uid
+    );
+
+  const filtered =
+    monthRecords(
+      records,
+      year,
+      month
+    );
+
+  const analytics =
+    aggregate(
+      filtered,
+      year
+    );
+
+  const saved =
+    await savedMonthInterpretation(
+      uid,
+      year,
+      month
+    );
+
+  return {
+    success:
+      true,
+
+    mode:
+      "month",
+
+    month,
+
+    monthName:
+      monthName(month),
+
+    ...analytics,
+
+    mysticMonthCost:
+      MYSTIC_MONTH_COST,
+
+    hasInterpretation:
+      !!saved,
+
+    interpretation:
+      saved
+        ?.interpretation ??
+      null,
+
+    interpretationCreatedAtMs:
+      saved
+        ?.createdAtMs ??
+      null,
+
+    interpretationCached:
+      !!saved,
+  };
+}
+
+/* =========================
+   INTERPRET MYSTIC MONTH
+========================= */
+
+export async function interpretMysticMonth(
+  uid,
+  requestedYear,
+  requestedMonth
+) {
+  if (!uid) {
+    throw new ServiceError(
+      "UID gerekli",
+      401,
+      "AUTH_REQUIRED"
+    );
+  }
+
+  const year =
+    parseYear(
+      requestedYear
+    );
+
+  const month =
+    parseMonth(
+      requestedMonth
+    );
+
+  const existing =
+    await savedMonthInterpretation(
+      uid,
+      year,
+      month
+    );
+
+  if (
+    existing
+  ) {
+    return {
+      success:
+        true,
+
+      ...existing,
+
+      charged:
+        false,
+    };
+  }
+
+  const records =
+    await loadHistory(
+      uid
+    );
+
+  const filtered =
+    monthRecords(
+      records,
+      year,
+      month
+    );
+
+  const analytics =
+    aggregate(
+      filtered,
+      year
+    );
+
+  if (
+    !analytics.totalFortunes
+  ) {
+    throw new ServiceError(
+      "Bu ay için yorumlanacak fal geçmişi bulunamadı",
+      400,
+      "NO_MONTH_DATA"
+    );
+  }
+
+  const {
+    lockId,
+    cached,
+  } =
+    await acquireMonthLock(
+      uid,
+      year,
+      month
+    );
+
+  if (
+    cached
+  ) {
+    return {
+      success:
+        true,
+
+      ...cached,
+
+      charged:
+        false,
+    };
+  }
+
+  try {
+    const userSnapshot =
+      await userRef(
+        uid
+      ).get();
+
+    if (
+      !userSnapshot.exists
+    ) {
+      throw new ServiceError(
+        "Kullanıcı bulunamadı",
+        404,
+        "USER_NOT_FOUND"
+      );
+    }
+
+    const user =
+      userSnapshot.data() ||
+      {};
+
+    ensureEnoughMonthCoin(
+      user
+    );
+
+    const interpretation =
+      await generateMonthInterpretation(
+        analytics,
+        user,
+        month
+      );
+
+    return await chargeAndSaveMysticMonth({
+      uid,
+      year,
+      month,
+      lockId,
+      interpretation,
+      analytics,
+    });
+  } catch (
+    error
+  ) {
+    await releaseMonthLock(
+      uid,
+      year,
+      month,
+      lockId,
+      error?.message
+    );
+
+    throw error;
+  }
+}
+
 export {
   MYSTIC_YEAR_COST,
+  MYSTIC_MONTH_COST,
   ServiceError,
 };
