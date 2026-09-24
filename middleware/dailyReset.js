@@ -2,7 +2,9 @@ import admin from "firebase-admin";
 import { db } from "../config/firebase.js";
 
 const TZ = "Europe/Istanbul";
+const DAILY_STANDARD_COIN = 4;
 const DAILY_PREMIUM_COIN = 8;
+const STANDARD_MONTHLY_MAX = DAILY_STANDARD_COIN * 30;
 const MONTHLY_MAX = 240;
 
 function getTodayKey() {
@@ -53,16 +55,8 @@ export default async function dailyReset(req, res, next) {
 
       const nowMs = Date.now();
 
-      // 🔥 premium bitmişse kapat
-      if (!premiumUntilMs || premiumUntilMs <= nowMs) {
-        tx.update(userRef, {
-          isPremium: false,
-          premiumStatus: "expired",
-          premiumAutoRenew: false,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        return;
-      }
+      const premiumActive =
+        user.isPremium === true && premiumUntilMs > nowMs;
 
       /* =========================
          DAILY RESET
@@ -76,24 +70,41 @@ export default async function dailyReset(req, res, next) {
       if (daysPassed <= 0) return;
 
       const safeDays = Math.min(daysPassed, 30);
-      const earned = safeDays * DAILY_PREMIUM_COIN;
+      const dailyAmount = premiumActive
+        ? DAILY_PREMIUM_COIN
+        : DAILY_STANDARD_COIN;
+      const balanceLimit = premiumActive
+        ? MONTHLY_MAX
+        : STANDARD_MONTHLY_MAX;
+      const earned = safeDays * dailyAmount;
 
       const currentDaily = Number(user.dailyCoin) || 0;
 
       // 🔥 MAX LIMIT KORUMA
       const finalEarn = Math.min(
         earned,
-        MONTHLY_MAX - currentDaily
+        balanceLimit - currentDaily
       );
 
-      if (finalEarn <= 0) return;
+      const premiumExpired = user.isPremium === true && !premiumActive;
+
+      if (finalEarn <= 0 && !premiumExpired) return;
 
       /* =========================
          UPDATE (ATOMIC)
       ========================= */
 
       tx.update(userRef, {
-        dailyCoin: admin.firestore.FieldValue.increment(finalEarn),
+        ...(finalEarn > 0
+          ? { dailyCoin: admin.firestore.FieldValue.increment(finalEarn) }
+          : {}),
+        ...(premiumExpired
+          ? {
+              isPremium: false,
+              premiumStatus: "expired",
+              premiumAutoRenew: false,
+            }
+          : {}),
         lastDailyResetKey: todayKey,
         lastDailyResetAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),

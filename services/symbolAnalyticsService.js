@@ -70,7 +70,6 @@ const CARD_ONLY_TYPES =
   new Set([
     "tarot",
     "melek",
-    "gizli_fal",
   ]);
 
 /* =========================
