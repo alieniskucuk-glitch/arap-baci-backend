@@ -14,6 +14,8 @@ import ruhEsiRoutes from "./routes/ruhEsi.js";
 import melekRoutes from "./routes/melek.js";
 import gizliFalRoutes from "./routes/gizliFal.js";
 import symbolAnalyticsRoutes from "./routes/symbolAnalytics.js";
+import niyetRoutes from "./routes/niyet.js";
+import yediGunlukKehanetRoutes from "./routes/yediGunlukKehanet.js";
 
 /* ================= USER ROUTES ================= */
 
@@ -122,6 +124,16 @@ app.use(
 app.use(
   "/symbol-analytics",
   symbolAnalyticsRoutes
+);
+
+app.use(
+  "/niyet",
+  niyetRoutes
+);
+
+app.use(
+  "/yedi-gunluk-kehanet",
+  yediGunlukKehanetRoutes
 );
 
 app.use(

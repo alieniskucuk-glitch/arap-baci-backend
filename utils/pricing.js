@@ -60,6 +60,14 @@ export const PRICING = {
 
   GIZLI_FAL: 5,
 
+  // 📅 7 Günlük Kehanet
+
+  YEDI_GUNLUK_KEHANET: 5,
+
+  // 🐾 Niyet Falı
+
+  NIYET: 1,
+
   // ✨ Benim Mistik Yılım
 
   MISTIK_YIL: 2

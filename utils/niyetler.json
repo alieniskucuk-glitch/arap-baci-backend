@@ -1,0 +1,2508 @@
+{
+  "ortak": [
+    {
+      "id": "ortak_001",
+      "theme": "haber",
+      "text": "Kuş konmuş pencereye,\nKanadı değmiş geceye,\nBeklediğin haber gelir,\nSevinç düşer yüreğine."
+    },
+    {
+      "id": "ortak_002",
+      "theme": "haber",
+      "text": "Yol uzanır kapına,\nBir söz değer aklına,\nGeciken haber gelir,\nFerahlık dolar içine."
+    },
+    {
+      "id": "ortak_003",
+      "theme": "haber",
+      "text": "Sessiz geçen gün biter,\nBeklenen söz sana yeter,\nUzaklardan bir ses gelir,\nMerakın yerini sevinç alır."
+    },
+    {
+      "id": "ortak_004",
+      "theme": "haber",
+      "text": "Akşam çöker, gün döner,\nBekleyen gönül de güler,\nBir haber var yol üstünde,\nGelince yüzün de güler."
+    },
+    {
+      "id": "ortak_005",
+      "theme": "haber",
+      "text": "Kapı çalar ansızın,\nDağılır içte kaygın,\nBeklediğin o güzel söz,\nYakındadır sandığından."
+    },
+    {
+      "id": "ortak_006",
+      "theme": "haber",
+      "text": "Bir kuş geçer damından,\nHaber gelir ardından,\nUzun süren bekleyişin,\nSevinç doğurur sonunda."
+    },
+    {
+      "id": "ortak_007",
+      "theme": "haber",
+      "text": "Gecenin ardından gün,\nBir haberle aydınlanır yüzün,\nMerak ettiğin ne varsa,\nAydınlanır zaman zaman."
+    },
+    {
+      "id": "ortak_008",
+      "theme": "haber",
+      "text": "Yollar sessiz görünür,\nHaber gizlice yürür,\nTam vazgeçtim derken bir söz,\nKapında sana görünür."
+    },
+    {
+      "id": "ortak_009",
+      "theme": "haber",
+      "text": "Rüzgâr eser pencereden,\nBir ses gelir ötelerden,\nBeklediğin haber yakın,\nYüzün güler yeniden."
+    },
+    {
+      "id": "ortak_010",
+      "theme": "haber",
+      "text": "Takvim döner, gün gelir,\nGeciken söz yol bulur,\nİçini kurcalayan konu,\nBir haberle son bulur."
+    },
+    {
+      "id": "ortak_011",
+      "theme": "dilek",
+      "text": "Bir yıldız tutmuş gece,\nDileğin düşmüş içine,\nSabırla beklediğin şey,\nYaklaşıyor sessizce."
+    },
+    {
+      "id": "ortak_012",
+      "theme": "dilek",
+      "text": "Ay doğmuş ince ince,\nNiyetin var gönlünce,\nÖnündeki taşlar kalkar,\nYol açılır sevincine."
+    },
+    {
+      "id": "ortak_013",
+      "theme": "dilek",
+      "text": "Bir dilek var dilinde,\nUmut saklı içinde,\nVakti dolunca o murat,\nÇiçek açar elinde."
+    },
+    {
+      "id": "ortak_014",
+      "theme": "dilek",
+      "text": "Kalbinden geçen temizse,\nYolun sanma ki kapalı,\nBiraz sabır, biraz zaman,\nMurat kapına gelir."
+    },
+    {
+      "id": "ortak_015",
+      "theme": "dilek",
+      "text": "Göğe bakıp tuttuğun,\nİçine gizli koyduğun,\nO güzel dilek için,\nAçılır bir gün yolun."
+    },
+    {
+      "id": "ortak_016",
+      "theme": "dilek",
+      "text": "Bir mum yanar gecede,\nNiyet saklı alevde,\nSabırla koruduğun umut,\nKarşılık bulur vakitte."
+    },
+    {
+      "id": "ortak_017",
+      "theme": "dilek",
+      "text": "Gönlünde bir murat var,\nÖnünde açık yollar,\nAceleyi bırak biraz,\nKısmetin seni bulur."
+    },
+    {
+      "id": "ortak_018",
+      "theme": "dilek",
+      "text": "Dileğini sakla iyi,\nHer vaktin vardır yeri,\nGeciken şey kayıp değil,\nVakti gelince olur dileğin."
+    },
+    {
+      "id": "ortak_019",
+      "theme": "dilek",
+      "text": "Bir kapı var önünde,\nAnahtarı gönlünde,\nİnandığın o güzel şey,\nYakındadır sandığından."
+    },
+    {
+      "id": "ortak_020",
+      "theme": "dilek",
+      "text": "Bulut geçer, gök açılır,\nBekleyen murat açılır,\nUmudunu yitirme hiç,\nVakti gelince açılır."
+    },
+    {
+      "id": "ortak_021",
+      "theme": "yol",
+      "text": "Yol görünür uzaklara,\nKısmet düşer duraklara,\nAttığın her doğru adım,\nGötürür güzel yarınlara."
+    },
+    {
+      "id": "ortak_022",
+      "theme": "yol",
+      "text": "Bir yol çıkar önüne,\nGüneş vurur yönüne,\nKorkmadan adım atarsan,\nFerahlık gelir gönlüne."
+    },
+    {
+      "id": "ortak_023",
+      "theme": "yol",
+      "text": "Valiz değil, niyet hazır,\nÖnündeki yol da hazır,\nKısa ya da uzun olsun,\nSonu sana hayır taşır."
+    },
+    {
+      "id": "ortak_024",
+      "theme": "yol",
+      "text": "Yol kıvrılır dağlardan,\nHaber gelir uzaklardan,\nÇıkacağın bu yeni yol,\nKısmet getirir ardından."
+    },
+    {
+      "id": "ortak_025",
+      "theme": "yol",
+      "text": "Adım atınca yol açar,\nTereddüt yavaşça kaçar,\nGideceğin yeni yerde,\nBir güzel fırsat doğar."
+    },
+    {
+      "id": "ortak_026",
+      "theme": "yol",
+      "text": "Bir kavşak var ileride,\nİki seçenek önünde,\nİçine sinen yolu seç,\nHuzur vardır sonunda."
+    },
+    {
+      "id": "ortak_027",
+      "theme": "yol",
+      "text": "Uzak sandığın yer yakın,\nYolun açık, gönlün sakin,\nBu seyahat dönüşünde,\nBir yenilik sana yakın."
+    },
+    {
+      "id": "ortak_028",
+      "theme": "yol",
+      "text": "Yol çağırır usul usul,\nAklındaki düğüm çözülür,\nGittiğin yerde bir kapı,\nTam vaktinde sana açılır."
+    },
+    {
+      "id": "ortak_029",
+      "theme": "yol",
+      "text": "Ay ışığı düşmüş yola,\nKısmet düşmüş bu yola,\nÇıkacağın yol sonunda,\nSevinç dolar gönlüne."
+    },
+    {
+      "id": "ortak_030",
+      "theme": "yol",
+      "text": "Yollar bazen yorucudur,\nSonundaki umut budur,\nSabırla gittiğin yerde,\nYeni başlangıç bulunur."
+    },
+    {
+      "id": "ortak_031",
+      "theme": "is_kariyer",
+      "text": "Emek verdin günbegün,\nKarşılığı yakın bugün,\nÖnüne çıkan bir fırsat,\nDeğiştirir işte yönün."
+    },
+    {
+      "id": "ortak_032",
+      "theme": "is_kariyer",
+      "text": "Dosyalar üst üste,\nSabır kalmış nefeste,\nÇalıştığın o kapıda,\nGüzel haber var bu kez de."
+    },
+    {
+      "id": "ortak_033",
+      "theme": "is_kariyer",
+      "text": "İş yolunda bir kapı var,\nFırsat durur eşiğinde,\nKendini geri çekmezsen,\nAdın duyulur yerinde."
+    },
+    {
+      "id": "ortak_034",
+      "theme": "is_kariyer",
+      "text": "Emeğin yerde kalmıyor,\nŞansın senden kaçmıyor,\nBeklediğin iş haberi,\nÇok uzakta durmuyor."
+    },
+    {
+      "id": "ortak_035",
+      "theme": "is_kariyer",
+      "text": "Merdiven çıkar basamak basamak,\nHer adım ister emek,\nSabırla sürdürdüğün iş,\nGetirecek güzel sonuç."
+    },
+    {
+      "id": "ortak_036",
+      "theme": "is_kariyer",
+      "text": "Masanda duran o konu,\nYakında bulur sonunu,\nBir görüşme ya da teklif,\nDeğiştirir iş yolunu."
+    },
+    {
+      "id": "ortak_037",
+      "theme": "is_kariyer",
+      "text": "Çalıştığın günler sayılır,\nEmeğin bir gün duyulur,\nDoğru yerde doğru anda,\nÖnüne fırsat koyulur."
+    },
+    {
+      "id": "ortak_038",
+      "theme": "is_kariyer",
+      "text": "İşinde yeni bir dönem,\nÖnündedir adım adım,\nKendine güvenip yürürsen,\nAçılır önünde yarın."
+    },
+    {
+      "id": "ortak_039",
+      "theme": "is_kariyer",
+      "text": "Bir haber var iş yerinden,\nBelki de başka bir yerden,\nSana uygun bir fırsat,\nÇıkar hiç beklemediğin yerden."
+    },
+    {
+      "id": "ortak_040",
+      "theme": "is_kariyer",
+      "text": "Ektiğin emek yeşerir,\nZamanla karşılık verir,\nSabırla yürüttüğün iş,\nSeni daha ileri götürür."
+    },
+    {
+      "id": "ortak_041",
+      "theme": "para_kismet",
+      "text": "Boş kalan el dolacak,\nDar gün biraz azalacak,\nBeklediğin bir ödeme,\nVakti gelince ulaşacak."
+    },
+    {
+      "id": "ortak_042",
+      "theme": "para_kismet",
+      "text": "Kısmet kapıda bekler,\nSabreden gönül güçlenir,\nUfak görünen bir kazanç,\nBüyük rahatlık getirecek."
+    },
+    {
+      "id": "ortak_043",
+      "theme": "para_kismet",
+      "text": "Hesap çok, yük ağırsa,\nGönlün biraz daralsa,\nYakında gelen bir para,\nNefes olur bütçene."
+    },
+    {
+      "id": "ortak_044",
+      "theme": "para_kismet",
+      "text": "Bir para yolu açılır,\nSıkışıklığın azalır,\nEline geçen kısmeti,\nTutarsan bereket kalır."
+    },
+    {
+      "id": "ortak_045",
+      "theme": "para_kismet",
+      "text": "Küçük gelir, büyük yeter,\nDoğru harcanırsa değer,\nYakın zamanda bir kazanç,\nYüklerinden pay eksiltir."
+    },
+    {
+      "id": "ortak_046",
+      "theme": "para_kismet",
+      "text": "Cüzdan suskun görünse de,\nKısmet dönüyor yönüne,\nBeklemediğin bir ödeme,\nFerahlık verir eline."
+    },
+    {
+      "id": "ortak_047",
+      "theme": "para_kismet",
+      "text": "Kazanç gelir azar azar,\nBereket sabırla çoğalır,\nAcele etmezsen bu dönem,\nMaddi yükün hafif kalır."
+    },
+    {
+      "id": "ortak_048",
+      "theme": "para_kismet",
+      "text": "Bir borç varsa kapanır,\nİçindeki yük azalır,\nBeklediğin maddi haber,\nYakın zamanda duyulur."
+    },
+    {
+      "id": "ortak_049",
+      "theme": "para_kismet",
+      "text": "Kısmet gelir tek kapıdan,\nBereket doğar ardından,\nDoğru karar verdiğinde,\nRahatlarsın hesabından."
+    },
+    {
+      "id": "ortak_050",
+      "theme": "para_kismet",
+      "text": "Para yolu ince ince,\nAçılıyor gün geçtikçe,\nEline geçen fırsatı,\nİyi değerlendir gönlünce."
+    },
+    {
+      "id": "ortak_051",
+      "theme": "aile",
+      "text": "Ev içinde kırgınlık var,\nAma gönülde sevgi var,\nTatlı dille konuşunca,\nAradaki buzlar kalkar."
+    },
+    {
+      "id": "ortak_052",
+      "theme": "aile",
+      "text": "Bir sofra var kurulacak,\nEski konu konuşulacak,\nSakin kalan bir çift sözle,\nEvde huzur çoğalacak."
+    },
+    {
+      "id": "ortak_053",
+      "theme": "aile",
+      "text": "Ailenden bir ses gelir,\nİçindeki yükü siler,\nUzun süren bir mesele,\nKonuşunca sona erer."
+    },
+    {
+      "id": "ortak_054",
+      "theme": "aile",
+      "text": "Ev kapısı sıcak olur,\nKırgın gönül yakın olur,\nBir yakınından gelecek söz,\nSana kuvvet, sana huzur olur."
+    },
+    {
+      "id": "ortak_055",
+      "theme": "aile",
+      "text": "Aynı çatı, ayrı fikir,\nSonunda ortak yol belirir,\nSabırla yapılan konuşma,\nAile bağını güçlendirir."
+    },
+    {
+      "id": "ortak_056",
+      "theme": "aile",
+      "text": "Bir büyükten dua gelir,\nBir yakından destek gelir,\nZor sandığın aile işi,\nEl birliğiyle çözülür."
+    },
+    {
+      "id": "ortak_057",
+      "theme": "aile",
+      "text": "Ev içinde haber var,\nYüz güldüren bir söz var,\nBeklenen bir buluşmayla,\nSofrada yeniden neşe var."
+    },
+    {
+      "id": "ortak_058",
+      "theme": "aile",
+      "text": "Kırgınlığı uzun tutma,\nSevgiyi içinde unutma,\nBir adım atan olursa,\nEski huzuru geri çağırma."
+    },
+    {
+      "id": "ortak_059",
+      "theme": "aile",
+      "text": "Hanede bir değişiklik,\nGetirecek yenilik,\nBirlikte verilen karar,\nDönüşecek ferahlığa."
+    },
+    {
+      "id": "ortak_060",
+      "theme": "aile",
+      "text": "Aileden uzak biri,\nYollar onu sana taşır,\nGelecek bir telefonla,\nIsınacak evin içi."
+    },
+    {
+      "id": "ortak_061",
+      "theme": "dostluk",
+      "text": "Eski dosttan ses gelir,\nHatıralar canlanır,\nBir zaman küsen iki gönül,\nKonuşunca yakınlaşır."
+    },
+    {
+      "id": "ortak_062",
+      "theme": "dostluk",
+      "text": "Dost kapısı açık kalır,\nGerçek bağ kolay kopmaz,\nBir yanlış söz araya girse,\nSamimiyet onu aşar."
+    },
+    {
+      "id": "ortak_063",
+      "theme": "dostluk",
+      "text": "Bir arkadaş seni arar,\nİçindeki yükü sorar,\nBeklemediğin bir destek,\nTam zamanında yetişir."
+    },
+    {
+      "id": "ortak_064",
+      "theme": "dostluk",
+      "text": "Kırgınlığın varsa söyle,\nYük taşınmaz böyle böyle,\nAçık edilen bir gönül,\nDostluğu getirir yerine."
+    },
+    {
+      "id": "ortak_065",
+      "theme": "dostluk",
+      "text": "Eski bir isim aklına,\nDüşer ansızın yanına,\nYakında ondan bir haber,\nNeşe katar günlerine."
+    },
+    {
+      "id": "ortak_066",
+      "theme": "dostluk",
+      "text": "Dost meclisi kurulacak,\nBir güzel söz duyulacak,\nUzun zamandır beklediğin,\nDestek sana sunulacak."
+    },
+    {
+      "id": "ortak_067",
+      "theme": "dostluk",
+      "text": "Uzak kalan dost yakındır,\nGerçek bağın yolu açıktır,\nBir mesajla başlayan söz,\nEski sıcaklığı taşır."
+    },
+    {
+      "id": "ortak_068",
+      "theme": "dostluk",
+      "text": "Sırtını dayadığın biri,\nUnutmamış eski yeri,\nİhtiyacın olduğu anda,\nYetişir sana onun eli."
+    },
+    {
+      "id": "ortak_069",
+      "theme": "dostluk",
+      "text": "Bir dostluk sınanmış zamanla,\nAma bağı kopmamış hâlâ,\nDoğru sözle konuşulursa,\nEski neşe döner biraz."
+    },
+    {
+      "id": "ortak_070",
+      "theme": "dostluk",
+      "text": "Kimin gerçek olduğu,\nDar zamanda anlaşılır,\nYakında göreceğin destek,\nBir dostluğu sağlamlaştırır."
+    },
+    {
+      "id": "ortak_071",
+      "theme": "degisim",
+      "text": "Eski sayfa kapanıyor,\nYeni günler yaklaşıyor,\nBıraktığın yükün yerine,\nDaha hafif gün doğuyor."
+    },
+    {
+      "id": "ortak_072",
+      "theme": "degisim",
+      "text": "Bir kapı kapanır bazen,\nArdından yenisi gelir,\nCesaretle attığın adım,\nSeni doğru yere getirir."
+    },
+    {
+      "id": "ortak_073",
+      "theme": "degisim",
+      "text": "Düzen değişir, gönül ürker,\nSonra yavaş yavaş güler,\nYeni olan ilk zor gelse,\nZaman sana uyum verir."
+    },
+    {
+      "id": "ortak_074",
+      "theme": "degisim",
+      "text": "Eski yükü bırak artık,\nYeni yolun olsun açık,\nDeğişimden korkmazsan,\nÖnün olur daha aydınlık."
+    },
+    {
+      "id": "ortak_075",
+      "theme": "degisim",
+      "text": "Rüzgâr yönünü çevirir,\nHayat yeni ses getirir,\nAlıştığın şey değişse de,\nSonunda gönlün ferahlar."
+    },
+    {
+      "id": "ortak_076",
+      "theme": "degisim",
+      "text": "Bir karar var eşiğinde,\nYenilik durur önünde,\nAdımını attığın anda,\nCesaret büyür içinde."
+    },
+    {
+      "id": "ortak_077",
+      "theme": "degisim",
+      "text": "Dün geride, yol ileride,\nUmut saklı her yenide,\nKüçük bir değişiklik bile,\nBüyük ferahlık getirir."
+    },
+    {
+      "id": "ortak_078",
+      "theme": "degisim",
+      "text": "Eski düzen dar gelirse,\nYeni kapı seni bekler,\nKorkunu biraz bırakırsan,\nHayat başka renk gösterir."
+    },
+    {
+      "id": "ortak_079",
+      "theme": "degisim",
+      "text": "Bir şey biter, biri başlar,\nHayat böyle yolunu açar,\nGeçmişe tutunmak yerine,\nYeni gün sana kucak açar."
+    },
+    {
+      "id": "ortak_080",
+      "theme": "degisim",
+      "text": "Değişim sessizce gelir,\nÖnce şaşırtır, sonra güldürür,\nDoğru zamanda verdiğin karar,\nSeni daha iyi yere götürür."
+    },
+    {
+      "id": "ortak_081",
+      "theme": "sans_firsat",
+      "text": "Şans kapına vuracak,\nKüçük bir iz bırakacak,\nGözden kaçırmazsan onu,\nYeni bir yol açacak."
+    },
+    {
+      "id": "ortak_082",
+      "theme": "sans_firsat",
+      "text": "Bir fırsat var önünde,\nİlk bakışta küçük belki,\nDoğru anda tutarsan,\nBüyür gider günbegün."
+    },
+    {
+      "id": "ortak_083",
+      "theme": "sans_firsat",
+      "text": "Talih döner yavaşça,\nKapı açar usulca,\nHazır olduğun bir anda,\nFırsat gelir kolayca."
+    },
+    {
+      "id": "ortak_084",
+      "theme": "sans_firsat",
+      "text": "Beklemediğin bir teklif,\nGetirebilir yenilik,\nAcele etmeden bakarsan,\nİçinde vardır iyilik."
+    },
+    {
+      "id": "ortak_085",
+      "theme": "sans_firsat",
+      "text": "Şans bazen sessiz gelir,\nKendini hemen belli etmez,\nDikkatle baktığın yerde,\nYeni bir imkan belirir."
+    },
+    {
+      "id": "ortak_086",
+      "theme": "sans_firsat",
+      "text": "Bir tesadüf sanacaksın,\nSonra değer anlayacaksın,\nKarşına çıkan o fırsatla,\nYeni bir yola varacaksın."
+    },
+    {
+      "id": "ortak_087",
+      "theme": "sans_firsat",
+      "text": "Küçük kapı büyük yola,\nAçılır doğru zamanda,\nCesaretini toplarsan,\nKısmet kalır yanında."
+    },
+    {
+      "id": "ortak_088",
+      "theme": "sans_firsat",
+      "text": "Günün birinde bir teklif,\nDeğiştirir eski düzeni,\nİyi düşünüp seçtiğinde,\nSevindirir gönül seni."
+    },
+    {
+      "id": "ortak_089",
+      "theme": "sans_firsat",
+      "text": "Talihin dönmüş yüzüne,\nBir fırsat düşmüş önüne,\nGözün açık, aklın sakin,\nKısmet gelir kendi yönüne."
+    },
+    {
+      "id": "ortak_090",
+      "theme": "sans_firsat",
+      "text": "Bir adım var atılacak,\nŞans yanında duracak,\nVakti gelen bu fırsat,\nHayrına yol açacak."
+    },
+    {
+      "id": "ortak_091",
+      "theme": "karar_huzur",
+      "text": "İki yol var önünde,\nCevap saklı gönlünde,\nAcele etmeden seçersen,\nHuzur gelir sonunda."
+    },
+    {
+      "id": "ortak_092",
+      "theme": "karar_huzur",
+      "text": "Aklın başka, kalbin başka,\nKarar verme telaşla,\nBiraz zaman tanı kendine,\nDoğru yol çıkar karşına."
+    },
+    {
+      "id": "ortak_093",
+      "theme": "karar_huzur",
+      "text": "Düşündüğün konu ağır,\nAma cevabı yakın durur,\nGerçekleri açık görünce,\nKararın içini rahatlatır."
+    },
+    {
+      "id": "ortak_094",
+      "theme": "karar_huzur",
+      "text": "Bir seçim var kapında,\nHerkes söyler aklınca,\nKendi sesini duyduğunda,\nYolun belirir sonunda."
+    },
+    {
+      "id": "ortak_095",
+      "theme": "karar_huzur",
+      "text": "Kararsızlık yorar insan,\nHer söz olmaz doğru nişan,\nSana huzur veren yönü,\nSeçtiğinde biter duman."
+    },
+    {
+      "id": "ortak_096",
+      "theme": "karar_huzur",
+      "text": "Biraz bekle, acele yok,\nÖnünde seçenek de çok,\nGerçek yüzler belli olunca,\nDoğru karar uzak değil."
+    },
+    {
+      "id": "ortak_097",
+      "theme": "karar_huzur",
+      "text": "Aklındaki düğüm çözülür,\nBir işaret sana görünür,\nİçine sinen yolu seçince,\nGönlün sessizce rahatlar."
+    },
+    {
+      "id": "ortak_098",
+      "theme": "karar_huzur",
+      "text": "Her kapı aynı yere çıkmaz,\nHer söz kalbine yakışmaz,\nKendine dürüst olduğunda,\nDoğru seçim seni şaşırtmaz."
+    },
+    {
+      "id": "ortak_099",
+      "theme": "karar_huzur",
+      "text": "Bir kararın vakti gelir,\nÖnce korku, sonra ferahlık verir,\nNet bir adım attığında,\nİçindeki yük eksilir."
+    },
+    {
+      "id": "ortak_100",
+      "theme": "karar_huzur",
+      "text": "Yol ayrımı uzun sürmez,\nGerçek kendini gizlemez,\nBiraz sabır, açık bir zihin,\nSeni doğru yöne götürür."
+    },
+    {
+      "id": "ortak_101",
+      "theme": "gecmisten_haber",
+      "text": "Geçmişten bir ses gelir,\nEski bir isim belirir,\nUnutuldu sandığın konu,\nBir haberle geri gelir."
+    },
+    {
+      "id": "ortak_102",
+      "theme": "gecmisten_haber",
+      "text": "Dün kapanmış sanma hemen,\nBazı sözler kalır içten,\nGeçmişten gelecek mesaj,\nBir kapıyı açar yeniden."
+    },
+    {
+      "id": "ortak_103",
+      "theme": "gecmisten_haber",
+      "text": "Eski defter açılacak,\nBir konu daha konuşulacak,\nBu kez sözler daha sakin,\nNe olduğu anlaşılacak."
+    },
+    {
+      "id": "ortak_104",
+      "theme": "gecmisten_haber",
+      "text": "Bir hatıra canlanır,\nArdından haber alınır,\nGeçmişte yarım kalan söz,\nYakında tamamlanır."
+    },
+    {
+      "id": "ortak_105",
+      "theme": "gecmisten_haber",
+      "text": "Eski bir yol, eski bir iz,\nAma bu kez gönlün temiz,\nGelecek haber ne olursa,\nGerçeği görmen daha kolay."
+    },
+    {
+      "id": "ortak_106",
+      "theme": "gecmisten_haber",
+      "text": "Dünden kalan bir soru,\nBulacak yakınca sonu,\nGeçmişten gelecek sözle,\nNetleşecek asıl konu."
+    },
+    {
+      "id": "ortak_107",
+      "theme": "gecmisten_haber",
+      "text": "Bir zamanın sessizliği,\nBozulacak ansızın,\nEski birinden duyacağın,\nSöz şaşırtır biraz seni."
+    },
+    {
+      "id": "ortak_108",
+      "theme": "gecmisten_haber",
+      "text": "Geçmiş kapıyı çalarsa,\nHemen açma telaşla,\nÖnce dinle, sonra düşün,\nKarar ver sakin kafayla."
+    },
+    {
+      "id": "ortak_109",
+      "theme": "gecmisten_haber",
+      "text": "Eski bir bağ ses verir,\nZaman başka göz gösterir,\nGelen haber sana geçmişi,\nDaha doğru anlatabilir."
+    },
+    {
+      "id": "ortak_110",
+      "theme": "gecmisten_haber",
+      "text": "Bir isim düşer ekrana,\nHatıra gelir yanına,\nGeçmişten gelen bu haber,\nCevap verir bir soruna."
+    },
+    {
+      "id": "ortak_111",
+      "theme": "surpriz",
+      "text": "Günün sıradan başlasa,\nAkşam başka renk alsa,\nBeklemediğin bir sürpriz,\nYüzüne gülüş bıraksa."
+    },
+    {
+      "id": "ortak_112",
+      "theme": "surpriz",
+      "text": "Kapı çalar ansızın,\nŞaşırırsın bir an için,\nGelen küçük bir güzellik,\nİyi gelir gönlün için."
+    },
+    {
+      "id": "ortak_113",
+      "theme": "surpriz",
+      "text": "Bir hediye şart değil,\nGüzel söz de az değil,\nYakında hoş bir sürpriz,\nGününü değiştirebilir."
+    },
+    {
+      "id": "ortak_114",
+      "theme": "surpriz",
+      "text": "Beklemediğin bir anda,\nSevinç durur tam karşında,\nKüçük ama tatlı bir şey,\nKalır uzun süre aklında."
+    },
+    {
+      "id": "ortak_115",
+      "theme": "surpriz",
+      "text": "Rutin günün arasından,\nBir güzellik çıkar ansızın,\nHiç hesapta olmayan haber,\nGülümsetir seni birden."
+    },
+    {
+      "id": "ortak_116",
+      "theme": "surpriz",
+      "text": "Bir davet ya da bir söz,\nGününe getirir neşe,\nYakın zamanda bir sürpriz,\nRenk katacak bekleyişe."
+    },
+    {
+      "id": "ortak_117",
+      "theme": "surpriz",
+      "text": "Takvimde yok bu güzel an,\nAma kısmet bilir zaman,\nHazırlıksız yakalasa da,\nGülümsetir seni o an."
+    },
+    {
+      "id": "ortak_118",
+      "theme": "surpriz",
+      "text": "Sessiz giden gün değişir,\nBir haberle yüzün güler,\nBeklenmedik küçük mutluluk,\nİçindeki yükü siler."
+    },
+    {
+      "id": "ortak_119",
+      "theme": "surpriz",
+      "text": "Bir karşılaşma olabilir,\nBir güzel söz duyulabilir,\nYakında hiç beklemediğin,\nTatlı bir an yaşanabilir."
+    },
+    {
+      "id": "ortak_120",
+      "theme": "surpriz",
+      "text": "Sürprizin büyüğü şart değil,\nGönlü güldüren az değil,\nYakında gelecek bir güzellik,\nSana iyi gelir gönülden."
+    },
+    {
+      "id": "ortak_121",
+      "theme": "sabir_uyari",
+      "text": "Acele etme bu aralar,\nHer yol hemen açılmaz,\nBiraz sabır gösterirsen,\nYanlış adım atılmaz."
+    },
+    {
+      "id": "ortak_122",
+      "theme": "sabir_uyari",
+      "text": "Gözün gördüğüne inan,\nAma sözleri de tart bir an,\nHızlı verilen bir karar,\nSonradan olmasın ziyan."
+    },
+    {
+      "id": "ortak_123",
+      "theme": "sabir_uyari",
+      "text": "Bir iş varsa beklemede,\nZorlamanın yok faydası,\nVakti gelince açılır,\nKapalı duran kapısı."
+    },
+    {
+      "id": "ortak_124",
+      "theme": "sabir_uyari",
+      "text": "Her duyduğun doğru olmaz,\nHer gülene gönül konmaz,\nBiraz gözle, biraz düşün,\nSonra verilen karar şaşmaz."
+    },
+    {
+      "id": "ortak_125",
+      "theme": "sabir_uyari",
+      "text": "Önündeki sis dağılır,\nAma biraz zaman alır,\nŞimdi acele etmek yerine,\nBeklemek sana yarar."
+    },
+    {
+      "id": "ortak_126",
+      "theme": "sabir_uyari",
+      "text": "Bir söz duyup hemen üzülme,\nAslını bilmeden hükmetme,\nYakında gerçek ortaya çıkar,\nBoş yere yük yüklenme."
+    },
+    {
+      "id": "ortak_127",
+      "theme": "sabir_uyari",
+      "text": "Kısmet gelir ağır ağır,\nHızlı olan her şey hayır değil,\nAdımını sağlam atarsan,\nSonunda için rahat eder."
+    },
+    {
+      "id": "ortak_128",
+      "theme": "sabir_uyari",
+      "text": "Bir teklif seni çağırır,\nParlak görünür, aklı alır,\nDetayını iyi incelersen,\nDoğru karar seni korur."
+    },
+    {
+      "id": "ortak_129",
+      "theme": "sabir_uyari",
+      "text": "Gönlün ister hemen olsun,\nAma zaman da sözünü bulsun,\nBiraz sabır bu niyette,\nSonuç daha güzel olsun."
+    },
+    {
+      "id": "ortak_130",
+      "theme": "sabir_uyari",
+      "text": "Öfkeyle söylenen söz,\nGeri dönse de izi kalır,\nBu günlerde sakin kalmak,\nSana daha çok yarar."
+    },
+    {
+      "id": "ortak_131",
+      "theme": "yeni_baslangic",
+      "text": "Yeni bir gün doğuyor,\nEski yükler azalıyor,\nÖnünde temiz bir sayfa,\nSeni yeniden çağırıyor."
+    },
+    {
+      "id": "ortak_132",
+      "theme": "yeni_baslangic",
+      "text": "Bir başlangıç kapıda,\nCesaret olsun yanında,\nGeçmişi geride bırakıp,\nYürü kendi yolunda."
+    },
+    {
+      "id": "ortak_133",
+      "theme": "yeni_baslangic",
+      "text": "İlk adım küçük olabilir,\nAma yönünü değiştirebilir,\nBaşlayacağın yeni şey,\nSana umut getirebilir."
+    },
+    {
+      "id": "ortak_134",
+      "theme": "yeni_baslangic",
+      "text": "Dün ne olduysa dünde,\nYeni fırsat var önünde,\nKendine bir şans verdiğinde,\nFerahlık büyür içinde."
+    },
+    {
+      "id": "ortak_135",
+      "theme": "yeni_baslangic",
+      "text": "Bir sayfa çevir artık,\nÖnündeki yol aydınlık,\nBaşlangıç zor görünse de,\nSonu sana daha yakın."
+    },
+    {
+      "id": "ortak_136",
+      "theme": "yeni_baslangic",
+      "text": "Yeni düzen, yeni nefes,\nGönlündeki yükü hafifletir,\nKendin için attığın adım,\nSana yeniden güç verir."
+    },
+    {
+      "id": "ortak_137",
+      "theme": "yeni_baslangic",
+      "text": "Bir kapı açılır sabah,\nİçeri dolar taze hava,\nYeni başlayan bu dönem,\nSana ferahlık bırakır."
+    },
+    {
+      "id": "ortak_138",
+      "theme": "yeni_baslangic",
+      "text": "Küçük bir karar bugün,\nDeğiştirebilir yarını,\nBaşlamak için doğru vakit,\nYaklaştırır umutlarını."
+    },
+    {
+      "id": "ortak_139",
+      "theme": "yeni_baslangic",
+      "text": "Bir şeyleri baştan kurmak,\nBazen en doğru yol olur,\nCesaret edip başladığında,\nÖnün olur daha parlak."
+    },
+    {
+      "id": "ortak_140",
+      "theme": "yeni_baslangic",
+      "text": "Yeni yolun ilk gününde,\nKorku dursa da içinde,\nAdım attıkça anlarsın,\nDoğru yerdesin sonunda."
+    },
+    {
+      "id": "ortak_141",
+      "theme": "ic_ferahligi",
+      "text": "İçini sıkan bulutlar,\nDağılır ağır ağır,\nBir süredir taşıdığın yük,\nYakında hafif kalır."
+    },
+    {
+      "id": "ortak_142",
+      "theme": "ic_ferahligi",
+      "text": "Gecenin sonu sabah,\nDar günün sonu ferah,\nAklındaki ağır mesele,\nÇözülür yavaş yavaş."
+    },
+    {
+      "id": "ortak_143",
+      "theme": "ic_ferahligi",
+      "text": "Gönlün yorgun görünür,\nAma huzur sana yürür,\nBir haber ya da bir karar,\nİçindeki sisi siler."
+    },
+    {
+      "id": "ortak_144",
+      "theme": "ic_ferahligi",
+      "text": "Bir nefes al, gün döner,\nZaman ağır yükü böler,\nYakında seni yoran konu,\nEski gücünü yitirir."
+    },
+    {
+      "id": "ortak_145",
+      "theme": "ic_ferahligi",
+      "text": "İçinde düğüm ne varsa,\nÇözülür sıra sıra,\nKendine verdiğin zaman,\nDöner huzura sonra."
+    },
+    {
+      "id": "ortak_146",
+      "theme": "ic_ferahligi",
+      "text": "Daraldığın günler geçer,\nGönlün yeniden nefes alır,\nSakinlikle verdiğin karar,\nİçine ferahlık eker."
+    },
+    {
+      "id": "ortak_147",
+      "theme": "ic_ferahligi",
+      "text": "Yağmur diner, hava açar,\nİçindeki korku kaçar,\nBir süredir beklediğin huzur,\nYavaşça sana yaklaşır."
+    },
+    {
+      "id": "ortak_148",
+      "theme": "ic_ferahligi",
+      "text": "Her yük sonsuza kalmaz,\nHer gece karanlık olmaz,\nYakında duyacağın bir söz,\nİçindeki sıkıntıyı azaltır."
+    },
+    {
+      "id": "ortak_149",
+      "theme": "ic_ferahligi",
+      "text": "Gönlün biraz dinlenecek,\nAğır düşünce hafifleyecek,\nKendini yoran bir mesele,\nYakında geride kalacak."
+    },
+    {
+      "id": "ortak_150",
+      "theme": "ic_ferahligi",
+      "text": "Sabah gelir geceden,\nHuzur gelir beklemeden,\nİçini sıkan ne varsa,\nUzaklaşır yavaşça senden."
+    }
+  ],
+  "kadin": [
+    {
+      "id": "kadin_001",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Gece düşer pencerene,\nOnun aklı gelir sana,\nSustuğuna aldanma hiç,\nGönlü dönüyor yine sana."
+    },
+    {
+      "id": "kadin_002",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Yollar ayrı görünse de,\nAklı kalmış yine sende,\nSeni unuttum dese bile,\nİzin duruyor gönlünde."
+    },
+    {
+      "id": "kadin_003",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Bir adam var aklında,\nSen de varsın hatırında,\nSözü diline gelmese de,\nDüşüncesi yine sende."
+    },
+    {
+      "id": "kadin_004",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Sessizliği uzun sürer,\nAma aklı sana döner,\nGururundan konuşmasa,\nGönlü seni yine söyler."
+    },
+    {
+      "id": "kadin_005",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Gün içinde dalar gider,\nBir an seni hatır eder,\nSenden uzak durmuş olsa,\nAklı yine sana döner."
+    },
+    {
+      "id": "kadin_006",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Bakışında saklı bir iz,\nSözlerinde eksik bir ses,\nSeni düşündüğü bu ara,\nYakında olur daha net."
+    },
+    {
+      "id": "kadin_007",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Aranızda zaman geçmiş,\nAma izi hiç silinmemiş,\nO adamın gönlünde sen,\nSandığından çok yer etmiş."
+    },
+    {
+      "id": "kadin_008",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Kendi yoluna dönmüş gibi,\nUnuttu sanma seni,\nBir hatıran düşer aklına,\nGülümser sessizce yine."
+    },
+    {
+      "id": "kadin_009",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Geceleri düşünür seni,\nGündüz saklar bu halini,\nBir işaret verdiğinde,\nAnlarsın gönül dilini."
+    },
+    {
+      "id": "kadin_010",
+      "theme": "adam_seni_dusunuyor",
+      "text": "Kalbinde kalan bir adam,\nSenden yana kurar hayal,\nŞimdilik suskun görünür,\nAma aklı sende bu ara."
+    },
+    {
+      "id": "kadin_011",
+      "theme": "adamdan_mesaj",
+      "text": "Telefonun sessiz dursa,\nBir mesaj düşer ansızın,\nBeklediğin o adamdan,\nHaber gelir yakın zamanda."
+    },
+    {
+      "id": "kadin_012",
+      "theme": "adamdan_mesaj",
+      "text": "Ekranına bir isim düşer,\nİçindeki merak diner,\nKısa başlayan o mesaj,\nUzun bir sohbete döner."
+    },
+    {
+      "id": "kadin_013",
+      "theme": "adamdan_mesaj",
+      "text": "Sustu diye bitti sanma,\nBir haber var yolunda,\nO adamdan gelecek söz,\nKapı açar konuşmaya."
+    },
+    {
+      "id": "kadin_014",
+      "theme": "adamdan_mesaj",
+      "text": "Gece vakti bir mesaj,\nSende bırakır tatlı telaş,\nBeklediğin adam yazar,\nSessizlik yerini söze bırakır."
+    },
+    {
+      "id": "kadin_015",
+      "theme": "adamdan_mesaj",
+      "text": "Bir selamla başlar söz,\nArdından çoğalır her söz,\nOnun yazdığı o mesaj,\nİçindeki soruyu çözer."
+    },
+    {
+      "id": "kadin_016",
+      "theme": "adamdan_mesaj",
+      "text": "Telefon çalar bir akşam,\nTanıdık bir ses, tanıdık ad,\nSenden uzak duran adam,\nKonuşmak ister bu defa."
+    },
+    {
+      "id": "kadin_017",
+      "theme": "adamdan_mesaj",
+      "text": "Bir haber var yolunda,\nOnun sesi var sonunda,\nSeni merak ettiği belli,\nSözü gelir tam zamanında."
+    },
+    {
+      "id": "kadin_018",
+      "theme": "adamdan_mesaj",
+      "text": "Uzun süren sessizlikten,\nBir cümle çıkar içinden,\nO adamdan gelecek mesaj,\nUlaşır hiç beklemeden."
+    },
+    {
+      "id": "kadin_019",
+      "theme": "adamdan_mesaj",
+      "text": "Bir bildirim, bir küçük söz,\nArdından uzar sıcak söz,\nBeklediğin adam yazınca,\nDağılır içindeki köz."
+    },
+    {
+      "id": "kadin_020",
+      "theme": "adamdan_mesaj",
+      "text": "Düşünür, siler, yine yazar,\nCesareti zamanla artar,\nSana göndereceği mesaj,\nYakın zamanda yolunu bulur."
+    },
+    {
+      "id": "kadin_021",
+      "theme": "bulusma",
+      "text": "Aynı yerde yol kesişir,\nİki gönül biraz şaşırır,\nSevdiğin adamla buluşma,\nBeklediğinden iyi geçer."
+    },
+    {
+      "id": "kadin_022",
+      "theme": "bulusma",
+      "text": "Bir masa, iki fincan,\nSöylenecek sözler tamam,\nYüz yüze gelince onunla,\nDağılır aradaki duman."
+    },
+    {
+      "id": "kadin_023",
+      "theme": "bulusma",
+      "text": "Göz göze gelir bir anda,\nSöz kalmaz fazla arada,\nBeklediğin o buluşma,\nIsıtır gönlü sonunda."
+    },
+    {
+      "id": "kadin_024",
+      "theme": "bulusma",
+      "text": "Bir davet var yakında,\nOnun sözü var aklında,\nGittiğinde anlayacaksın,\nMesafe kalmaz aranızda."
+    },
+    {
+      "id": "kadin_025",
+      "theme": "bulusma",
+      "text": "Akşamüstü bir buluşma,\nKalbin düşer tatlı telaşa,\nO adamla konuşunca,\nSorular döner cevaba."
+    },
+    {
+      "id": "kadin_026",
+      "theme": "bulusma",
+      "text": "Bir yol seni ona taşır,\nİlk heyecan yavaş aşılır,\nBuluşmanın sonunda ise,\nAranız biraz yakınlaşır."
+    },
+    {
+      "id": "kadin_027",
+      "theme": "bulusma",
+      "text": "Saat gelir, gün belirir,\nBeklenen görüşme gerçekleşir,\nOnunla yüz yüze konuşmak,\nİçindeki yükü hafifletir."
+    },
+    {
+      "id": "kadin_028",
+      "theme": "bulusma",
+      "text": "Bir kahve, bir uzun sohbet,\nAranızda büyür sıcaklık,\nBeklediğin buluşma sana,\nGetirir yeni bir yakınlık."
+    },
+    {
+      "id": "kadin_029",
+      "theme": "bulusma",
+      "text": "Onunla aynı masada,\nSessizlik bile anlam taşır,\nSöylemediği bazı şeyler,\nBakışından sana ulaşır."
+    },
+    {
+      "id": "kadin_030",
+      "theme": "bulusma",
+      "text": "Buluşmanız kısa başlar,\nSohbet uzar, saat şaşar,\nGiderken aklında kalan,\nYeni bir görüşme olur."
+    },
+    {
+      "id": "kadin_031",
+      "theme": "barisma",
+      "text": "Kırgınlığın izi kalmış,\nAma sevgi eksilmemiş,\nBir özürle açılan kapı,\nBarışmaya yol vermiş."
+    },
+    {
+      "id": "kadin_032",
+      "theme": "barisma",
+      "text": "Gurur durmuş aranızda,\nSözler kalmış yarımda,\nO adamdan gelecek adım,\nYumuşatır kalbini de."
+    },
+    {
+      "id": "kadin_033",
+      "theme": "barisma",
+      "text": "Küs günlerin sonu yakın,\nİkiniz de biraz yorgun,\nSakin bir konuşma ile,\nBarış yolu açılır bugün."
+    },
+    {
+      "id": "kadin_034",
+      "theme": "barisma",
+      "text": "Bir yanlış söz büyümüş,\nİki gönlü de üzmüş,\nDürüstçe konuştuğunuzda,\nO düğüm hemen çözülür."
+    },
+    {
+      "id": "kadin_035",
+      "theme": "barisma",
+      "text": "Onun içinde pişmanlık,\nSende kalmış biraz kırgınlık,\nBir araya geldiğinizde,\nYerini alır yakınlık."
+    },
+    {
+      "id": "kadin_036",
+      "theme": "barisma",
+      "text": "Sessiz geçen günler biter,\nO adam bir adım eder,\nİçten gelen bir özürle,\nKırgınlığın yükü gider."
+    },
+    {
+      "id": "kadin_037",
+      "theme": "barisma",
+      "text": "Aranızda buz olsa da,\nAltında sevgi durur hâlâ,\nBir konuşma yeter bazen,\nİki gönlü yakın kılmaya."
+    },
+    {
+      "id": "kadin_038",
+      "theme": "barisma",
+      "text": "O da seni düşünmüş çok,\nAma gururu olmuş engel,\nYakında atacağı adım,\nBarışmaya olur bir yol."
+    },
+    {
+      "id": "kadin_039",
+      "theme": "barisma",
+      "text": "Kırılan yer onarılır,\nDoğru sözle bağ kurulur,\nİkiniz de açık olursanız,\nEski sıcaklık bulunur."
+    },
+    {
+      "id": "kadin_040",
+      "theme": "barisma",
+      "text": "Geçmiş sözler ağır gelir,\nAma zaman yükü siler,\nOnunla yapılacak konuşma,\nBarış için umut verir."
+    },
+    {
+      "id": "kadin_041",
+      "theme": "yeni_ask",
+      "text": "Yeni biri çıkar yola,\nGülüşü dokunur sana,\nBaşta sıradan sandığın,\nAdam yer eder aklında."
+    },
+    {
+      "id": "kadin_042",
+      "theme": "yeni_ask",
+      "text": "Bir tanışma var yakında,\nBaşta tesadüf sanılır,\nSohbet ilerledikçe onun,\nSıcaklığı kalır yanında."
+    },
+    {
+      "id": "kadin_043",
+      "theme": "yeni_ask",
+      "text": "Geçmiş yükün geride kalır,\nYeni bir adam sana yaklaşır,\nYavaş başlayan bu tanışma,\nGönlünde güzel yer açar."
+    },
+    {
+      "id": "kadin_044",
+      "theme": "yeni_ask",
+      "text": "Bir ortamda göz göze,\nSohbet uzar sözden söze,\nYeni tanıdığın o adam,\nİyi gelir kalbine."
+    },
+    {
+      "id": "kadin_045",
+      "theme": "yeni_ask",
+      "text": "Kalbin bir süredir susmuş,\nYeni umut kapı bulmuş,\nHayatına giren bir adam,\nSana yeniden ışık olmuş."
+    },
+    {
+      "id": "kadin_046",
+      "theme": "yeni_ask",
+      "text": "Bir selamla başlar belki,\nSonra büyür sohbetiniz,\nYeni tanışacağın adam,\nGönlüne düşebilir sessizce."
+    },
+    {
+      "id": "kadin_047",
+      "theme": "yeni_ask",
+      "text": "Acele etmez bu yeni bağ,\nAdım adım kurulur sağlam,\nSana yaklaşan o adam,\nGüven verir zamanla."
+    },
+    {
+      "id": "kadin_048",
+      "theme": "yeni_ask",
+      "text": "Tanımadığın bir yüz gelir,\nSonra tanıdık hissettirir,\nYeni başlayan bu hikâye,\nKalbini yeniden sevindirir."
+    },
+    {
+      "id": "kadin_049",
+      "theme": "yeni_ask",
+      "text": "Bir davet ya da kalabalık,\nGetirir sana yeni tanışıklık,\nOrada göreceğin bir adam,\nUyandırır tatlı merak."
+    },
+    {
+      "id": "kadin_050",
+      "theme": "yeni_ask",
+      "text": "Yeni bir yol, yeni insan,\nKalbin duyar tatlı heyecan,\nKarşına çıkacak bir adam,\nGetirir güzel bir başlangıç."
+    },
+    {
+      "id": "kadin_051",
+      "theme": "ciddi_adim",
+      "text": "Onun sözü ağırlaşır,\nGelecek planı konuşulur,\nHayatındaki o adam,\nSana daha ciddi yaklaşır."
+    },
+    {
+      "id": "kadin_052",
+      "theme": "ciddi_adim",
+      "text": "Bugün yarın derken artık,\nNiyeti olur daha açık,\nSeni planına katan adam,\nAtar somut bir adım."
+    },
+    {
+      "id": "kadin_053",
+      "theme": "ciddi_adim",
+      "text": "Gelecekten söz ederse,\nSeni içinde gösterirse,\nBil ki gönlündeki niyet,\nCiddiyete doğru gider."
+    },
+    {
+      "id": "kadin_054",
+      "theme": "ciddi_adim",
+      "text": "Söz değil, davranış gelir,\nSorumluluğu belli eder,\nHayatındaki o adam,\nİlişkiye emek verir."
+    },
+    {
+      "id": "kadin_055",
+      "theme": "ciddi_adim",
+      "text": "Birlikte yarın konuşulur,\nOrtak planlar kurulur,\nOnun sana karşı niyeti,\nYakında daha net olur."
+    },
+    {
+      "id": "kadin_056",
+      "theme": "ciddi_adim",
+      "text": "Ailesinden söz açarsa,\nHayatını sana anlatırsa,\nBu adamın gönlü artık,\nKalıcı bir bağ arar."
+    },
+    {
+      "id": "kadin_057",
+      "theme": "ciddi_adim",
+      "text": "Yavaş yürür ama sağlam,\nSözünü tutar adım adım,\nSenden yana olan niyeti,\nCiddileşir zamanla."
+    },
+    {
+      "id": "kadin_058",
+      "theme": "ciddi_adim",
+      "text": "Bir karar var gönlünde,\nSeni koymuş geleceğine,\nYakında yapacağı konuşma,\nIşık tutar ilişkinize."
+    },
+    {
+      "id": "kadin_059",
+      "theme": "ciddi_adim",
+      "text": "Küçük adımlar büyürken,\nGüven de güçlenir içten,\nOnun sana verdiği değer,\nDaha açık görünür sana."
+    },
+    {
+      "id": "kadin_060",
+      "theme": "ciddi_adim",
+      "text": "İlişkinin adı konur,\nBelirsizlik sona varır,\nSevdiğin adam bu defa,\nDaha net bir adım atar."
+    },
+    {
+      "id": "kadin_061",
+      "theme": "evlilik",
+      "text": "Bir yüzük sözü uzakta değil,\nGelecek artık belirsiz değil,\nSevdiğin adamın gönlünde,\nYuva fikri sessiz değil."
+    },
+    {
+      "id": "kadin_062",
+      "theme": "evlilik",
+      "text": "Aynı çatı konuşulur,\nOrtak yarınlar kurulur,\nİlişkinizde evlilik sözü,\nYakında dile gelir."
+    },
+    {
+      "id": "kadin_063",
+      "theme": "evlilik",
+      "text": "Aile, ev ve gelecek,\nKonuşulacak tek tek,\nOnun gönlündeki karar,\nSenden yana büyüyecek."
+    },
+    {
+      "id": "kadin_064",
+      "theme": "evlilik",
+      "text": "Bir teklif var ufukta,\nVakti saklı biraz daha,\nİlişkiniz sağlam giderse,\nYüzük düşer parmağına."
+    },
+    {
+      "id": "kadin_065",
+      "theme": "evlilik",
+      "text": "Yuva kurmak kolay değil,\nAma gönlü senden yana,\nSevdiğin adamın niyeti,\nGeçici bir heves değil."
+    },
+    {
+      "id": "kadin_066",
+      "theme": "evlilik",
+      "text": "Gelecekten söz açılır,\nİkinizin yolu birleşir,\nEvlilik konusu yakında,\nDaha ciddi konuşulur."
+    },
+    {
+      "id": "kadin_067",
+      "theme": "evlilik",
+      "text": "Bir masa, iki aile,\nKonuşmalar tatlı dille,\nİlişkinizin ilerisi,\nYuva fikrine dönebilir."
+    },
+    {
+      "id": "kadin_068",
+      "theme": "evlilik",
+      "text": "Yüzük değil yalnız mesele,\nBir ömürlük güven hele,\nOnun sana yaklaşımı,\nCiddileşir günbegün."
+    },
+    {
+      "id": "kadin_069",
+      "theme": "evlilik",
+      "text": "Bir karar olgunlaşıyor,\nGeleceğiniz konuşuluyor,\nSevdiğin adam gönlünde,\nYuva fikrini büyütüyor."
+    },
+    {
+      "id": "kadin_070",
+      "theme": "evlilik",
+      "text": "Bugün hayal olan yarın,\nOlabilir ortak yolun,\nİlişkiniz aynı yöndeyse,\nEvlilik görünür sonunda."
+    },
+    {
+      "id": "kadin_071",
+      "theme": "eski_sevgili",
+      "text": "Eski sevgiliden bir ses,\nGeçmişten gelir bir nefes,\nYarım kalan o konuşma,\nTekrar açılır bu kez."
+    },
+    {
+      "id": "kadin_072",
+      "theme": "eski_sevgili",
+      "text": "Bir isim düşer ekrana,\nHatıralar gelir yana,\nEski sevgilin bir sözle,\nDöner yeniden kapına."
+    },
+    {
+      "id": "kadin_073",
+      "theme": "eski_sevgili",
+      "text": "Geçmiş bitti sanılır,\nBazen sözler yarım kalır,\nEski sevgilinden haber,\nYakın zamanda alınır."
+    },
+    {
+      "id": "kadin_074",
+      "theme": "eski_sevgili",
+      "text": "O da geçmişi düşünmüş,\nBazı şeyleri fark etmiş,\nGeri dönmek isterse de,\nKarar sende kalmış şimdi."
+    },
+    {
+      "id": "kadin_075",
+      "theme": "eski_sevgili",
+      "text": "Eski sevda kapı çalar,\nKalbin önce şaşırır,\nSözünü dinle, acele etme,\nGerçek niyet sonra anlaşılır."
+    },
+    {
+      "id": "kadin_076",
+      "theme": "eski_sevgili",
+      "text": "Bir özür var dil ucunda,\nEski günler aklında,\nO adam tekrar gelirse,\nBak davranışına sonunda."
+    },
+    {
+      "id": "kadin_077",
+      "theme": "eski_sevgili",
+      "text": "Geçmişin izi silinmez,\nAma aynı hata çekilmez,\nEski sevgili dönerse,\nBu kez söz tek başına yetmez."
+    },
+    {
+      "id": "kadin_078",
+      "theme": "eski_sevgili",
+      "text": "Bir buluşma isteyebilir,\nYarım sözü tamamlayabilir,\nEski sevgilinle aranda,\nNet bir kapanış da gelebilir."
+    },
+    {
+      "id": "kadin_079",
+      "theme": "eski_sevgili",
+      "text": "Dönüş var mı diye düşünme,\nÖnce kendi gönlünü dinle,\nEski sevgiliden gelecek haber,\nSana gerçeği gösterebilir."
+    },
+    {
+      "id": "kadin_080",
+      "theme": "eski_sevgili",
+      "text": "Geçmişten biri yaklaşır,\nEski duygu biraz taşar,\nAma bu kez vereceğin karar,\nDaha akıllı, daha sağlam olur."
+    },
+    {
+      "id": "kadin_081",
+      "theme": "uzak_mesafe",
+      "text": "Aranızda yollar uzun,\nAma gönüller hâlâ yakın,\nUzakta olan o adamla,\nBuluşma vakti görünür."
+    },
+    {
+      "id": "kadin_082",
+      "theme": "uzak_mesafe",
+      "text": "Kilometreler arada,\nÖzlem durmuş iki yanda,\nBir tarih konuşulduğunda,\nMesafe küçülür bir anda."
+    },
+    {
+      "id": "kadin_083",
+      "theme": "uzak_mesafe",
+      "text": "Uzak şehir, aynı düşünce,\nSeni anar gece olunca,\nO adamla görüşme yolu,\nAçılır yavaşça gönlünce."
+    },
+    {
+      "id": "kadin_084",
+      "theme": "uzak_mesafe",
+      "text": "Telefonla geçen günler,\nBir buluşmayı bekler,\nUzakta olan sevdiğin,\nYaklaşmak için yol arar."
+    },
+    {
+      "id": "kadin_085",
+      "theme": "uzak_mesafe",
+      "text": "Mesafe zor, bağınız var,\nÖzlem büyür zaman kadar,\nYakında yapılacak plan,\nİkinizi bir araya taşır."
+    },
+    {
+      "id": "kadin_086",
+      "theme": "uzak_mesafe",
+      "text": "Bir bilet ya da bir tarih,\nOlur özleme bir çare,\nUzakta duran o adam,\nGelir sana doğru yine."
+    },
+    {
+      "id": "kadin_087",
+      "theme": "uzak_mesafe",
+      "text": "Yollar uzun görünse de,\nNiyet varsa çözüm gelir,\nOnunla kuracağın plan,\nMesafeyi biraz eritir."
+    },
+    {
+      "id": "kadin_088",
+      "theme": "uzak_mesafe",
+      "text": "Uzaklık sevdayı sınar,\nGerçek bağ yine dayanır,\nYakında yüz yüze gelmek,\nİkinize de iyi gelir."
+    },
+    {
+      "id": "kadin_089",
+      "theme": "uzak_mesafe",
+      "text": "Aynı göğe bakarsınız,\nFarklı şehirde kalırsınız,\nBir görüşme ayarlandığında,\nÖzlemi biraz azaltırsınız."
+    },
+    {
+      "id": "kadin_090",
+      "theme": "uzak_mesafe",
+      "text": "Mesafe sonsuz değil,\nBekleyiş de boş değil,\nO adamın sana gelişi,\nSandığından uzak değil."
+    },
+    {
+      "id": "kadin_091",
+      "theme": "gizli_hayran",
+      "text": "Seni uzaktan süzen var,\nGönlünde saklı sözü var,\nÇekingen duran bir adam,\nSana karşı merakı var."
+    },
+    {
+      "id": "kadin_092",
+      "theme": "gizli_hayran",
+      "text": "Bakışları ele verir,\nSözü çıkmaz, yüzü güler,\nYakınında bir adam var,\nSana ilgisini gizler."
+    },
+    {
+      "id": "kadin_093",
+      "theme": "gizli_hayran",
+      "text": "Ortak yerde denk gelirsiniz,\nKısa kısa konuşursunuz,\nO adamın gözlerinde,\nFarklı bir anlam bulursun."
+    },
+    {
+      "id": "kadin_094",
+      "theme": "gizli_hayran",
+      "text": "Seni görür, hali değişir,\nYaklaşınca sözü şaşırır,\nÇekingen bir hayran sana,\nYavaş yavaş görünür."
+    },
+    {
+      "id": "kadin_095",
+      "theme": "gizli_hayran",
+      "text": "Bir selamı fazla sürer,\nYanındayken yüzü güler,\nSana ilgisi olan adam,\nCesaret toplamayı bekler."
+    },
+    {
+      "id": "kadin_096",
+      "theme": "gizli_hayran",
+      "text": "Uzak durur ama bakar,\nBir bahane bulup yaklaşır,\nGizli tuttuğu o ilgi,\nYakında kendini açar."
+    },
+    {
+      "id": "kadin_097",
+      "theme": "gizli_hayran",
+      "text": "Yakın çevrende biri,\nSaklıyor senden ilgisini,\nBir sohbet uzadığı anda,\nAnlarsın gönül dilini."
+    },
+    {
+      "id": "kadin_098",
+      "theme": "gizli_hayran",
+      "text": "Adını sık duyan biri,\nSeni gizlice merak eder,\nOrtak bir tanıdık belki,\nYaklaştırır onu sana."
+    },
+    {
+      "id": "kadin_099",
+      "theme": "gizli_hayran",
+      "text": "Çekingenlik perde olmuş,\nAma gönlü sana durmuş,\nKüçük bir işaret verirsen,\nCesareti biraz bulur."
+    },
+    {
+      "id": "kadin_100",
+      "theme": "gizli_hayran",
+      "text": "Sana bakıp geri dönen,\nKonuşmaya fırsat gözeten,\nBir adam var çevrende,\nİlgisi yakında belirginleşir."
+    },
+    {
+      "id": "kadin_101",
+      "theme": "duygu_itirafi",
+      "text": "İçinde sakladığı söz,\nYakında dökülür dile,\nO adamın sana karşı,\nDuygusu olur daha açık."
+    },
+    {
+      "id": "kadin_102",
+      "theme": "duygu_itirafi",
+      "text": "Uzun zamandır susmuşsa,\nKalbini içinde tutmuşsa,\nBir konuşma sırasında,\nSana içini açabilir."
+    },
+    {
+      "id": "kadin_103",
+      "theme": "duygu_itirafi",
+      "text": "Bakış yetmez, söz de gelir,\nGizlenen his gün yüzü görür,\nSana karşı ne duyuyorsa,\nYakında daha açık söyler."
+    },
+    {
+      "id": "kadin_104",
+      "theme": "duygu_itirafi",
+      "text": "Bir akşam sakin bir anda,\nSöz döner sizin tarafa,\nO adam içinden geçeni,\nAnlatabilir sana da."
+    },
+    {
+      "id": "kadin_105",
+      "theme": "duygu_itirafi",
+      "text": "Gönlünde tuttuğu duygu,\nDil ucunda bekler durur,\nCesaretini topladığında,\nSana içten halini anlatır."
+    },
+    {
+      "id": "kadin_106",
+      "theme": "duygu_itirafi",
+      "text": "Senden yana kalbi varsa,\nBunu saklamak zorlaşır,\nYakında duyacağın bir söz,\nİçindeki soruyu azaltır."
+    },
+    {
+      "id": "kadin_107",
+      "theme": "duygu_itirafi",
+      "text": "Bir cümle var söyleyecek,\nBelki de seni şaşırtacak,\nO adamın saklı duygusu,\nYakında ortaya çıkacak."
+    },
+    {
+      "id": "kadin_108",
+      "theme": "duygu_itirafi",
+      "text": "Sözleri hep yarım kaldı,\nAma gönlü geri durmadı,\nBir fırsat bulduğu anda,\nDuygusunu senden saklamaz."
+    },
+    {
+      "id": "kadin_109",
+      "theme": "duygu_itirafi",
+      "text": "Geciken itiraf gelir,\nSessizliği bir söz deler,\nKalbindeki o adamın,\nNiyeti biraz daha belirir."
+    },
+    {
+      "id": "kadin_110",
+      "theme": "duygu_itirafi",
+      "text": "Bir bakışla başlayan hal,\nSöze döner zamanla,\nO adam sana içini,\nAçar uygun bir anda."
+    },
+    {
+      "id": "kadin_111",
+      "theme": "guven",
+      "text": "Güven yavaş kurulur,\nSözle değil işle bulunur,\nO adam gerçekten isterse,\nDavranışıyla belli olur."
+    },
+    {
+      "id": "kadin_112",
+      "theme": "guven",
+      "text": "Kalbin hemen inanmasın,\nAma korkuyla da kapanmasın,\nSana değer veren adam,\nBunu emekle anlatsın."
+    },
+    {
+      "id": "kadin_113",
+      "theme": "guven",
+      "text": "Bir söz güzel gelebilir,\nAma zaman gerçeği verir,\nOnun niyetini anlamak,\nDavranışından belirir."
+    },
+    {
+      "id": "kadin_114",
+      "theme": "guven",
+      "text": "Geçmiş seni incitmişse,\nYeni bağa gölge düşse,\nSabırla yaklaşan adam,\nGüvenini geri getirebilir."
+    },
+    {
+      "id": "kadin_115",
+      "theme": "guven",
+      "text": "Acele sevda kolay parlar,\nSağlam bağ yavaşça başlar,\nSana gerçekten değer veren,\nZor gününde yanında kalır."
+    },
+    {
+      "id": "kadin_116",
+      "theme": "guven",
+      "text": "Şüphe varsa konuş açık,\nSessizlik büyütmesin kırgınlık,\nDürüst kalan iki gönül,\nKurabilir sağlam yakınlık."
+    },
+    {
+      "id": "kadin_117",
+      "theme": "guven",
+      "text": "Onun sözüyle işi birse,\nGönlün biraz huzur bulur,\nGüven adım adım gelirse,\nİlişkin de sağlam olur."
+    },
+    {
+      "id": "kadin_118",
+      "theme": "guven",
+      "text": "Kalbini tamamen kapatma,\nAma her söze de aldanma,\nSana güven veren adamı,\nZaman zaten gösterecek."
+    },
+    {
+      "id": "kadin_119",
+      "theme": "guven",
+      "text": "Bir bağın temeli güven,\nGerisi gelir günbegün,\nO adam sabırlıysa eğer,\nİçin rahatlar bir gün."
+    },
+    {
+      "id": "kadin_120",
+      "theme": "guven",
+      "text": "Güven isteyen bir konu,\nYakında bulacak sonu,\nOnun göstereceği tavır,\nCevabını sana verir."
+    },
+    {
+      "id": "kadin_121",
+      "theme": "belirsizlik",
+      "text": "Aranızda adı konmamış,\nBir yakınlık yarım kalmış,\nYakında yapılacak konuşma,\nBu belirsizliği dağıtır."
+    },
+    {
+      "id": "kadin_122",
+      "theme": "belirsizlik",
+      "text": "Ne ileri ne de geri,\nYormuş seni bu bekleyiş,\nO adam net konuşunca,\nBelli olur ilişkinin yönü."
+    },
+    {
+      "id": "kadin_123",
+      "theme": "belirsizlik",
+      "text": "Seni seviyor mu diye,\nDüşünme her gece yine,\nDavranışları kısa sürede,\nCevap verir kalbine."
+    },
+    {
+      "id": "kadin_124",
+      "theme": "belirsizlik",
+      "text": "Bir ilişki askıda kalmış,\nSözler yarım, yol daralmış,\nAçık bir konuşma ile,\nNe olduğu anlaşılacak."
+    },
+    {
+      "id": "kadin_125",
+      "theme": "belirsizlik",
+      "text": "Beklemek seni yormuşsa,\nOnun tavrı karışmışsa,\nYakında net bir adım,\nSorularını azaltacak."
+    },
+    {
+      "id": "kadin_126",
+      "theme": "belirsizlik",
+      "text": "Söz var ama yönü yoksa,\nİlgi var da adı yoksa,\nBir konuşma şart bu defa,\nGerçek çıkar ortaya."
+    },
+    {
+      "id": "kadin_127",
+      "theme": "belirsizlik",
+      "text": "Kalbin bir cevap arıyor,\nOnun hali şaşırtıyor,\nÇok geçmeden bir davranış,\nAsıl niyeti anlatıyor."
+    },
+    {
+      "id": "kadin_128",
+      "theme": "belirsizlik",
+      "text": "Bugün yakın, yarın uzak,\nBu belirsizlik çok sürmez,\nO adam ya adım atar,\nYa da yolun olur açık."
+    },
+    {
+      "id": "kadin_129",
+      "theme": "belirsizlik",
+      "text": "Belirsizlik sis gibidir,\nGerçek gelince dağılır,\nOnun sana karşı tavrı,\nYakında açıkça anlaşılır."
+    },
+    {
+      "id": "kadin_130",
+      "theme": "belirsizlik",
+      "text": "Bir karar vakti gelecek,\nYa yaklaşacak ya gidecek,\nSenin için en hayırlısı,\nNetlik ile belirecek."
+    },
+    {
+      "id": "kadin_131",
+      "theme": "aileyle_tanisma",
+      "text": "Aile sözü açılırsa,\nSeni anlatır yanında,\nHayatındaki o adam,\nSana yer açar dünyasında."
+    },
+    {
+      "id": "kadin_132",
+      "theme": "aileyle_tanisma",
+      "text": "Bir davet var hanesine,\nYakınları da yanında,\nSeni tanıştırma niyeti,\nCiddiyet taşır aslında."
+    },
+    {
+      "id": "kadin_133",
+      "theme": "aileyle_tanisma",
+      "text": "Ailesinden söz ederse,\nSeni onlara anlatırsa,\nİlişkinin geleceğini,\nDaha ciddi düşünüyor."
+    },
+    {
+      "id": "kadin_134",
+      "theme": "aileyle_tanisma",
+      "text": "Bir sofra var yakınlarda,\nSen de varsın o masada,\nOnun ailesiyle tanışmak,\nYeni bir eşik olur ilişkide."
+    },
+    {
+      "id": "kadin_135",
+      "theme": "aileyle_tanisma",
+      "text": "Seni saklamak istemez,\nHayatından ayrı görmez,\nYakın çevresine kattıkça,\nNiyeti daha netleşir."
+    },
+    {
+      "id": "kadin_136",
+      "theme": "aileyle_tanisma",
+      "text": "Bir tanışma gündeme gelir,\nİlk heyecan sonra geçer,\nAilesinin sıcak tavrı,\nİçine ferahlık verir."
+    },
+    {
+      "id": "kadin_137",
+      "theme": "aileyle_tanisma",
+      "text": "Aile kapısı açılır,\nSözler sıcakça paylaşılır,\nBu tanışma ilişkinizde,\nKalıcı bir iz bırakır."
+    },
+    {
+      "id": "kadin_138",
+      "theme": "aileyle_tanisma",
+      "text": "Onun dünyasına girmek,\nYakınlarını da tanımak,\nİlişkinizin ciddiyetini,\nDaha açık gösterebilir."
+    },
+    {
+      "id": "kadin_139",
+      "theme": "aileyle_tanisma",
+      "text": "Bir büyükten güzel söz,\nİçini rahatlatır biraz,\nAileyle kurulacak bağ,\nİlişkinize güç katar."
+    },
+    {
+      "id": "kadin_140",
+      "theme": "aileyle_tanisma",
+      "text": "Yuva sözü geçiyorsa,\nAile konusu açılıyorsa,\nSevdiğin adam seni artık,\nHayatına daha çok katıyor."
+    },
+    {
+      "id": "kadin_141",
+      "theme": "kiskanclik_uyari",
+      "text": "Kıskançlık biraz artmış,\nSözler gereksiz uzamış,\nGüvenle konuşulmazsa,\nGönül boş yere yorulur."
+    },
+    {
+      "id": "kadin_142",
+      "theme": "kiskanclik_uyari",
+      "text": "Bir isim girerse araya,\nHemen düşme kuruntuya,\nÖnce gerçeği öğren sonra,\nKarar ver sakin kafayla."
+    },
+    {
+      "id": "kadin_143",
+      "theme": "kiskanclik_uyari",
+      "text": "Onun kıskanç bakışları,\nSevginin tek ölçüsü değil,\nSınırlarını açık söyle,\nHuzur bundan daha değerli."
+    },
+    {
+      "id": "kadin_144",
+      "theme": "kiskanclik_uyari",
+      "text": "Bir yanlış anlama varsa,\nBüyütme konuşmadan asla,\nAçık edilen gerçekler,\nDağıtır şüpheyi zamanla."
+    },
+    {
+      "id": "kadin_145",
+      "theme": "kiskanclik_uyari",
+      "text": "Kıskançlık tatlı başlar,\nFazlası gönlü daraltır,\nSana değer veren adam,\nSınırına saygı da duyar."
+    },
+    {
+      "id": "kadin_146",
+      "theme": "kiskanclik_uyari",
+      "text": "Bir söz kulağına gelir,\nİçini biraz daraltır,\nDoğrusunu ondan duyunca,\nKuruntun yerini gerçeğe bırakır."
+    },
+    {
+      "id": "kadin_147",
+      "theme": "kiskanclik_uyari",
+      "text": "Başkasının lafıyla,\nBozulmasın güzel denge,\nOnunla açık konuşursan,\nGerçek olan çıkar öne."
+    },
+    {
+      "id": "kadin_148",
+      "theme": "kiskanclik_uyari",
+      "text": "Şüphe ateş gibi yanar,\nGerçek gelince söner,\nSana karşı dürüst olan,\nGözünü kaçırmadan söyler."
+    },
+    {
+      "id": "kadin_149",
+      "theme": "kiskanclik_uyari",
+      "text": "Kıskançlık varsa iki yanda,\nGüven olsun tam ortada,\nBirbirinizi dinlerseniz,\nSorun kalmaz aranızda."
+    },
+    {
+      "id": "kadin_150",
+      "theme": "kiskanclik_uyari",
+      "text": "Bir sınır çizmek gerek,\nSevgi kadar saygı gerek,\nOnun tavrı seni yorarsa,\nBunu söylemek sana gerek."
+    },
+    {
+      "id": "kadin_151",
+      "theme": "iliski_canlanma",
+      "text": "Soğuyan söz ısınacak,\nAradaki bağ canlanacak,\nBirlikte geçirilen zaman,\nYakınlığı artıracak."
+    },
+    {
+      "id": "kadin_152",
+      "theme": "iliski_canlanma",
+      "text": "Günler aynı gidiyorsa,\nHeyecan biraz bittiyse,\nKüçük bir plan ikinize,\nYeniden neşe getirecek."
+    },
+    {
+      "id": "kadin_153",
+      "theme": "iliski_canlanma",
+      "text": "Bir akşam uzun konuşun,\nEski güzel günü bulun,\nİkinizin de emeğiyle,\nBağınızı taze tutun."
+    },
+    {
+      "id": "kadin_154",
+      "theme": "iliski_canlanma",
+      "text": "Sessizleşen sevgi değil,\nBelki yalnız yorgun gönül,\nBiraz zaman ayırınca,\nYakınlık geri gelebilir."
+    },
+    {
+      "id": "kadin_155",
+      "theme": "iliski_canlanma",
+      "text": "Aranızdaki eski neşe,\nDönebilir yavaş yavaş,\nO adam da çaba gösterirse,\nİlişki bulur yeni heyecan."
+    },
+    {
+      "id": "kadin_156",
+      "theme": "iliski_canlanma",
+      "text": "Birlikte yeni bir plan,\nGetirir taze heyecan,\nUzun süren durgunluğun,\nArdından gelir güzel zaman."
+    },
+    {
+      "id": "kadin_157",
+      "theme": "iliski_canlanma",
+      "text": "Sözler azalmış olabilir,\nAma bağ hâlâ sürebilir,\nSamimi bir buluşma,\nİkinize de iyi gelebilir."
+    },
+    {
+      "id": "kadin_158",
+      "theme": "iliski_canlanma",
+      "text": "Biraz uzak kalmış gönül,\nYakınlaşır günbegün,\nİkiniz de isterse eğer,\nİlişki yeniden büyür."
+    },
+    {
+      "id": "kadin_159",
+      "theme": "iliski_canlanma",
+      "text": "Eski sıcaklık kaybolmaz,\nÜzerine emek konursa,\nBir küçük jest, içten söz,\nAradaki yolu kısaltır."
+    },
+    {
+      "id": "kadin_160",
+      "theme": "iliski_canlanma",
+      "text": "Durgun su yeniden akar,\nKalp kalbe yolunu bulur,\nİlişkinizde yeni dönem,\nEmek verdikçe kurulur."
+    },
+    {
+      "id": "kadin_161",
+      "theme": "beklenen_adim",
+      "text": "Uzun zamandır bekledin,\nOnun adımını gözledin,\nYakında küçük bir hareket,\nCevap verir bekleyişine."
+    },
+    {
+      "id": "kadin_162",
+      "theme": "beklenen_adim",
+      "text": "Bir adım var geciken,\nGurur yüzünden bekleyen,\nO adam cesaret bulunca,\nSana doğru yönelir yeniden."
+    },
+    {
+      "id": "kadin_163",
+      "theme": "beklenen_adim",
+      "text": "Söz çok oldu, sıra işte,\nGerçek niyet belli işte,\nAtacağı somut adımla,\nGöreceksin ne istediğini."
+    },
+    {
+      "id": "kadin_164",
+      "theme": "beklenen_adim",
+      "text": "Beklemek sabrını yormuş,\nAma konu sona varmış,\nO adam ya yaklaşacak,\nYa da önünü açacak."
+    },
+    {
+      "id": "kadin_165",
+      "theme": "beklenen_adim",
+      "text": "Bir davet ya da bir arama,\nOlabilir ilk yaklaşma,\nBeklediğin o küçük adım,\nBaşlatabilir konuşmayı."
+    },
+    {
+      "id": "kadin_166",
+      "theme": "beklenen_adim",
+      "text": "Geri durmuş uzun zaman,\nŞimdi yaklaşır yavaşça,\nOnun senden yana tavrı,\nYakında olur daha açık."
+    },
+    {
+      "id": "kadin_167",
+      "theme": "beklenen_adim",
+      "text": "Beklediğin cevap değil,\nBu kez davranış gelecek,\nO adamın atacağı adım,\nSana çok şey söyleyecek."
+    },
+    {
+      "id": "kadin_168",
+      "theme": "beklenen_adim",
+      "text": "Kapı aralık duruyor,\nO da bunu biliyor,\nBir adım atma cesareti,\nİçinde yavaş büyüyor."
+    },
+    {
+      "id": "kadin_169",
+      "theme": "beklenen_adim",
+      "text": "Gün gelir bekleyiş biter,\nSöz değil hareket gelir,\nSenden yana bir niyeti varsa,\nYakında bunu gösterir."
+    },
+    {
+      "id": "kadin_170",
+      "theme": "beklenen_adim",
+      "text": "Adım gecikmiş olabilir,\nAma tamamen kaybolmuş değil,\nYakında göreceğin tavır,\nSana net bir yön verir."
+    },
+    {
+      "id": "kadin_171",
+      "theme": "ortak_arkadas",
+      "text": "Bir dost meclisi kurulacak,\nYeni bir yüz tanınacak,\nOrtak arkadaş aracılığıyla,\nGüzel bir sohbet başlayacak."
+    },
+    {
+      "id": "kadin_172",
+      "theme": "ortak_arkadas",
+      "text": "Bir davet var çevrenden,\nBir adam çıkar içinden,\nTanışmanız doğal başlar,\nMerak doğar iki yanda."
+    },
+    {
+      "id": "kadin_173",
+      "theme": "ortak_arkadas",
+      "text": "Bir arkadaş olur vesile,\nBir tanışma gelir dile,\nOrtak çevrede gördüğün adam,\nYaklaşabilir tatlı dille."
+    },
+    {
+      "id": "kadin_174",
+      "theme": "ortak_arkadas",
+      "text": "Bir masa, birkaç tanıdık,\nArasında doğar yakınlık,\nOrada göreceğin bir adam,\nBırakabilir hoş bir merak."
+    },
+    {
+      "id": "kadin_175",
+      "theme": "ortak_arkadas",
+      "text": "Dostların bir araya gelir,\nYeni bir sohbet belirir,\nTanışacağın o adamla,\nMuhabbet kolay ilerler."
+    },
+    {
+      "id": "kadin_176",
+      "theme": "ortak_arkadas",
+      "text": "Ortak biri adını anar,\nBir tanışmaya kapı açar,\nİlk görüşte değil belki,\nSohbet ettikçe bağ başlar."
+    },
+    {
+      "id": "kadin_177",
+      "theme": "ortak_arkadas",
+      "text": "Kalabalık bir buluşma,\nGetirebilir yeni tanışma,\nOrtak arkadaş sayesinde,\nBir adam girer aklına."
+    },
+    {
+      "id": "kadin_178",
+      "theme": "ortak_arkadas",
+      "text": "Bir arkadaş olur köprü,\nİki yabancıyı yakın eder,\nTanışacağın o adamın,\nGülüşü aklında kalabilir."
+    },
+    {
+      "id": "kadin_179",
+      "theme": "ortak_arkadas",
+      "text": "Çevrenden gelecek davet,\nAşk için olur bir vesile,\nOrtak tanıdığın bir adam,\nYaklaşır sana ilgiyle."
+    },
+    {
+      "id": "kadin_180",
+      "theme": "ortak_arkadas",
+      "text": "Bir sohbet başlar dostça,\nSonra başka hale döner,\nOrtak çevreden bir adam,\nSana karşı merak besler."
+    },
+    {
+      "id": "kadin_181",
+      "theme": "is_cevresi_tanisma",
+      "text": "İş yolunda bir tanışma,\nDöner tatlı bir bakışa,\nProfesyonel başlayan söz,\nKalbine dokunur sonra."
+    },
+    {
+      "id": "kadin_182",
+      "theme": "is_cevresi_tanisma",
+      "text": "Bir toplantı ya da görev,\nGetirir yeni bir sebep,\nOrada tanıdığın adam,\nSana karşı duyar merak."
+    },
+    {
+      "id": "kadin_183",
+      "theme": "is_cevresi_tanisma",
+      "text": "İş çevrende yeni bir yüz,\nSohbeti sıcak, tavrı içten,\nZamanla aranızda doğar,\nİşten başka güzel bir söz."
+    },
+    {
+      "id": "kadin_184",
+      "theme": "is_cevresi_tanisma",
+      "text": "Bir proje, bir ortak konu,\nYaklaştırır iki yolu,\nTanışacağın o adamın,\nSıcaklığı kalır aklında."
+    },
+    {
+      "id": "kadin_185",
+      "theme": "is_cevresi_tanisma",
+      "text": "Masalar arasında bakış,\nSonra gelir küçük tanış,\nİş yerinden bir adamla,\nDoğabilir tatlı yakınlık."
+    },
+    {
+      "id": "kadin_186",
+      "theme": "is_cevresi_tanisma",
+      "text": "Bir iş vesilesi olur,\nMuhabbet kendiliğinden kurulur,\nOrada gördüğün bir adam,\nAklında biraz uzun durur."
+    },
+    {
+      "id": "kadin_187",
+      "theme": "is_cevresi_tanisma",
+      "text": "Kariyer yolunda giderken,\nBir gönül işi gelişirken,\nİş çevrende tanışacağın,\nAdam sana sıcak gelir."
+    },
+    {
+      "id": "kadin_188",
+      "theme": "is_cevresi_tanisma",
+      "text": "Bir eğitim ya da toplantı,\nGetirir yeni bir tanışıklık,\nO ortamda gördüğün adam,\nUyandırabilir tatlı merak."
+    },
+    {
+      "id": "kadin_189",
+      "theme": "is_cevresi_tanisma",
+      "text": "İş sözüyle başlar konu,\nSonra uzar sohbet yolu,\nBir adamın sana ilgisi,\nZaman içinde belli olur."
+    },
+    {
+      "id": "kadin_190",
+      "theme": "is_cevresi_tanisma",
+      "text": "Profesyonel sınır korunur,\nAma sıcak bir bağ da doğar,\nİş çevresindeki bir adam,\nUygun zamanda adım atar."
+    },
+    {
+      "id": "kadin_191",
+      "theme": "seyahat_ask",
+      "text": "Bir yol var ikiniz için,\nYeni anı, yeni sevinç,\nSevdiğin adamla çıkacağın,\nYol yakınlaştırır sizi."
+    },
+    {
+      "id": "kadin_192",
+      "theme": "seyahat_ask",
+      "text": "Bir bilet, iki kişilik,\nGetirir güzel yenilik,\nBirlikte çıkılan bu yol,\nAranızda kurar yakınlık."
+    },
+    {
+      "id": "kadin_193",
+      "theme": "seyahat_ask",
+      "text": "Şehir değişir, hava değişir,\nİki gönül de rahat eder,\nSevdiğin adamla bir kaçamak,\nİlişkinize iyi gelir."
+    },
+    {
+      "id": "kadin_194",
+      "theme": "seyahat_ask",
+      "text": "Yol boyunca uzun sohbet,\nYaklaştırır birbirinize,\nBirlikte çıkacağınız gezi,\nBırakır güzel bir anı."
+    },
+    {
+      "id": "kadin_195",
+      "theme": "seyahat_ask",
+      "text": "Bir plan var uzaklara,\nİkiniz için yeni hava,\nBu yolculuk aranızdaki,\nBağınızı biraz daha güçlendirir."
+    },
+    {
+      "id": "kadin_196",
+      "theme": "seyahat_ask",
+      "text": "Kısa bir tatil olabilir,\nGüzel bir fırsat gelebilir,\nSevdiğin adamla geçirilen,\nZaman ilişkinizi besler."
+    },
+    {
+      "id": "kadin_197",
+      "theme": "seyahat_ask",
+      "text": "Yola çıkınca dert azalır,\nSohbet çoğalır, bağ ısınır,\nBirlikte göreceğiniz yer,\nKalbinizde iz bırakır."
+    },
+    {
+      "id": "kadin_198",
+      "theme": "seyahat_ask",
+      "text": "Bir hafta sonu planı,\nGetirir tatlı heyecanı,\nOnunla çıkacağın yolun,\nSonu güzel anılarla dolu."
+    },
+    {
+      "id": "kadin_199",
+      "theme": "seyahat_ask",
+      "text": "Yol üstünde bir karar,\nİkinizin geleceğine dair,\nBirlikte geçirilen zaman,\nSize yeni fikirler sunar."
+    },
+    {
+      "id": "kadin_200",
+      "theme": "seyahat_ask",
+      "text": "Uzak yer şart değil aslında,\nYan yana olmak yeter bazen,\nSevdiğin adamla bir gezi,\nAranızdaki bağı tazeler."
+    },
+    {
+      "id": "kadin_201",
+      "theme": "surpriz_jest",
+      "text": "Bir küçük jest kapıda,\nSevdiğin adam yanında,\nBeklemediğin bir anda,\nGülümseme kalır yüzünde."
+    },
+    {
+      "id": "kadin_202",
+      "theme": "surpriz_jest",
+      "text": "Bazen çiçek, bazen bir söz,\nBazen yalnız sıcak bir göz,\nO adamdan gelen bir jest,\nGününü güzelleştirir."
+    },
+    {
+      "id": "kadin_203",
+      "theme": "surpriz_jest",
+      "text": "Bir plan saklıyor olabilir,\nSeni şaşırtmak isteyebilir,\nYakında yapacağı küçük şey,\nKalbine iyi gelebilir."
+    },
+    {
+      "id": "kadin_204",
+      "theme": "surpriz_jest",
+      "text": "Ansızın gelen bir davet,\nOlur gönlüne zarif jest,\nSeni düşündüğünü gösteren,\nBir hareket gelir bu kez."
+    },
+    {
+      "id": "kadin_205",
+      "theme": "surpriz_jest",
+      "text": "Bir not, bir kahve, bir çiçek,\nMesele büyük olmak değil,\nSeni aklında tuttuğunu,\nKüçük bir şey gösterebilir."
+    },
+    {
+      "id": "kadin_206",
+      "theme": "surpriz_jest",
+      "text": "Özel bir gün beklemeden,\nSana gelir içten bir jest,\nO adamın davranışıyla,\nYüzün güler bu sefer."
+    },
+    {
+      "id": "kadin_207",
+      "theme": "surpriz_jest",
+      "text": "Sürpriz küçük ama sıcak,\nGönlünde bırakır bir iz,\nSana değer verdiği belli,\nİnce jesti bunu söyler."
+    },
+    {
+      "id": "kadin_208",
+      "theme": "surpriz_jest",
+      "text": "Bir akşam plan değişebilir,\nGüzel bir davet gelebilir,\nOnun hazırladığı sürpriz,\nSeni gerçekten sevindirebilir."
+    },
+    {
+      "id": "kadin_209",
+      "theme": "surpriz_jest",
+      "text": "Sözden önce davranış,\nKalbine tatlı dokunur,\nO adamdan beklemediğin,\nBir incelik görünebilir."
+    },
+    {
+      "id": "kadin_210",
+      "theme": "surpriz_jest",
+      "text": "Bir şey getirir belki,\nBelki yalnız yanında olur,\nSana yaptığı o küçük jest,\nDuygusunu açıkça duyurur."
+    },
+    {
+      "id": "kadin_211",
+      "theme": "telefon_arama",
+      "text": "Bir akşam telefon çalar,\nTanıdık sesi seni sarar,\nUzun süredir susan adam,\nBu kez konuşmayı uzatır."
+    },
+    {
+      "id": "kadin_212",
+      "theme": "telefon_arama",
+      "text": "Mesaj değil, sesi gelir,\nİçindeki merakı siler,\nO adamın yapacağı arama,\nBirçok şeyi netleştirir."
+    },
+    {
+      "id": "kadin_213",
+      "theme": "telefon_arama",
+      "text": "Numarası düşer ekrana,\nKalbin hızlanır bir anda,\nBeklediğin o telefon,\nBir konuşma açar aranızda."
+    },
+    {
+      "id": "kadin_214",
+      "theme": "telefon_arama",
+      "text": "Bir arama var gecikmiş,\nSöylenecek söz birikmiş,\nTelefonun öte yanında,\nO adam seni özlemiş."
+    },
+    {
+      "id": "kadin_215",
+      "theme": "telefon_arama",
+      "text": "Sesini duymak isterse,\nBir bahaneyle ararsa,\nKonuşma ilerledikçe,\nAsıl niyeti açıklar."
+    },
+    {
+      "id": "kadin_216",
+      "theme": "telefon_arama",
+      "text": "Telefon suskun kalmayacak,\nBir ses seni şaşırtacak,\nBeklediğin adam arayınca,\nİçindeki yük azalacak."
+    },
+    {
+      "id": "kadin_217",
+      "theme": "telefon_arama",
+      "text": "Kısa konuşma diye başlar,\nSonra konu uzar gider,\nOnun sesindeki sıcaklık,\nSana çok şey hissettirir."
+    },
+    {
+      "id": "kadin_218",
+      "theme": "telefon_arama",
+      "text": "Bir arama yol açabilir,\nKırgınlığı azaltabilir,\nO adamla yapılacak konuşma,\nYeni bir sayfa açabilir."
+    },
+    {
+      "id": "kadin_219",
+      "theme": "telefon_arama",
+      "text": "Gece ya da gün ortası,\nDuyulur onun sıcak sesi,\nHazırlıksız yakalasa da,\nİyi gelir konuşması."
+    },
+    {
+      "id": "kadin_220",
+      "theme": "telefon_arama",
+      "text": "Bir ses var sana yakın,\nTelefon kadar yakın,\nO adamdan gelecek arama,\nSandığından daha yakın."
+    },
+    {
+      "id": "kadin_221",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Yüz yüze bir söz gelecek,\nGözler gerçeği söyleyecek,\nO adam sakladığı şeyi,\nBu kez açıkça anlatacak."
+    },
+    {
+      "id": "kadin_222",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Mesaj yetmez bazı söze,\nSöz gerekir göz göze,\nOnunla yapacağın konuşma,\nCevap verir gönlüne."
+    },
+    {
+      "id": "kadin_223",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Bir masada karşı karşıya,\nSöz döner asıl konuya,\nO adam niyetini anlatır,\nBakışı dönmez başka yana."
+    },
+    {
+      "id": "kadin_224",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Gözlerini kaçırsa da,\nSözünü yarım bıraksa da,\nSonunda söyleyeceği şey,\nNetlik getirir sana."
+    },
+    {
+      "id": "kadin_225",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Bir açıklama bekliyorsan,\nYakında fırsat doğacak,\nYüz yüze geldiğiniz anda,\nGerçek daha açık olacak."
+    },
+    {
+      "id": "kadin_226",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Saklanan konu açılır,\nİki taraf da rahatlar,\nOnun doğrudan söyleyeceği,\nSöz kafanı toparlar."
+    },
+    {
+      "id": "kadin_227",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Bir buluşma, ciddi hava,\nAma sonu olur ferah,\nO adamın açıklaması,\nGötürür şüpheyi uzağa."
+    },
+    {
+      "id": "kadin_228",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Yarım cümle kalmayacak,\nBu kez konu kapanacak,\nYüz yüze konuştuğunuzda,\nNe istediği anlaşılacak."
+    },
+    {
+      "id": "kadin_229",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Kalbin cevabı ararken,\nOnun sözü gelir içten,\nGöz göze yapılan konuşma,\nDaha gerçek olur her şeyden."
+    },
+    {
+      "id": "kadin_230",
+      "theme": "yuz_yuze_aciklama",
+      "text": "Açık konuşma vakti gelir,\nSessizlik yerini söze verir,\nO adamla yüz yüze konuşmak,\nSana gereken yönü verir."
+    },
+    {
+      "id": "kadin_231",
+      "theme": "sadakat_netlik",
+      "text": "Söz değil, tutarlılık gerek,\nSevgi kadar sadakat gerek,\nO adamın gerçek niyeti,\nDavranışında görünecek."
+    },
+    {
+      "id": "kadin_232",
+      "theme": "sadakat_netlik",
+      "text": "Kalbin güven arıyorsa,\nGözün davranış arıyorsa,\nOnun sana bağlılığı,\nZamanla açıkça anlaşılır."
+    },
+    {
+      "id": "kadin_233",
+      "theme": "sadakat_netlik",
+      "text": "Bir soru varsa içinde,\nSaklama kendi gönlünde,\nAçık konuştuğunuz zaman,\nNetlik gelir ilişkine."
+    },
+    {
+      "id": "kadin_234",
+      "theme": "sadakat_netlik",
+      "text": "Sadakat lafta kalmaz,\nGizli olan uzun saklanmaz,\nO adam dürüst davranırsa,\nİçindeki kuşku azalır."
+    },
+    {
+      "id": "kadin_235",
+      "theme": "sadakat_netlik",
+      "text": "Sana verdiği sözleri,\nTutuyor mu bak bir bir,\nGerçek bağlılık gösteriş değil,\nSüreklilikle belli olur."
+    },
+    {
+      "id": "kadin_236",
+      "theme": "sadakat_netlik",
+      "text": "Bir konuda kuşku varsa,\nGerçeği sor doğrudan,\nOnun vereceği açık cevap,\nRahatlatır seni zamanla."
+    },
+    {
+      "id": "kadin_237",
+      "theme": "sadakat_netlik",
+      "text": "Güven varsa bağ büyür,\nŞüphe varsa gönül yorulur,\nYakında göreceğin tavır,\nNe kadar bağlı olduğunu gösterir."
+    },
+    {
+      "id": "kadin_238",
+      "theme": "sadakat_netlik",
+      "text": "Bir ilişki net olmalı,\nİki taraf da açık kalmalı,\nOnun sana olan sadakati,\nDavranışla anlaşılmalı."
+    },
+    {
+      "id": "kadin_239",
+      "theme": "sadakat_netlik",
+      "text": "Gönlünü yoran soru biter,\nGerçek kendini belli eder,\nO adamın tutarlı hali,\nSana güven verir."
+    },
+    {
+      "id": "kadin_240",
+      "theme": "sadakat_netlik",
+      "text": "Ne saklı ne yarım söz,\nBu ilişkide gereken öz,\nAçıklık geldiği zaman,\nKalbin de bulur huzur."
+    },
+    {
+      "id": "kadin_241",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Eski sevda geride kalır,\nKalbin yavaşça toparlanır,\nYeni bir adamın gelişi,\nSana yeniden umut verir."
+    },
+    {
+      "id": "kadin_242",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Bir kapı kapandı diye,\nGönlünü kapatma sevgiye,\nGeçmişten sonra yeni biri,\nİyi gelebilir kalbine."
+    },
+    {
+      "id": "kadin_243",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Kırık yerler zamanla iyileşir,\nYeni gün başka his getirir,\nHayatına girecek bir adam,\nSana güveni hatırlatabilir."
+    },
+    {
+      "id": "kadin_244",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Eski hikâye son bulmuş,\nYeni sayfa seni bulmuş,\nKalbine yaklaşan biri,\nGülüşünü geri getirmiş."
+    },
+    {
+      "id": "kadin_245",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Geçmişin yükü azalır,\nYeni tanışma yol alır,\nBu kez daha sakin sevgi,\nİçinde güzel yer açar."
+    },
+    {
+      "id": "kadin_246",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Ayrılık seni yormuşsa,\nGönlün biraz kapanmışsa,\nYeni bir adamın sabrı,\nSana iyi gelebilir sonra."
+    },
+    {
+      "id": "kadin_247",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Eskiyi ölçü yapma artık,\nYeni yolun olsun açık,\nKarşına çıkacak bir adam,\nBaşka bir sevgi anlatır."
+    },
+    {
+      "id": "kadin_248",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Kalbin dinlenmiş biraz,\nŞimdi yeniden gelsin yaz,\nYeni başlayan bir yakınlık,\nGetirebilir sana huzur."
+    },
+    {
+      "id": "kadin_249",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Geçmişi geride bırak,\nYeni olana alan aç,\nSana yaklaşan bir adam,\nKalbinde güzel iz bırakabilir."
+    },
+    {
+      "id": "kadin_250",
+      "theme": "ayrilik_sonrasi_yeni_baslangic",
+      "text": "Bir son her zaman son değil,\nYeni başlangıç uzak değil,\nDoğru adamla karşılaşınca,\nKalbin yeniden umutlanır."
+    }
+  ],
+  "erkek": [
+    {
+      "id": "erkek_001",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Gece düşer pencerene,\nOnun aklı gelir sana,\nSustuğuna aldanma hiç,\nGönlü dönüyor yine sana."
+    },
+    {
+      "id": "erkek_002",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Yollar ayrı görünse de,\nAklı kalmış yine sende,\nSeni unuttum dese bile,\nİzin duruyor gönlünde."
+    },
+    {
+      "id": "erkek_003",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Bir kadın var aklında,\nSen de varsın hatırında,\nSözü diline gelmese de,\nDüşüncesi yine sende."
+    },
+    {
+      "id": "erkek_004",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Sessizliği uzun sürer,\nAma aklı sana döner,\nGururundan konuşmasa,\nGönlü seni yine söyler."
+    },
+    {
+      "id": "erkek_005",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Gün içinde dalar gider,\nBir an seni hatır eder,\nSenden uzak durmuş olsa,\nAklı yine sana döner."
+    },
+    {
+      "id": "erkek_006",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Bakışında saklı bir iz,\nSözlerinde eksik bir ses,\nSeni düşündüğü bu ara,\nYakında olur daha net."
+    },
+    {
+      "id": "erkek_007",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Aranızda zaman geçmiş,\nAma izi hiç silinmemiş,\nO kadının gönlünde sen,\nSandığından çok yer etmiş."
+    },
+    {
+      "id": "erkek_008",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Kendi yoluna dönmüş gibi,\nUnuttu sanma seni,\nBir hatıran düşer aklına,\nGülümser sessizce yine."
+    },
+    {
+      "id": "erkek_009",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Geceleri düşünür seni,\nGündüz saklar bu halini,\nBir işaret verdiğinde,\nAnlarsın gönül dilini."
+    },
+    {
+      "id": "erkek_010",
+      "theme": "kadin_seni_dusunuyor",
+      "text": "Kalbinde kalan bir kadın,\nSenden yana kurar hayal,\nŞimdilik suskun görünür,\nAma aklı sende bu ara."
+    },
+    {
+      "id": "erkek_011",
+      "theme": "kadindan_mesaj",
+      "text": "Telefonun sessiz dursa,\nBir mesaj düşer ansızın,\nBeklediğin o kadından,\nHaber gelir yakın zamanda."
+    },
+    {
+      "id": "erkek_012",
+      "theme": "kadindan_mesaj",
+      "text": "Ekranına bir isim düşer,\nİçindeki merak diner,\nKısa başlayan o mesaj,\nUzun bir sohbete döner."
+    },
+    {
+      "id": "erkek_013",
+      "theme": "kadindan_mesaj",
+      "text": "Sustu diye bitti sanma,\nBir haber var yolunda,\nO kadından gelecek söz,\nKapı açar konuşmaya."
+    },
+    {
+      "id": "erkek_014",
+      "theme": "kadindan_mesaj",
+      "text": "Gece vakti bir mesaj,\nSende bırakır tatlı telaş,\nBeklediğin kadın yazar,\nSessizlik yerini söze bırakır."
+    },
+    {
+      "id": "erkek_015",
+      "theme": "kadindan_mesaj",
+      "text": "Bir selamla başlar söz,\nArdından çoğalır her söz,\nOnun yazdığı o mesaj,\nİçindeki soruyu çözer."
+    },
+    {
+      "id": "erkek_016",
+      "theme": "kadindan_mesaj",
+      "text": "Telefon çalar bir akşam,\nTanıdık bir ses, tanıdık ad,\nSenden uzak duran kadın,\nKonuşmak ister bu defa."
+    },
+    {
+      "id": "erkek_017",
+      "theme": "kadindan_mesaj",
+      "text": "Bir haber var yolunda,\nOnun sesi var sonunda,\nSeni merak ettiği belli,\nSözü gelir tam zamanında."
+    },
+    {
+      "id": "erkek_018",
+      "theme": "kadindan_mesaj",
+      "text": "Uzun süren sessizlikten,\nBir cümle çıkar içinden,\nO kadından gelecek mesaj,\nUlaşır hiç beklemeden."
+    },
+    {
+      "id": "erkek_019",
+      "theme": "kadindan_mesaj",
+      "text": "Bir bildirim, bir küçük söz,\nArdından uzar sıcak söz,\nBeklediğin kadın yazınca,\nDağılır içindeki köz."
+    },
+    {
+      "id": "erkek_020",
+      "theme": "kadindan_mesaj",
+      "text": "Düşünür, siler, yine yazar,\nCesareti zamanla artar,\nSana göndereceği mesaj,\nYakın zamanda yolunu bulur."
+    },
+    {
+      "id": "erkek_021",
+      "theme": "bulusma",
+      "text": "Aynı yerde yol kesişir,\nİki gönül biraz şaşırır,\nSevdiğin kadınla buluşma,\nBeklediğinden iyi geçer."
+    },
+    {
+      "id": "erkek_022",
+      "theme": "bulusma",
+      "text": "Bir masa, iki fincan,\nSöylenecek sözler tamam,\nYüz yüze gelince onunla,\nDağılır aradaki duman."
+    },
+    {
+      "id": "erkek_023",
+      "theme": "bulusma",
+      "text": "Göz göze gelir bir anda,\nSöz kalmaz fazla arada,\nBeklediğin o buluşma,\nIsıtır gönlü sonunda."
+    },
+    {
+      "id": "erkek_024",
+      "theme": "bulusma",
+      "text": "Bir davet var yakında,\nOnun sözü var aklında,\nGittiğinde anlayacaksın,\nMesafe kalmaz aranızda."
+    },
+    {
+      "id": "erkek_025",
+      "theme": "bulusma",
+      "text": "Akşamüstü bir buluşma,\nKalbin düşer tatlı telaşa,\nO kadınla konuşunca,\nSorular döner cevaba."
+    },
+    {
+      "id": "erkek_026",
+      "theme": "bulusma",
+      "text": "Bir yol seni ona taşır,\nİlk heyecan yavaş aşılır,\nBuluşmanın sonunda ise,\nAranız biraz yakınlaşır."
+    },
+    {
+      "id": "erkek_027",
+      "theme": "bulusma",
+      "text": "Saat gelir, gün belirir,\nBeklenen görüşme gerçekleşir,\nOnunla yüz yüze konuşmak,\nİçindeki yükü hafifletir."
+    },
+    {
+      "id": "erkek_028",
+      "theme": "bulusma",
+      "text": "Bir kahve, bir uzun sohbet,\nAranızda büyür sıcaklık,\nBeklediğin buluşma sana,\nGetirir yeni bir yakınlık."
+    },
+    {
+      "id": "erkek_029",
+      "theme": "bulusma",
+      "text": "Onunla aynı masada,\nSessizlik bile anlam taşır,\nSöylemediği bazı şeyler,\nBakışından sana ulaşır."
+    },
+    {
+      "id": "erkek_030",
+      "theme": "bulusma",
+      "text": "Buluşmanız kısa başlar,\nSohbet uzar, saat şaşar,\nGiderken aklında kalan,\nYeni bir görüşme olur."
+    },
+    {
+      "id": "erkek_031",
+      "theme": "barisma",
+      "text": "Kırgınlığın izi kalmış,\nAma sevgi eksilmemiş,\nBir özürle açılan kapı,\nBarışmaya yol vermiş."
+    },
+    {
+      "id": "erkek_032",
+      "theme": "barisma",
+      "text": "Gurur durmuş aranızda,\nSözler kalmış yarımda,\nO kadından gelecek adım,\nYumuşatır kalbini de."
+    },
+    {
+      "id": "erkek_033",
+      "theme": "barisma",
+      "text": "Küs günlerin sonu yakın,\nİkiniz de biraz yorgun,\nSakin bir konuşma ile,\nBarış yolu açılır bugün."
+    },
+    {
+      "id": "erkek_034",
+      "theme": "barisma",
+      "text": "Bir yanlış söz büyümüş,\nİki gönlü de üzmüş,\nDürüstçe konuştuğunuzda,\nO düğüm hemen çözülür."
+    },
+    {
+      "id": "erkek_035",
+      "theme": "barisma",
+      "text": "Onun içinde pişmanlık,\nSende kalmış biraz kırgınlık,\nBir araya geldiğinizde,\nYerini alır yakınlık."
+    },
+    {
+      "id": "erkek_036",
+      "theme": "barisma",
+      "text": "Sessiz geçen günler biter,\nO kadın bir adım eder,\nİçten gelen bir özürle,\nKırgınlığın yükü gider."
+    },
+    {
+      "id": "erkek_037",
+      "theme": "barisma",
+      "text": "Aranızda buz olsa da,\nAltında sevgi durur hâlâ,\nBir konuşma yeter bazen,\nİki gönlü yakın kılmaya."
+    },
+    {
+      "id": "erkek_038",
+      "theme": "barisma",
+      "text": "O da seni düşünmüş çok,\nAma gururu olmuş engel,\nYakında atacağı adım,\nBarışmaya olur bir yol."
+    },
+    {
+      "id": "erkek_039",
+      "theme": "barisma",
+      "text": "Kırılan yer onarılır,\nDoğru sözle bağ kurulur,\nİkiniz de açık olursanız,\nEski sıcaklık bulunur."
+    },
+    {
+      "id": "erkek_040",
+      "theme": "barisma",
+      "text": "Geçmiş sözler ağır gelir,\nAma zaman yükü siler,\nOnunla yapılacak konuşma,\nBarış için umut verir."
+    },
+    {
+      "id": "erkek_041",
+      "theme": "yeni_ask",
+      "text": "Yeni biri çıkar yola,\nGülüşü dokunur sana,\nBaşta sıradan sandığın,\nKadın yer eder aklında."
+    },
+    {
+      "id": "erkek_042",
+      "theme": "yeni_ask",
+      "text": "Bir tanışma var yakında,\nBaşta tesadüf sanılır,\nSohbet ilerledikçe onun,\nSıcaklığı kalır yanında."
+    },
+    {
+      "id": "erkek_043",
+      "theme": "yeni_ask",
+      "text": "Geçmiş yükün geride kalır,\nYeni bir kadın sana yaklaşır,\nYavaş başlayan bu tanışma,\nGönlünde güzel yer açar."
+    },
+    {
+      "id": "erkek_044",
+      "theme": "yeni_ask",
+      "text": "Bir ortamda göz göze,\nSohbet uzar sözden söze,\nYeni tanıdığın o kadın,\nİyi gelir kalbine."
+    },
+    {
+      "id": "erkek_045",
+      "theme": "yeni_ask",
+      "text": "Kalbin bir süredir susmuş,\nYeni umut kapı bulmuş,\nHayatına giren bir kadın,\nSana yeniden ışık olmuş."
+    },
+    {
+      "id": "erkek_046",
+      "theme": "yeni_ask",
+      "text": "Bir selamla başlar belki,\nSonra büyür sohbetiniz,\nYeni tanışacağın kadın,\nGönlüne düşebilir sessizce."
+    },
+    {
+      "id": "erkek_047",
+      "theme": "yeni_ask",
+      "text": "Acele etmez bu yeni bağ,\nAdım adım kurulur sağlam,\nSana yaklaşan o kadın,\nGüven verir zamanla."
+    },
+    {
+      "id": "erkek_048",
+      "theme": "yeni_ask",
+      "text": "Tanımadığın bir yüz gelir,\nSonra tanıdık hissettirir,\nYeni başlayan bu hikâye,\nKalbini yeniden sevindirir."
+    },
+    {
+      "id": "erkek_049",
+      "theme": "yeni_ask",
+      "text": "Bir davet ya da kalabalık,\nGetirir sana yeni tanışıklık,\nOrada göreceğin bir kadın,\nUyandırır tatlı merak."
+    },
+    {
+      "id": "erkek_050",
+      "theme": "yeni_ask",
+      "text": "Yeni bir yol, yeni insan,\nKalbin duyar tatlı heyecan,\nKarşına çıkacak bir kadın,\nGetirir güzel bir başlangıç."
+    },
+    {
+      "id": "erkek_051",
+      "theme": "ciddi_adim",
+      "text": "Onun sözü ağırlaşır,\nGelecek planı konuşulur,\nHayatındaki o kadın,\nSana daha ciddi yaklaşır."
+    },
+    {
+      "id": "erkek_052",
+      "theme": "ciddi_adim",
+      "text": "Bugün yarın derken artık,\nNiyeti olur daha açık,\nSeni planına katan kadın,\nAtar somut bir adım."
+    },
+    {
+      "id": "erkek_053",
+      "theme": "ciddi_adim",
+      "text": "Gelecekten söz ederse,\nSeni içinde gösterirse,\nBil ki gönlündeki niyet,\nCiddiyete doğru gider."
+    },
+    {
+      "id": "erkek_054",
+      "theme": "ciddi_adim",
+      "text": "Söz değil, davranış gelir,\nSorumluluğu belli eder,\nHayatındaki o kadın,\nİlişkiye emek verir."
+    },
+    {
+      "id": "erkek_055",
+      "theme": "ciddi_adim",
+      "text": "Birlikte yarın konuşulur,\nOrtak planlar kurulur,\nOnun sana karşı niyeti,\nYakında daha net olur."
+    },
+    {
+      "id": "erkek_056",
+      "theme": "ciddi_adim",
+      "text": "Ailesinden söz açarsa,\nHayatını sana anlatırsa,\nBu kadının gönlü artık,\nKalıcı bir bağ arar."
+    },
+    {
+      "id": "erkek_057",
+      "theme": "ciddi_adim",
+      "text": "Yavaş yürür ama sağlam,\nSözünü tutar adım adım,\nSenden yana olan niyeti,\nCiddileşir zamanla."
+    },
+    {
+      "id": "erkek_058",
+      "theme": "ciddi_adim",
+      "text": "Bir karar var gönlünde,\nSeni koymuş geleceğine,\nYakında yapacağı konuşma,\nIşık tutar ilişkinize."
+    },
+    {
+      "id": "erkek_059",
+      "theme": "ciddi_adim",
+      "text": "Küçük adımlar büyürken,\nGüven de güçlenir içten,\nOnun sana verdiği değer,\nDaha açık görünür sana."
+    },
+    {
+      "id": "erkek_060",
+      "theme": "ciddi_adim",
+      "text": "İlişkinin adı konur,\nBelirsizlik sona varır,\nSevdiğin kadın bu defa,\nDaha net bir adım atar."
+    },
+    {
+      "id": "erkek_061",
+      "theme": "evlilik",
+      "text": "Bir yüzük sözü uzakta değil,\nGelecek artık belirsiz değil,\nSevdiğin kadının gönlünde,\nYuva fikri sessiz değil."
+    },
+    {
+      "id": "erkek_062",
+      "theme": "evlilik",
+      "text": "Aynı çatı konuşulur,\nOrtak yarınlar kurulur,\nİlişkinizde evlilik sözü,\nYakında dile gelir."
+    },
+    {
+      "id": "erkek_063",
+      "theme": "evlilik",
+      "text": "Aile, ev ve gelecek,\nKonuşulacak tek tek,\nOnun gönlündeki karar,\nSenden yana büyüyecek."
+    },
+    {
+      "id": "erkek_064",
+      "theme": "evlilik",
+      "text": "Bir teklif var ufukta,\nVakti saklı biraz daha,\nİlişkiniz sağlam giderse,\nYüzük düşer parmağına."
+    },
+    {
+      "id": "erkek_065",
+      "theme": "evlilik",
+      "text": "Yuva kurmak kolay değil,\nAma gönlü senden yana,\nSevdiğin kadının niyeti,\nGeçici bir heves değil."
+    },
+    {
+      "id": "erkek_066",
+      "theme": "evlilik",
+      "text": "Gelecekten söz açılır,\nİkinizin yolu birleşir,\nEvlilik konusu yakında,\nDaha ciddi konuşulur."
+    },
+    {
+      "id": "erkek_067",
+      "theme": "evlilik",
+      "text": "Bir masa, iki aile,\nKonuşmalar tatlı dille,\nİlişkinizin ilerisi,\nYuva fikrine dönebilir."
+    },
+    {
+      "id": "erkek_068",
+      "theme": "evlilik",
+      "text": "Yüzük değil yalnız mesele,\nBir ömürlük güven hele,\nOnun sana yaklaşımı,\nCiddileşir günbegün."
+    },
+    {
+      "id": "erkek_069",
+      "theme": "evlilik",
+      "text": "Bir karar olgunlaşıyor,\nGeleceğiniz konuşuluyor,\nSevdiğin kadın gönlünde,\nYuva fikrini büyütüyor."
+    },
+    {
+      "id": "erkek_070",
+      "theme": "evlilik",
+      "text": "Bugün hayal olan yarın,\nOlabilir ortak yolun,\nİlişkiniz aynı yöndeyse,\nEvlilik görünür sonunda."
+    },
+    {
+      "id": "erkek_071",
+      "theme": "eski_sevgili",
+      "text": "Eski sevgiliden bir ses,\nGeçmişten gelir bir nefes,\nYarım kalan o konuşma,\nTekrar açılır bu kez."
+    },
+    {
+      "id": "erkek_072",
+      "theme": "eski_sevgili",
+      "text": "Bir isim düşer ekrana,\nHatıralar gelir yana,\nEski sevgilin bir sözle,\nDöner yeniden kapına."
+    },
+    {
+      "id": "erkek_073",
+      "theme": "eski_sevgili",
+      "text": "Geçmiş bitti sanılır,\nBazen sözler yarım kalır,\nEski sevgilinden haber,\nYakın zamanda alınır."
+    },
+    {
+      "id": "erkek_074",
+      "theme": "eski_sevgili",
+      "text": "O da geçmişi düşünmüş,\nBazı şeyleri fark etmiş,\nGeri dönmek isterse de,\nKarar sende kalmış şimdi."
+    },
+    {
+      "id": "erkek_075",
+      "theme": "eski_sevgili",
+      "text": "Eski sevda kapı çalar,\nKalbin önce şaşırır,\nSözünü dinle, acele etme,\nGerçek niyet sonra anlaşılır."
+    },
+    {
+      "id": "erkek_076",
+      "theme": "eski_sevgili",
+      "text": "Bir özür var dil ucunda,\nEski günler aklında,\nO kadın tekrar gelirse,\nBak davranışına sonunda."
+    },
+    {
+      "id": "erkek_077",
+      "theme": "eski_sevgili",
+      "text": "Geçmişin izi silinmez,\nAma aynı hata çekilmez,\nEski sevgili dönerse,\nBu kez söz tek başına yetmez."
+    },
+    {
+      "id": "erkek_078",
+      "theme": "eski_sevgili",
+      "text": "Bir buluşma isteyebilir,\nYarım sözü tamamlayabilir,\nEski sevgilinle aranda,\nNet bir kapanış da gelebilir."
+    },
+    {
+      "id": "erkek_079",
+      "theme": "eski_sevgili",
+      "text": "Dönüş var mı diye düşünme,\nÖnce kendi gönlünü dinle,\nEski sevgiliden gelecek haber,\nSana gerçeği gösterebilir."
+    },
+    {
+      "id": "erkek_080",
+      "theme": "eski_sevgili",
+      "text": "Geçmişten biri yaklaşır,\nEski duygu biraz taşar,\nAma bu kez vereceğin karar,\nDaha akıllı, daha sağlam olur."
+    },
+    {
+      "id": "erkek_081",
+      "theme": "uzak_mesafe",
+      "text": "Aranızda yollar uzun,\nAma gönüller hâlâ yakın,\nUzakta olan o kadınla,\nBuluşma vakti görünür."
+    },
+    {
+      "id": "erkek_082",
+      "theme": "uzak_mesafe",
+      "text": "Kilometreler arada,\nÖzlem durmuş iki yanda,\nBir tarih konuşulduğunda,\nMesafe küçülür bir anda."
+    },
+    {
+      "id": "erkek_083",
+      "theme": "uzak_mesafe",
+      "text": "Uzak şehir, aynı düşünce,\nSeni anar gece olunca,\nO kadınla görüşme yolu,\nAçılır yavaşça gönlünce."
+    },
+    {
+      "id": "erkek_084",
+      "theme": "uzak_mesafe",
+      "text": "Telefonla geçen günler,\nBir buluşmayı bekler,\nUzakta olan sevdiğin,\nYaklaşmak için yol arar."
+    },
+    {
+      "id": "erkek_085",
+      "theme": "uzak_mesafe",
+      "text": "Mesafe zor, bağınız var,\nÖzlem büyür zaman kadar,\nYakında yapılacak plan,\nİkinizi bir araya taşır."
+    },
+    {
+      "id": "erkek_086",
+      "theme": "uzak_mesafe",
+      "text": "Bir bilet ya da bir tarih,\nOlur özleme bir çare,\nUzakta duran o kadın,\nGelir sana doğru yine."
+    },
+    {
+      "id": "erkek_087",
+      "theme": "uzak_mesafe",
+      "text": "Yollar uzun görünse de,\nNiyet varsa çözüm gelir,\nOnunla kuracağın plan,\nMesafeyi biraz eritir."
+    },
+    {
+      "id": "erkek_088",
+      "theme": "uzak_mesafe",
+      "text": "Uzaklık sevdayı sınar,\nGerçek bağ yine dayanır,\nYakında yüz yüze gelmek,\nİkinize de iyi gelir."
+    },
+    {
+      "id": "erkek_089",
+      "theme": "uzak_mesafe",
+      "text": "Aynı göğe bakarsınız,\nFarklı şehirde kalırsınız,\nBir görüşme ayarlandığında,\nÖzlemi biraz azaltırsınız."
+    },
+    {
+      "id": "erkek_090",
+      "theme": "uzak_mesafe",
+      "text": "Mesafe sonsuz değil,\nBekleyiş de boş değil,\nO kadının sana gelişi,\nSandığından uzak değil."
+    },
+    {
+      "id": "erkek_091",
+      "theme": "gizli_hayran",
+      "text": "Seni uzaktan süzen var,\nGönlünde saklı sözü var,\nÇekingen duran bir kadın,\nSana karşı merakı var."
+    },
+    {
+      "id": "erkek_092",
+      "theme": "gizli_hayran",
+      "text": "Bakışları ele verir,\nSözü çıkmaz, yüzü güler,\nYakınında bir kadın var,\nSana ilgisini gizler."
+    },
+    {
+      "id": "erkek_093",
+      "theme": "gizli_hayran",
+      "text": "Ortak yerde denk gelirsiniz,\nKısa kısa konuşursunuz,\nO kadının gözlerinde,\nFarklı bir anlam bulursun."
+    },
+    {
+      "id": "erkek_094",
+      "theme": "gizli_hayran",
+      "text": "Seni görür, hali değişir,\nYaklaşınca sözü şaşırır,\nÇekingen bir hayran sana,\nYavaş yavaş görünür."
+    },
+    {
+      "id": "erkek_095",
+      "theme": "gizli_hayran",
+      "text": "Bir selamı fazla sürer,\nYanındayken yüzü güler,\nSana ilgisi olan kadın,\nCesaret toplamayı bekler."
+    },
+    {
+      "id": "erkek_096",
+      "theme": "gizli_hayran",
+      "text": "Uzak durur ama bakar,\nBir bahane bulup yaklaşır,\nGizli tuttuğu o ilgi,\nYakında kendini açar."
+    },
+    {
+      "id": "erkek_097",
+      "theme": "gizli_hayran",
+      "text": "Yakın çevrende biri,\nSaklıyor senden ilgisini,\nBir sohbet uzadığı anda,\nAnlarsın gönül dilini."
+    },
+    {
+      "id": "erkek_098",
+      "theme": "gizli_hayran",
+      "text": "Adını sık duyan biri,\nSeni gizlice merak eder,\nOrtak bir tanıdık belki,\nYaklaştırır onu sana."
+    },
+    {
+      "id": "erkek_099",
+      "theme": "gizli_hayran",
+      "text": "Çekingenlik perde olmuş,\nAma gönlü sana durmuş,\nKüçük bir işaret verirsen,\nCesareti biraz bulur."
+    },
+    {
+      "id": "erkek_100",
+      "theme": "gizli_hayran",
+      "text": "Sana bakıp geri dönen,\nKonuşmaya fırsat gözeten,\nBir kadın var çevrende,\nİlgisi yakında belirginleşir."
+    }
+  ]
+}
