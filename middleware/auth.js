@@ -46,6 +46,9 @@ export default async function auth(req, res, next) {
 
       isPremium: userData?.isPremium === true,
 
+      // Firebase Admin tarafından imzalanmış özel claim; istemciden alınmaz.
+      isModerator: decoded.moderator === true || decoded.admin === true,
+
       dailyCoin:
         typeof userData?.dailyCoin === "number"
           ? userData.dailyCoin
