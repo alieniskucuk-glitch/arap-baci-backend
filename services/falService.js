@@ -3,6 +3,10 @@ import {
   extractText,
   imagesToOpenAI
 } from "../utils/helpers.js";
+import {
+  emptyFalDilemma,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
 
 /* =========================
    PROMPTS (KORUNDU)
@@ -303,6 +307,7 @@ export async function generateFalInsights(
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 
@@ -419,6 +424,19 @@ themes boş dizi olsun.
 - Tema yoksa
 primaryTheme null olsun.
 
+İKİLEM KURALLARI:
+
+- Fal metninde açıkça kararsız kalınan iki makul seçenek veya karar konusu
+  yoksa ikilem üretme.
+- hasDilemma bu durumda false, question/option1/option2 null olsun.
+- Yalnızca fal metninde gerçekten bulunan bağlama dayanan bir ikilem varsa
+  hasDilemma true yap.
+- question kısa, Türkçe ve kullanıcının kararını soran bir soru olsun.
+- option1 ve option2, soruya cevap veren tam olarak iki kısa seçenek olsun.
+- Fal metninde geçen isim, soyisim, telefon, e-posta veya başka özel bilgiyi
+  question ya da seçeneklerde asla yazma; genel ifadeler kullan.
+- Bağlamı olmayan, zorla üretilmiş veya eğlence için uydurulmuş ikilem üretme.
+
 Açıklama yazma.
 Markdown yazma.
 Kod bloğu yazma.
@@ -437,7 +455,13 @@ SADECE şu JSON formatında cevap ver:
     "Haber",
     "Değişim"
   ],
-  "primaryTheme": "Haber"
+  "primaryTheme": "Haber",
+  "dilemma": {
+    "hasDilemma": false,
+    "question": null,
+    "option1": null,
+    "option2": null
+  }
 }
 `,
           },
@@ -669,10 +693,13 @@ SADECE şu JSON formatında cevap ver:
       }
     }
 
+    const dilemma = parseFalDilemma(parsed.dilemma);
+
     return {
       symbols,
       themes,
       primaryTheme,
+      dilemma,
     };
 
   } catch (err) {
@@ -686,6 +713,7 @@ SADECE şu JSON formatında cevap ver:
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 }

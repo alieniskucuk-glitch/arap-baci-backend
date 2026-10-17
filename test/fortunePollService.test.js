@@ -139,8 +139,8 @@ function validPollInput(overrides = {}) {
   return {
     alias: "Ada",
     question: "Hangisini seçmeliyim?",
-    sourceHistoryId: "history-1",
-    options: ["A", "B"],
+    draftId: "draft-1",
+    options: ["Evet", "Hayır"],
     description: "İlk cümle. İkinci cümle!",
     endsAt: new Date(Date.now() + 60_000).toISOString(),
     ...overrides,
@@ -160,14 +160,15 @@ test("oylama girdisi iki seçenek, kaynak fal ve iki cümle açıklama ister", (
     { code: "INVALID_POLL" },
   );
   assert.throws(
-    () => validatePollInput(validPollInput({ question: "https://ornek.test" })),
-    { code: "UNSAFE_CONTENT" },
+    () => validatePollInput(validPollInput({ draftId: "" })),
+    { code: "INVALID_POLL" },
   );
 });
 
 test("kaynak fal yalnızca sahibinin geçmişinden doğrulanır ve özel metin kopyalanmaz", async () => {
   const db = new FakeFirestore({
     "users/owner/history/history-1": { type: "tarot", interpretation: "özel metin" },
+    "fortunePollDrafts/draft-1": { ownerUid: "owner", sourceHistoryId: "history-1", question: "Hangisini seçmeliyim?", status: "claimed" },
   });
   const service = createFortunePollService({ db, admin: fakeAdmin });
 
@@ -175,15 +176,12 @@ test("kaynak fal yalnızca sahibinin geçmişinden doğrulanır ve özel metin k
   assert.equal(poll.id, "new-1");
   assert.equal(poll.sourceHistoryId, undefined);
   assert.equal(db.records.get("fortunePolls/new-1").interpretation, undefined);
-  assert.deepEqual(db.records.get("fortunePollPrivate/new-1"), {
-    ownerUid: "owner",
-    sourceHistoryId: "history-1",
-    createdAt: db.records.get("fortunePollPrivate/new-1").createdAt,
-  });
+  assert.equal(db.records.get("fortunePollPrivate/new-1").ownerUid, "owner");
+  assert.equal(db.records.get("fortunePollPrivate/new-1").sourceHistoryId, "history-1");
 
   await assert.rejects(
     service.createPoll("other", validPollInput()),
-    { code: "SOURCE_FORTUNE_NOT_FOUND" },
+    { code: "DRAFT_NOT_FOUND" },
   );
 });
 

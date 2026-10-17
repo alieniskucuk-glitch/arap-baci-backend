@@ -11,6 +11,7 @@ import {
 import auth from "../middleware/auth.js";
 import coinCheck from "../middleware/coinCheck.js";
 import { decreaseCoin } from "../utils/coinManager.js";
+import { db } from "../config/firebase.js";
 
 const router = express.Router();
 
@@ -124,6 +125,12 @@ router.post(
         symbols: [],
         themes: [],
         primaryTheme: null,
+        dilemma: {
+          hasDilemma: false,
+          question: null,
+          option1: null,
+          option2: null,
+        },
       };
 
       try {
@@ -139,6 +146,20 @@ router.post(
           "FAL INSIGHTS ERROR:",
           insightsError
         );
+      }
+
+      // Anket taslağı, istemcinin değiştiremeyeceği özel backend kaydıdır.
+      // Fal metni burada saklanmaz veya herkese açık bir veriye taşınmaz.
+      if (insights?.dilemma?.hasDilemma === true) {
+        await db.collection("fortunePollDrafts").doc(id).set({
+          ownerUid: uid,
+          falId: id,
+          question: insights.dilemma.question,
+          option1: insights.dilemma.option1,
+          option2: insights.dilemma.option2,
+          status: "available",
+          createdAt: new Date(),
+        });
       }
 
       /* =========================
@@ -163,6 +184,14 @@ router.post(
         primaryTheme:
           insights?.primaryTheme ||
           null,
+
+        dilemma:
+          insights?.dilemma || {
+            hasDilemma: false,
+            question: null,
+            option1: null,
+            option2: null,
+          },
       });
 
     } catch (err) {

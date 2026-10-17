@@ -31,6 +31,22 @@ router.get("/mine", auth, async (req, res) => {
   }
 });
 
+router.get("/profile", auth, async (req, res) => {
+  try {
+    return res.json(await polls.getProfile(req.user.uid));
+  } catch (error) {
+    return sendError(res, error, "Anket profili yüklenemedi");
+  }
+});
+
+router.post("/drafts/claim", auth, async (req, res) => {
+  try {
+    return res.json(await polls.claimDraft(req.user.uid, req.body));
+  } catch (error) {
+    return sendError(res, error, "Anket taslağı doğrulanamadı");
+  }
+});
+
 router.get("/blocked-users", auth, async (req, res) => {
   try {
     return res.json({ blocks: await polls.getBlockedUsers(req.user.uid) });

@@ -5,6 +5,7 @@ import {
 
 const TIME_ZONE = "Europe/Istanbul";
 const FREE_DAILY_VOTE_LIMIT = 2;
+const POLL_OPTIONS = ["Evet", "Hayır"];
 
 function pollError(code, message, status = 400) {
   const error = new Error(message);
@@ -61,18 +62,12 @@ export function isPremiumActive(user, nowMs = Date.now()) {
 }
 
 export function validatePollInput(input, nowMs = Date.now()) {
-  const alias = validatePublicText(input?.alias, "Rumuz", { maxLength: 40 });
-  const question = validatePublicText(input?.question, "Soru", { maxLength: 320 });
-  const sourceHistoryId = trimRequired(input?.sourceHistoryId, "Kaynak fal");
+  const alias = typeof input?.alias === "string" ? input.alias.trim() : "";
+  const draftId = trimRequired(input?.draftId, "Anket taslağı");
   const rawOptions = Array.isArray(input?.options) ? input.options : [];
-
-  if (rawOptions.length !== 2) {
-    throw pollError("INVALID_POLL", "Tam olarak iki seçenek gereklidir");
+  if (rawOptions.length !== 2 || rawOptions[0] !== "Evet" || rawOptions[1] !== "Hayır") {
+    throw pollError("INVALID_POLL", "Seçenekler yalnızca Evet ve Hayır olabilir");
   }
-
-  const optionLabels = rawOptions.map((option, index) =>
-    validatePublicText(option, `Seçenek ${index + 1}`, { maxLength: 120 }),
-  );
   const description = validatePublicText(input?.description, "Açıklama", {
     maxLength: 500,
     required: false,
@@ -89,9 +84,8 @@ export function validatePollInput(input, nowMs = Date.now()) {
 
   return {
     alias,
-    question,
-    sourceHistoryId,
-    options: optionLabels,
+    draftId,
+    options: POLL_OPTIONS,
     description: description || null,
     endsAtMs,
   };
@@ -165,6 +159,8 @@ export function createFortunePollService({ db, admin }) {
   const commentPrivate = db.collection("fortunePollCommentPrivate");
   const reports = db.collection("fortunePollReports");
   const blocks = db.collection("fortunePollBlocks");
+  const drafts = db.collection("fortunePollDrafts");
+  const profiles = db.collection("fortunePollProfiles");
 
   async function blockedUidsFor(uid) {
     if (!uid) return new Set();
@@ -227,23 +223,44 @@ export function createFortunePollService({ db, admin }) {
   }
 
   return {
+    async getProfile(uid) {
+      const snapshot = await profiles.doc(uid).get();
+      return { alias: snapshot.exists ? snapshot.data()?.alias || null : null };
+    },
+
+    async claimDraft(uid, input) {
+      const falId = trimRequired(input?.falId, "Fal");
+      const sourceHistoryId = trimRequired(input?.sourceHistoryId, "Kaynak fal");
+      const draftRef = drafts.doc(falId);
+      const sourceRef = db.collection("users").doc(uid).collection("history").doc(sourceHistoryId);
+      await db.runTransaction(async (transaction) => {
+        const [draft, source] = await Promise.all([transaction.get(draftRef), transaction.get(sourceRef)]);
+        if (!draft.exists || draft.data()?.ownerUid !== uid || draft.data()?.status !== "available") {
+          throw pollError("DRAFT_NOT_FOUND", "Anket taslağı bulunamadı", 404);
+        }
+        if (!source.exists || source.data()?.falId !== falId) {
+          throw pollError("SOURCE_FORTUNE_NOT_FOUND", "Kaynak fal doğrulanamadı", 404);
+        }
+        transaction.update(draftRef, { sourceHistoryId, status: "claimed", claimedAt: new Date() });
+      });
+      const draft = (await draftRef.get()).data();
+      return { draftId: falId, question: draft.question, options: POLL_OPTIONS };
+    },
+
     async createPoll(uid, input) {
       const now = new Date();
       const value = validatePollInput(input, now.getTime());
       const pollRef = polls.doc();
       const privateRef = pollPrivate.doc(pollRef.id);
-      const sourceRef = db
-        .collection("users")
-        .doc(uid)
-        .collection("history")
-        .doc(value.sourceHistoryId);
+      const draftRef = drafts.doc(value.draftId);
+      const profileRef = profiles.doc(uid);
       const endsAt = admin.firestore.Timestamp.fromMillis(value.endsAtMs);
 
       const data = {
-        alias: value.alias,
-        question: value.question,
+        alias: "",
+        question: "",
         description: value.description,
-        options: value.options.map((label, index) => ({
+        options: POLL_OPTIONS.map((label, index) => ({
           id: `option${index + 1}`,
           label,
           voteCount: 0,
@@ -255,17 +272,23 @@ export function createFortunePollService({ db, admin }) {
       };
 
       await db.runTransaction(async (transaction) => {
-        const source = await transaction.get(sourceRef);
-        if (!source.exists) {
-          throw pollError("SOURCE_FORTUNE_NOT_FOUND", "Kaynak fal bulunamadı", 404);
-        }
+        const [draft, profile] = await Promise.all([transaction.get(draftRef), transaction.get(profileRef)]);
+        if (!draft.exists || draft.data()?.ownerUid !== uid || draft.data()?.status !== "claimed") throw pollError("DRAFT_NOT_FOUND", "Doğrulanmış anket taslağı bulunamadı", 404);
+        const draftData = draft.data();
+        const alias = profile.exists ? profile.data()?.alias : validatePublicText(value.alias, "Rumuz", { maxLength: 40 });
+        if (!alias) throw pollError("INVALID_POLL", "Rumuz zorunludur");
+        data.alias = alias;
+        data.question = draftData.question;
 
         transaction.set(pollRef, data);
         transaction.set(privateRef, {
           ownerUid: uid,
-          sourceHistoryId: value.sourceHistoryId,
+          sourceHistoryId: draftData.sourceHistoryId,
+          draftId: value.draftId,
           createdAt: now,
         });
+        if (!profile.exists) transaction.set(profileRef, { alias, createdAt: now });
+        transaction.update(draftRef, { status: "used", pollId: pollRef.id, usedAt: now });
       });
 
       return publicPoll(pollRef.id, data, now.getTime());
