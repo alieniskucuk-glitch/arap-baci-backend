@@ -3,6 +3,13 @@ import openai from "../config/openai.js";
 import { db, admin } from "../config/firebase.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { getTarotById } from "../utils/tarotDeck.js";
+import {
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
+  FORTUNE_POLL_DILEMMA_JSON,
+  emptyFalDilemma,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
+import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
 
 const COLLECTION = "secretFortunes";
 
@@ -233,6 +240,8 @@ function statusResponse(
   ) {
     out.result =
       data.result || null;
+    out.falId = `gizli:${sessionId}:${uid}`;
+    out.dilemma = data.result?.dilemma || emptyFalDilemma();
   }
 
   return out;
@@ -294,6 +303,8 @@ Kurallar:
 - Teknik analiz sürecinden bahsetme.
 - Markdown veya ek açıklama yazma.
 
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
+
 SADECE JSON döndür:
 
 {
@@ -308,7 +319,8 @@ SADECE JSON döndür:
   "sharedTheme": "Ortak tema",
   "creatorInterpretation": "1. kişinin seçtiği 3 karta dayalı yorumu",
   "inviteeInterpretation": "2. kişinin seçtiği 3 karta dayalı yorumu",
-  "jointInterpretation": "İki kişi arasındaki ortak ve detaylı fal yorumu"
+  "jointInterpretation": "İki kişi arasındaki ortak ve detaylı fal yorumu",
+${FORTUNE_POLL_DILEMMA_JSON}
 }
 `.trim(),
           },
@@ -478,6 +490,8 @@ ${JSON.stringify(
           ?.jointInterpretation ||
         ""
       ).trim(),
+
+    dilemma: parseFalDilemma(parsed?.dilemma),
   };
 
   if (
@@ -606,6 +620,8 @@ async function saveHistory(
     {
       ...common,
 
+      falId: `gizli:${sessionId}:${data.creatorUid}`,
+
       role:
         "creator",
 
@@ -631,6 +647,8 @@ async function saveHistory(
     inviteeHistory,
     {
       ...common,
+
+      falId: `gizli:${sessionId}:${data.inviteeUid}`,
 
       role:
         "invitee",
@@ -809,6 +827,19 @@ async function finalizeSession(
       result,
       remainingCoin
     );
+
+    await Promise.all([
+      persistFortunePollDraft({
+        uid: data.creatorUid,
+        falId: `gizli:${sessionId}:${data.creatorUid}`,
+        dilemma: result.dilemma,
+      }),
+      persistFortunePollDraft({
+        uid: data.inviteeUid,
+        falId: `gizli:${sessionId}:${data.inviteeUid}`,
+        dilemma: result.dilemma,
+      }),
+    ]);
 
   } catch (err) {
 

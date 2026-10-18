@@ -3,6 +3,13 @@ import openai from "../config/openai.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { getTarotById } from "../utils/tarotDeck.js";
 import { db, admin } from "../config/firebase.js";
+import {
+  emptyFalDilemma,
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
+  FORTUNE_POLL_DILEMMA_JSON,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
+import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
 
 /* =========================
    MEMORY SESSION STORE
@@ -672,6 +679,7 @@ async function generateTarotInsights(
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 
@@ -709,6 +717,8 @@ TEMA KURALLARI:
 - primaryTheme, themes içindeki en baskın tek tema olsun.
 - Tema yoksa themes boş dizi ve primaryTheme null olsun.
 
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
+
 Açıklama yazma.
 Markdown yazma.
 Kod bloğu yazma.
@@ -728,7 +738,8 @@ SADECE şu JSON formatında cevap ver:
     "Aşk",
     "Değişim"
   ],
-  "primaryTheme": "Aşk"
+  "primaryTheme": "Aşk",
+${FORTUNE_POLL_DILEMMA_JSON}
 }
 `.trim(),
         },
@@ -897,6 +908,7 @@ SADECE şu JSON formatında cevap ver:
     symbols,
     themes,
     primaryTheme,
+    dilemma: parseFalDilemma(parsed.dilemma),
   };
 }
 
@@ -999,6 +1011,7 @@ export async function startTarot(
       createdAt,
       processing: false,
       status: "active",
+      falId: sessionId,
     }
   );
 
@@ -1478,6 +1491,9 @@ export async function revealTarot(
             interpretation
           );
 
+        const dilemma = insightsData?.dilemma || emptyFalDilemma();
+        await persistFortunePollDraft({ uid, falId: sessionId, dilemma });
+
         await updateSessionDoc(
           uid,
           sessionId,
@@ -1496,6 +1512,8 @@ export async function revealTarot(
               insightsData
                 ?.primaryTheme ||
               null,
+
+            dilemma,
 
             insightsVersion:
               1,
@@ -1535,6 +1553,9 @@ export async function revealTarot(
         prediction,
 
         checkAfterDays,
+
+        dilemma:
+          (await getSessionDoc(uid, sessionId))?.dilemma || emptyFalDilemma(),
       };
     }
 

@@ -1,5 +1,13 @@
 import OpenAI from "openai";
+import crypto from "crypto";
 import { decreaseCoin } from "../utils/coinManager.js";
+import {
+  emptyFalDilemma,
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
+  FORTUNE_POLL_DILEMMA_JSON,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
+import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -41,6 +49,7 @@ async function generateRuhEsiInsights(result) {
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 
@@ -123,6 +132,8 @@ tek tema olmalı.
 
 - Tema yoksa primaryTheme null olsun.
 
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
+
 Açıklama yazma.
 Markdown yazma.
 Ek metin yazma.
@@ -140,7 +151,8 @@ SADECE şu JSON formatında cevap ver:
     "İletişim",
     "Ruhsal Bağ"
   ],
-  "primaryTheme": "Ruhsal Bağ"
+  "primaryTheme": "Ruhsal Bağ",
+${FORTUNE_POLL_DILEMMA_JSON}
 }
 `.trim(),
           },
@@ -357,6 +369,7 @@ SADECE şu JSON formatında cevap ver:
       symbols,
       themes,
       primaryTheme,
+      dilemma: parseFalDilemma(parsed.dilemma),
     };
 
   } catch (err) {
@@ -369,6 +382,7 @@ SADECE şu JSON formatında cevap ver:
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 }
@@ -637,6 +651,8 @@ Daha güçlü ve etkileyici yorum yaz.
         )
       );
 
+    const falId = crypto.randomUUID();
+
     /* =========================
        COIN + INSIGHTS
 
@@ -666,6 +682,8 @@ Daha güçlü ve etkileyici yorum yaz.
         ),
       ]);
 
+    await persistFortunePollDraft({ uid, falId, dilemma: insights.dilemma });
+
     /* ================= RESPONSE ================= */
 
     return res.status(200).json({
@@ -684,6 +702,10 @@ Daha güçlü ve etkileyici yorum yaz.
 
       primaryTheme:
         insights.primaryTheme,
+
+      falId,
+
+      dilemma: insights.dilemma,
     });
 
   } catch (err) {

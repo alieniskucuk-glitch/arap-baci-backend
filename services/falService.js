@@ -424,15 +424,18 @@ themes boş dizi olsun.
 - Tema yoksa
 primaryTheme null olsun.
 
-İKİLEM KURALLARI:
+ANKET KONU KURALLARI:
 
-- Fal metninde açıkça kararsız kalınan iki makul seçenek veya karar konusu
-  yoksa ikilem üretme.
-- hasDilemma bu durumda false, question/option1/option2 null olsun.
-- Yalnızca fal metninde gerçekten bulunan bağlama dayanan bir ikilem varsa
-  hasDilemma true yap.
-- question kısa, Türkçe ve kullanıcının kararını soran bir soru olsun.
-- option1 ve option2, soruya cevap veren tam olarak iki kısa seçenek olsun.
+- Fal metninde gerçekten geçen ve kullanıcı için ankete uygun somut bir konu
+  (ilişki, geçmişten gelen kişi, yolculuk, taşınma veya iş değişikliği gibi)
+  varsa anket taslağı hazırla. Kullanıcının açıkça kararsız kalmış olması veya
+  metinde iki seçenek söylemesi zorunlu değildir.
+- Uygun bir konu yoksa hasDilemma false, question/option1/option2 null olsun.
+- Yalnızca fal metninin gerçek bağlamına dayanan bir konu varsa hasDilemma true
+  yap; bağlamı olmayan veya zorla üretilmiş anket üretme.
+- question kısa, Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı sorusu
+  olsun.
+- hasDilemma true olduğunda option1 "Evet", option2 "Hayır" olsun.
 - Fal metninde geçen isim, soyisim, telefon, e-posta veya başka özel bilgiyi
   question ya da seçeneklerde asla yazma; genel ifadeler kullan.
 - Bağlamı olmayan, zorla üretilmiş veya eğlence için uydurulmuş ikilem üretme.

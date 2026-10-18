@@ -1,5 +1,13 @@
 import OpenAI from "openai";
+import crypto from "crypto";
 import { decreaseCoin } from "../utils/coinManager.js";
+import {
+  emptyFalDilemma,
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
+  FORTUNE_POLL_DILEMMA_JSON,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
+import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -54,6 +62,7 @@ async function generateRuyaInsights(
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 
@@ -156,6 +165,8 @@ en baskın tek tema olmalı.
 - Tema yoksa themes boş dizi olsun.
 - Tema yoksa primaryTheme null olsun.
 
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
+
 Açıklama yazma.
 Markdown yazma.
 Kod bloğu yazma.
@@ -174,7 +185,8 @@ SADECE şu JSON formatında cevap ver:
     "Değişim",
     "Karar"
   ],
-  "primaryTheme": "Değişim"
+  "primaryTheme": "Değişim",
+${FORTUNE_POLL_DILEMMA_JSON}
 }
 `.trim();
 
@@ -407,6 +419,7 @@ SADECE şu JSON formatında cevap ver:
       symbols,
       themes,
       primaryTheme,
+      dilemma: parseFalDilemma(parsed.dilemma),
     };
 
   } catch (err) {
@@ -419,6 +432,7 @@ SADECE şu JSON formatında cevap ver:
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 }
@@ -559,6 +573,8 @@ En az yaklaşık
 
         "Rüyanda güçlü bir mesaj var ama biraz daha dikkatle düşünmelisin...";
 
+      const falId = crypto.randomUUID();
+
       /* =========================
          COIN + INSIGHTS
 
@@ -586,6 +602,8 @@ En az yaklaşık
           ),
         ]);
 
+      await persistFortunePollDraft({ uid, falId, dilemma: insights.dilemma });
+
       /* =========================
          RESPONSE
       ========================= */
@@ -606,6 +624,10 @@ En az yaklaşık
 
         primaryTheme:
           insights.primaryTheme,
+
+        falId,
+
+        dilemma: insights.dilemma,
       });
 
     } catch (err) {

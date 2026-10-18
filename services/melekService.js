@@ -3,6 +3,13 @@ import OpenAI from "openai";
 import { MELEK_DECK } from "../utils/melekDeck.js";
 import { PRICING } from "../utils/pricing.js";
 import { decreaseCoin } from "../utils/coinManager.js";
+import {
+  emptyFalDilemma,
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
+  FORTUNE_POLL_DILEMMA_JSON,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
+import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -79,6 +86,7 @@ async function generateMelekInsights(
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 
@@ -121,6 +129,8 @@ TEMA KURALLARI:
 - primaryTheme themes içindeki en baskın tek tema olmalı.
 - Tema yoksa themes boş dizi ve primaryTheme null olsun.
 
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
+
 Açıklama yazma.
 Markdown yazma.
 Ek metin yazma.
@@ -138,7 +148,8 @@ SADECE şu JSON formatında cevap ver:
     "Ruhsal Gelişim",
     "Karar"
   ],
-  "primaryTheme": "Ruhsal Gelişim"
+  "primaryTheme": "Ruhsal Gelişim",
+${FORTUNE_POLL_DILEMMA_JSON}
 }
 `.trim(),
           },
@@ -344,6 +355,7 @@ SADECE şu JSON formatında cevap ver:
       symbols,
       themes,
       primaryTheme,
+      dilemma: parseFalDilemma(parsed.dilemma),
     };
 
   } catch (err) {
@@ -356,6 +368,7 @@ SADECE şu JSON formatında cevap ver:
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 }
@@ -597,6 +610,7 @@ export async function revealMelek(
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
 
     try {
@@ -604,6 +618,12 @@ export async function revealMelek(
         await generateMelekInsights(
           interpretation
         );
+
+      await persistFortunePollDraft({
+        uid,
+        falId: sessionId,
+        dilemma: insights.dilemma,
+      });
 
     } catch (
       insightsError
@@ -637,6 +657,8 @@ export async function revealMelek(
 
       primaryTheme:
         insights.primaryTheme,
+
+      dilemma: insights.dilemma,
     };
   }
 

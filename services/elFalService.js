@@ -1,5 +1,13 @@
 import OpenAI from "openai";
+import crypto from "crypto";
 import { decreaseCoin } from "../utils/coinManager.js";
+import {
+  emptyFalDilemma,
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
+  FORTUNE_POLL_DILEMMA_JSON,
+  parseFalDilemma,
+} from "../utils/falDilemma.js";
+import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -44,6 +52,7 @@ async function generateElFaliInsights(
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 
@@ -142,6 +151,8 @@ themes boş dizi olsun.
 - Tema yoksa
 primaryTheme null olsun.
 
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
+
 Açıklama yazma.
 Markdown yazma.
 Kod bloğu yazma.
@@ -160,7 +171,8 @@ SADECE şu JSON formatında cevap ver:
     "Aşk",
     "Karar"
   ],
-  "primaryTheme": "Aşk"
+  "primaryTheme": "Aşk",
+${FORTUNE_POLL_DILEMMA_JSON}
 }
 `.trim(),
           },
@@ -390,6 +402,7 @@ SADECE şu JSON formatında cevap ver:
       symbols,
       themes,
       primaryTheme,
+      dilemma: parseFalDilemma(parsed.dilemma),
     };
 
   } catch (err) {
@@ -402,6 +415,7 @@ SADECE şu JSON formatında cevap ver:
       symbols: [],
       themes: [],
       primaryTheme: null,
+      dilemma: emptyFalDilemma(),
     };
   }
 }
@@ -565,6 +579,8 @@ Uzun ve mistik yaz.
         response.output_text ||
         "";
 
+      const falId = crypto.randomUUID();
+
       if (
         result.includes(
           "[FOTO_OKUNAMADI]"
@@ -604,6 +620,8 @@ Uzun ve mistik yaz.
           result
         );
 
+      await persistFortunePollDraft({ uid, falId, dilemma: insights.dilemma });
+
       /* =========================
          RESPONSE
       ========================= */
@@ -624,6 +642,10 @@ Uzun ve mistik yaz.
 
         primaryTheme:
           insights.primaryTheme,
+
+        falId,
+
+        dilemma: insights.dilemma,
       });
 
     } catch (err) {
