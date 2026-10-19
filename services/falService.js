@@ -297,7 +297,8 @@ function normalizeInsightId(value) {
 }
 
 export async function generateFalInsights(
-  falText
+  falText,
+  { falId = null } = {}
 ) {
   const cleanFal =
     String(falText || "").trim();
@@ -308,6 +309,11 @@ export async function generateFalInsights(
       themes: [],
       primaryTheme: null,
       dilemma: emptyFalDilemma(),
+      pollAnalysis: {
+        status: "SKIPPED_EMPTY_FORTUNE",
+        hasDilemma: false,
+        dilemmaState: "EMPTY_FORTUNE",
+      },
     };
   }
 
@@ -697,26 +703,54 @@ SADECE şu JSON formatında cevap ver:
     }
 
     const dilemma = parseFalDilemma(parsed.dilemma);
+    const hasDilemmaObject =
+      parsed?.dilemma &&
+      typeof parsed.dilemma === "object" &&
+      !Array.isArray(parsed.dilemma);
+    const rawHasDilemma =
+      parsed?.dilemma?.hasDilemma === true;
+    const dilemmaState =
+      dilemma.hasDilemma
+        ? "ELIGIBLE_TOPIC"
+        : rawHasDilemma
+          ? "INVALID_DILEMMA_FIELDS"
+          : hasDilemmaObject
+            ? "NO_ELIGIBLE_TOPIC"
+            : "MISSING_DILEMMA_OBJECT";
 
     return {
       symbols,
       themes,
       primaryTheme,
       dilemma,
+      // This is server-only diagnostic metadata. It intentionally excludes
+      // fortune text, question/options and the raw model response.
+      pollAnalysis: {
+        status: "ANALYSIS_COMPLETE",
+        hasDilemma: dilemma.hasDilemma,
+        dilemmaState,
+      },
     };
 
   } catch (err) {
 
-    console.error(
-      "FAL INSIGHTS ERROR:",
-      err
-    );
+    console.error("FAL_INSIGHTS_ANALYSIS_ERROR", {
+      falId,
+      errorName: err?.name || "UnknownError",
+      errorCode: String(err?.code || err?.status || "UNKNOWN"),
+    });
 
     return {
       symbols: [],
       themes: [],
       primaryTheme: null,
       dilemma: emptyFalDilemma(),
+      pollAnalysis: {
+        status: "ANALYSIS_ERROR",
+        hasDilemma: false,
+        dilemmaState: "ERROR",
+        errorCode: String(err?.code || err?.status || "UNKNOWN"),
+      },
     };
   }
 }

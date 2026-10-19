@@ -11,7 +11,7 @@ import {
 import auth from "../middleware/auth.js";
 import coinCheck from "../middleware/coinCheck.js";
 import { decreaseCoin } from "../utils/coinManager.js";
-import { db } from "../config/firebase.js";
+import { admin, db } from "../config/firebase.js";
 
 const router = express.Router();
 
@@ -25,6 +25,37 @@ const upload = multer({
 ========================= */
 
 const falStore = new Map();
+
+function safeDiagnosticCode(error) {
+  return String(
+    error?.code ||
+    error?.status ||
+    error?.name ||
+    "UNKNOWN"
+  );
+}
+
+// This collection is written only by the backend and has no client endpoint.
+// It contains no fortune text, user identifier, question/options or raw AI
+// response; its sole purpose is to trace an analysis outcome by falId.
+async function recordPollAnalysisTrace(falId, analysis) {
+  try {
+    await db.collection("fortunePollAnalysis").doc(falId).set({
+      falId,
+      status: analysis.status,
+      hasDilemma: analysis.hasDilemma === true,
+      dilemmaState: analysis.dilemmaState || null,
+      errorCode: analysis.errorCode || null,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+  } catch (error) {
+    console.error("FORTUNE_POLL_ANALYSIS_TRACE_ERROR", {
+      falId,
+      errorName: error?.name || "UnknownError",
+      errorCode: safeDiagnosticCode(error),
+    });
+  }
+}
 
 /* =========================
    START (TEK AKIŞ)
@@ -136,30 +167,68 @@ router.post(
       try {
         insights =
           await generateFalInsights(
-            full
+            full,
+            { falId: id }
           );
 
       } catch (
         insightsError
       ) {
-        console.error(
-          "FAL INSIGHTS ERROR:",
-          insightsError
-        );
+        console.error("FAL_INSIGHTS_UNEXPECTED_ERROR", {
+          falId: id,
+          errorName: insightsError?.name || "UnknownError",
+          errorCode: safeDiagnosticCode(insightsError),
+        });
+        insights.pollAnalysis = {
+          status: "ANALYSIS_ERROR",
+          hasDilemma: false,
+          dilemmaState: "ERROR",
+          errorCode: safeDiagnosticCode(insightsError),
+        };
       }
 
       // Anket taslağı, istemcinin değiştiremeyeceği özel backend kaydıdır.
       // Fal metni burada saklanmaz veya herkese açık bir veriye taşınmaz.
       if (insights?.dilemma?.hasDilemma === true) {
-        await db.collection("fortunePollDrafts").doc(id).set({
-          ownerUid: uid,
-          falId: id,
-          question: insights.dilemma.question,
-          option1: insights.dilemma.option1,
-          option2: insights.dilemma.option2,
-          status: "available",
-          createdAt: new Date(),
-        });
+        try {
+          await db.collection("fortunePollDrafts").doc(id).set({
+            ownerUid: uid,
+            falId: id,
+            question: insights.dilemma.question,
+            option1: insights.dilemma.option1,
+            option2: insights.dilemma.option2,
+            status: "available",
+            createdAt: new Date(),
+          });
+          await recordPollAnalysisTrace(id, {
+            status: "DRAFT_CREATED",
+            hasDilemma: true,
+            dilemmaState: insights.pollAnalysis?.dilemmaState,
+          });
+        } catch (draftError) {
+          const errorCode = safeDiagnosticCode(draftError);
+          await recordPollAnalysisTrace(id, {
+            status: "DRAFT_WRITE_FAILED",
+            hasDilemma: true,
+            dilemmaState: insights.pollAnalysis?.dilemmaState,
+            errorCode,
+          });
+          console.error("FORTUNE_POLL_DRAFT_WRITE_ERROR", {
+            falId: id,
+            errorName: draftError?.name || "UnknownError",
+            errorCode,
+          });
+          throw draftError;
+        }
+      } else {
+        await recordPollAnalysisTrace(
+          id,
+          insights?.pollAnalysis || {
+            status: "ANALYSIS_COMPLETE",
+            hasDilemma: false,
+            dilemmaState: "NO_ELIGIBLE_TOPIC",
+          }
+        );
       }
 
       /* =========================
