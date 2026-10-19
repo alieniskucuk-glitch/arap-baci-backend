@@ -432,19 +432,30 @@ primaryTheme null olsun.
 
 ANKET KONU KURALLARI:
 
-- Fal metninde gerçekten geçen ve kullanıcı için ankete uygun somut bir konu
-  (ilişki, geçmişten gelen kişi, yolculuk, taşınma veya iş değişikliği gibi)
-  varsa anket taslağı hazırla. Kullanıcının açıkça kararsız kalmış olması veya
-  metinde iki seçenek söylemesi zorunlu değildir.
-- Uygun bir konu yoksa hasDilemma false, question/option1/option2 null olsun.
-- Yalnızca fal metninin gerçek bağlamına dayanan bir konu varsa hasDilemma true
-  yap; bağlamı olmayan veya zorla üretilmiş anket üretme.
+- Fal metninde kullanıcının değerlendirebileceği somut bir gelişme veya karar
+  konusu gerçekten anlatılıyorsa hasDilemma true yap ve yalnızca bir anket
+  taslağı üret. Kullanıcının açıkça "kararsızım" demesi gerekmez.
+- İlişkide gelişme, belirsizlik veya dengesizlik; eski sevgiliyle yeniden
+  görüşme ihtimali; yolculuk veya taşınma ihtimali; kariyerde yeni fırsat ya da
+  proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
+  gelişme uygun konu olabilir. Bunlar örnektir; metindeki en belirgin tek
+  gelişmeyi seç.
+- Örneğin romantik ilişkide önemli gelişmeler ve dengesizlik anlatılıyorsa
+  "Aşk hayatımdaki belirsizliğe rağmen yeni bir adım atmalı mıyım?" gibi bir
+  soru üret. Kariyerde yeni fırsatlar ve dikkatli değerlendirme anlatılıyorsa
+  "Kariyerimde karşıma çıkabilecek yeni fırsatları değerlendirmeli miyim?"
+  gibi bir soru üret.
+- Yalnızca tema etiketlerinin "Aşk", "Karar" veya "Değişim" olması yeterli
+  değildir; sorunun dayandığı gelişme fal metninde açıkça bulunmalıdır.
+- Falda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
+  hasDilemma false, question/option1/option2 null olsun.
+- Fal metninde bulunmayan olay, kişi veya ilişki uydurma; metinde eski sevgili
+  geçmiyorsa eski sevgiliyle ilgili soru üretme.
 - question kısa, Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı sorusu
-  olsun.
-- hasDilemma true olduğunda option1 "Evet", option2 "Hayır" olsun.
+  olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2 tam
+  olarak "Hayır" olsun.
 - Fal metninde geçen isim, soyisim, telefon, e-posta veya başka özel bilgiyi
   question ya da seçeneklerde asla yazma; genel ifadeler kullan.
-- Bağlamı olmayan, zorla üretilmiş veya eğlence için uydurulmuş ikilem üretme.
 
 Açıklama yazma.
 Markdown yazma.

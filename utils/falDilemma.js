@@ -11,12 +11,26 @@ export function emptyFalDilemma() {
 // trigger a second AI request and it keeps the public fortune text untouched.
 export const FORTUNE_POLL_DILEMMA_INSTRUCTIONS = `
 ANKET KONU KURALLARI:
-- Yorumda gerçekten geçen ve kullanıcı için ankete uygun somut bir konu varsa
-  anket taslağı hazırla. Kullanıcının açıkça kararsız olması zorunlu değildir.
-- Uygun konu yoksa hasDilemma false, question/option1/option2 null olsun.
-- Soru kısa, Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı sorusu olsun.
-- Kişisel bilgi veya yorumda geçmeyen ayrıntı uydurma.
-- hasDilemma true olduğunda option1 "Evet", option2 "Hayır" olsun.
+- Yorumda kullanıcının değerlendirebileceği somut bir gelişme veya karar konusu
+  gerçekten anlatılıyorsa hasDilemma true yap ve yalnızca bir anket taslağı
+  üret. Kullanıcının açıkça "kararsızım" demesi gerekmez.
+- İlişkide gelişme, belirsizlik veya dengesizlik; eski sevgiliyle yeniden
+  görüşme ihtimali; yolculuk veya taşınma ihtimali; kariyerde yeni fırsat ya da
+  proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
+  gelişme uygun konu olabilir. Bunlar örnektir; yorumdaki en belirgin tek
+  gelişmeyi seç.
+- Romantik ilişkide önemli gelişmeler ve dengesizlik varsa, belirsizliğe rağmen
+  yeni adım atmayı; kariyerde yeni fırsatlar ve dikkatli değerlendirme varsa,
+  bu fırsatları değerlendirmeyi soran kısa bir soru üret.
+- Yalnızca "Aşk", "Karar" veya "Değişim" gibi tema etiketleri yeterli değildir;
+  sorunun dayandığı gelişme yorumun kendisinde açıkça bulunmalıdır.
+- Yorumda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
+  hasDilemma false, question/option1/option2 null olsun.
+- Yorumda geçmeyen olay, kişi veya ilişki uydurma; eski sevgiliden söz
+  edilmiyorsa eski sevgili sorusu üretme. Kişisel bilgi kullanma.
+- Soru kısa, Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı sorusu
+  olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2 tam
+  olarak "Hayır" olsun.
 `.trim();
 
 export const FORTUNE_POLL_DILEMMA_JSON = `
