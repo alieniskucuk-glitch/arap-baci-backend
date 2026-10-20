@@ -451,9 +451,14 @@ ANKET KONU KURALLARI:
   hasDilemma false, question/option1/option2 null olsun.
 - Fal metninde bulunmayan olay, kişi veya ilişki uydurma; metinde eski sevgili
   geçmiyorsa eski sevgiliyle ilgili soru üretme.
-- question kısa, Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı sorusu
-  olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2 tam
-  olarak "Hayır" olsun.
+- Soruyu yazmadan önce gelişmenin hayat alanını fal metninden belirle ve soruda
+  açıkça belirt. Kariyer fırsatı için yalnız "fırsat" deme; "kariyerimdeki yeni
+  fırsatlar" de. İlişki gelişmesi için "aşk hayatım" veya "ilişkim" bağlamını;
+  yolculuk için "yolculuk fırsatını" kullan. Bağlam metinde belirgin değilse
+  rastgele bir hayat alanı seçme.
+- question kısa, doğal Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı
+  sorusu olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2
+  tam olarak "Hayır" olsun.
 - Fal metninde geçen isim, soyisim, telefon, e-posta veya başka özel bilgiyi
   question ya da seçeneklerde asla yazma; genel ifadeler kullan.
 

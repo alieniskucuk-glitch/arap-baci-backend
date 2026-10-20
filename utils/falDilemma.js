@@ -28,9 +28,14 @@ ANKET KONU KURALLARI:
   hasDilemma false, question/option1/option2 null olsun.
 - Yorumda geçmeyen olay, kişi veya ilişki uydurma; eski sevgiliden söz
   edilmiyorsa eski sevgili sorusu üretme. Kişisel bilgi kullanma.
-- Soru kısa, Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı sorusu
-  olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2 tam
-  olarak "Hayır" olsun.
+- Soruyu yazmadan önce gelişmenin hayat alanını yorumdan belirle ve soruda
+  açıkça belirt. Kariyer fırsatı için yalnız "fırsat" deme; "kariyerimdeki yeni
+  fırsatlar" de. İlişki gelişmesi için "aşk hayatım" veya "ilişkim" bağlamını;
+  yolculuk için "yolculuk fırsatını" kullan. Bağlam belirgin değilse rastgele
+  bir hayat alanı seçme.
+- Soru kısa, doğal Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı
+  sorusu olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2
+  tam olarak "Hayır" olsun.
 `.trim();
 
 export const FORTUNE_POLL_DILEMMA_JSON = `
