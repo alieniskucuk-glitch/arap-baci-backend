@@ -440,12 +440,12 @@ ANKET KONU KURALLARI:
   proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
   gelişme uygun konu olabilir. Bunlar örnektir; metindeki en belirgin tek
   gelişmeyi seç.
-- Soru, falda geçen hayat alanını ve o alandaki somut gelişmeyi birlikte
-  söylemeli. "Karşıma çıkacak fırsatı değerlendirmeli miyim?" ve "Hayatımda
-  yeni bir adım atmalı mıyım?" gibi öznesi belirsiz sorular üretme. Örneğin
-  kariyerde yeni proje anlatılıyorsa "Kariyerimde karşıma çıkabilecek yeni
-  projeyi değerlendirmeli miyim?"; ilişkide belirsizlik anlatılıyorsa
-  "İlişkimdeki belirsizliğe rağmen yeni bir adım atmalı mıyım?" diye sor.
+- Bir Anket sorusu hayat alanı + somut durum + uygulanabilir eylem içermelidir.
+  Bunlardan biri fal bağlamında desteklenmiyorsa daha uygun gerçek bir konu seç;
+  hiçbiri yoksa Anket oluşturma. "Yeni adım atmak", "ilişkimi güçlendirmek" ve
+  "fırsatı değerlendirmek" tek başına uygulanabilir karar değildir. Falda yeni
+  kariyer projesi anlatılıyorsa projeyi kabul etmeyi; ilişkide belirsizlik ve
+  mevcut ilişki açıkça anlatılıyorsa ilişkiyi sürdürmeyi sorabilirsin.
 - Yalnızca tema etiketlerinin "Aşk", "Karar" veya "Değişim" olması yeterli
   değildir; sorunun dayandığı gelişme fal metninde açıkça bulunmalıdır.
 - Falda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa

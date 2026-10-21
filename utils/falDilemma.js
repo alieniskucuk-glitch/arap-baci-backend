@@ -19,12 +19,12 @@ ANKET KONU KURALLARI:
   proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
   gelişme uygun konu olabilir. Bunlar örnektir; yorumdaki en belirgin tek
   gelişmeyi seç.
-- Soru, falda geçen hayat alanını ve o alandaki somut gelişmeyi birlikte
-  söylemeli. "Karşıma çıkacak fırsatı değerlendirmeli miyim?" ve "Hayatımda
-  yeni bir adım atmalı mıyım?" gibi öznesi belirsiz sorular üretme. Örneğin
-  kariyerde yeni proje anlatılıyorsa "Kariyerimde karşıma çıkabilecek yeni
-  projeyi değerlendirmeli miyim?"; ilişkide belirsizlik anlatılıyorsa
-  "İlişkimdeki belirsizliğe rağmen yeni bir adım atmalı mıyım?" diye sor.
+- Bir Anket sorusu hayat alanı + somut durum + uygulanabilir eylem içermelidir.
+  Bunlardan biri fal bağlamında desteklenmiyorsa daha uygun gerçek bir konu seç;
+  hiçbiri yoksa Anket oluşturma. "Yeni adım atmak", "ilişkimi güçlendirmek" ve
+  "fırsatı değerlendirmek" tek başına uygulanabilir karar değildir. Falda yeni
+  kariyer projesi anlatılıyorsa projeyi kabul etmeyi; ilişkide belirsizlik ve
+  mevcut ilişki açıkça anlatılıyorsa ilişkiyi sürdürmeyi sorabilirsin.
 - Yalnızca "Aşk", "Karar" veya "Değişim" gibi tema etiketleri yeterli değildir;
   sorunun dayandığı gelişme yorumun kendisinde açıkça bulunmalıdır.
 - Yorumda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
@@ -78,10 +78,52 @@ const GENERIC_QUESTION_TERMS = new Set([
   "yeni",
 ]);
 
-const CONTEXT_FAMILIES = [
+const LIFE_AREA_FAMILIES = [
   ["ask", "duygusal", "iliski", "partner", "romantik", "sevgili"],
-  ["calisma", "is", "kariyer", "meslek", "proje"],
-  ["seyahat", "tasin", "tasinma", "yolculuk"],
+  ["calisma", "is", "kariyer", "meslek"],
+  ["seyahat", "yolculuk"],
+  ["aile", "ev"],
+  ["egitim", "okul"],
+  ["finans", "para"],
+  ["saglik"],
+];
+
+const SITUATION_FAMILIES = [
+  ["belirsiz", "dengesiz", "kararsiz", "tutarsiz"],
+  ["proje", "gorev"],
+  ["teklif", "pozisyon", "terfi"],
+  ["yolculuk", "seyahat"],
+  ["tasin", "tasinma"],
+  ["iletisim", "kopuk", "sessiz", "mesaj", "konus", "uzaklas"],
+  ["guven", "ihanet", "aldat", "sadakat", "suphe"],
+  ["eski", "gecmis", "geri", "yeniden", "baris"],
+];
+
+const ACTION_ROOTS = [
+  "kabul",
+  "reddet",
+  "surdur",
+  "sonlandir",
+  "basla",
+  "basvur",
+  "degistir",
+  "tasin",
+  "git",
+  "katil",
+  "gorus",
+  "baris",
+  "iletisim",
+  "konus",
+  "dene",
+  "guven",
+  "devam",
+];
+
+const VAGUE_ACTION_ROOTS = [
+  "adim",
+  "at",
+  "degerlendir",
+  "guclendir",
 ];
 
 function normalizedWords(value) {
@@ -151,33 +193,88 @@ function containsContextFamily(value, family) {
   );
 }
 
-function hasSharedContext(question, fortuneText) {
-  const questionTerms = meaningfulStems(question);
-  const fortuneTerms = meaningfulStems(fortuneText);
-  if ([...questionTerms].some((term) => fortuneTerms.has(term))) return true;
-
-  return CONTEXT_FAMILIES.some(
-    (family) => containsContextFamily(question, family) && containsContextFamily(fortuneText, family),
+function sharesFamily(question, fortuneText, family) {
+  return (
+    containsContextFamily(question, family) &&
+    containsContextFamily(fortuneText, family)
   );
 }
 
-function hasSpecificSubject(question) {
+function hasLifeArea(question, fortuneText) {
+  return LIFE_AREA_FAMILIES.some(
+    (family) =>
+      containsContextFamily(question, family) &&
+      (!fortuneText || containsContextFamily(fortuneText, family)),
+  );
+}
+
+function hasConcreteSituation(question, fortuneText) {
+  if (!fortuneText) {
+    return SITUATION_FAMILIES.some((family) =>
+      containsContextFamily(question, family),
+    );
+  }
+
+  const questionTerms = meaningfulStems(question);
+  const fortuneTerms = meaningfulStems(fortuneText);
+  const contextTerms = new Set(LIFE_AREA_FAMILIES.flat());
+  if (
+    [...questionTerms].some(
+      (term) => !contextTerms.has(term) && fortuneTerms.has(term),
+    )
+  ) {
+    return true;
+  }
+
+  return SITUATION_FAMILIES.some((family) =>
+    sharesFamily(question, fortuneText, family),
+  );
+}
+
+function hasUnsupportedSituationClaim(question, fortuneText) {
+  return (
+    !!fortuneText &&
+    SITUATION_FAMILIES.some(
+      (family) =>
+        containsContextFamily(question, family) &&
+        !containsContextFamily(fortuneText, family),
+    )
+  );
+}
+
+function hasSpecificSubject(question, fortuneText) {
   const terms = meaningfulStems(question);
   if (terms.size === 0) return false;
   return (
-    CONTEXT_FAMILIES.some((family) => containsContextFamily(question, family)) ||
-    [...terms].some((term) => term.length >= 4)
+    hasLifeArea(question, fortuneText) &&
+    hasConcreteSituation(question, fortuneText)
   );
 }
 
-// The model may return syntactically valid JSON with a vague question.  Keep
-// that draft private by rejecting it before any route can persist it.  When
-// the source fortune is available (coffee fortune), require a shared concrete
-// context; other existing services still get the generic-question guard while
-// retaining their current result contracts.
+function hasActionableDecision(question) {
+  const stems = contextStems(question);
+  if (
+    VAGUE_ACTION_ROOTS.some((root) =>
+      [...stems].some((stem) => stem.startsWith(root)),
+    )
+  ) {
+    return false;
+  }
+  return ACTION_ROOTS.some((root) =>
+    [...stems].some((stem) => stem.startsWith(root)),
+  );
+}
+
+// The model may return syntactically valid JSON with a vague action. Keep that
+// draft private by rejecting it before any route can persist it. When the
+// source fortune is available (coffee fortune), require a matching life area,
+// concrete situation, and actionable decision.
 export function isSpecificFalDilemmaQuestion(question, fortuneText = "") {
-  if (!hasSpecificSubject(question)) return false;
-  return !fortuneText || hasSharedContext(question, fortuneText);
+  return (
+    hasSpecificSubject(question, fortuneText) &&
+    !hasUnsupportedSituationClaim(question, fortuneText) &&
+    hasActionableDecision(question)
+  );
 }
 
 export function parseFalDilemma(value, { fortuneText = "" } = {}) {
