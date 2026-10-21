@@ -10,25 +10,30 @@ export function emptyFalDilemma() {
 // This text is deliberately shared by existing insight calls.  It does not
 // trigger a second AI request and it keeps the public fortune text untouched.
 export const FORTUNE_POLL_DILEMMA_INSTRUCTIONS = `
-ANKET KONU KURALLARI:
-- Fal yorumunda Anket yapılabilecek gerçek bir gelişme veya belirsizlik varsa
-  hasDilemma true yap ve yalnızca bir anket taslağı üret. Açık bir ikilem ya da
-  kesinleşmiş olay zorunlu değildir; uygun konu olup olmadığına yorumun
-  bağlamına göre karar ver.
-- İlişki belirsizliği, aşk hayatındaki gelişmeler, kariyer fırsatları, iş
-  projeleri, yolculuk ihtimalleri veya geçmiş ilişkiler; yorumda gerçekten yer
-  alıyorsa uygun Anket konusu olabilir. Yorumdaki en belirgin tek gelişmeyi
-  seç.
-- Konuyu soruda mümkün olduğunca açık belirt. Falda gerçekten bulunan gelişmeyi
-  esas al; belirsiz fırsat sorularından kaçın. İlişki, kariyer veya yolculuk
-  bağlamı açıksa soruda belirt.
-- Falda bulunmayan kişi, olay, teklif veya ilişki uydurma. Bağlam belirgin
-  değilse rastgele bir hayat alanı seçme.
-- Yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
-  hasDilemma false, question/option1/option2 null olsun.
-- Soru kısa, doğal Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı
-  sorusu olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2
-  tam olarak "Hayır" olsun.
+ANKET SORUSU OLUŞTURMA TALİMATI:
+- Fal yorumunun tamamını oku. Aşk, ilişki, geçmiş, kariyer, para, yolculuk, aile
+  veya başka alanlarda yalnızca konuyu değil, o konuda anlatılan gerçek gelişmeyi,
+  belirsizliği, ihtimali ya da kişisel durumu da değerlendir.
+- Falın gerçek içeriğine göre Anket için en anlamlı ve en belirgin tek konuyu seç.
+- Kısa, açık ve doğal Türkçeyle Evet/Hayır sorusu üret. Okuyan, hangi konu hakkında
+  oy verdiğini anlamalıdır. Mümkün olduğunda fal sahibinin kararını, tercihini veya
+  davranışını sor.
+- Genel bir fal cümlesinin sonuna yalnızca "mı?" ekleme. Gelecekteki ihtimaller de
+  Anket konusu olabilir; ancak soruyu yalnızca olayın gerçekleşip gerçekleşmeyeceğini
+  soran anlamsız bir tahmine dönüştürme.
+- Konuyu soruda açıkça belirt; falda gerçekten bulunan gelişmeyi esas al ve soruyu
+  gereksiz yere genel bırakma.
+- Falda bulunmayan sevgili, iş teklifi, ayrılık, aldatma, tartışma veya başka somut
+  olay ekleme. Kesinleşmemiş ihtimalleri gerçekleşmiş gibi sunma; soruyu
+  spesifikleştirmek için hayalî ayrıntı uydurma.
+- Açık bir ikilem veya kesinleşmiş olay zorunlu değildir. Her fal için Anket üretmek
+  zorunlu değildir: yalnızca genel enerji, soyut duygu veya belirsiz sembollerden
+  anlamlı bir soru çıkarılamıyorsa hasDilemma false yap.
+- Uygun konuları sabit kelime veya eylem listeleriyle eleme.
+- Son kontrolde sorunun konusunun açık, falın gerçek içeriğiyle bağlantılı, anlamlı
+  bir Evet/Hayır oylamasına uygun ve doğal Türkçe olduğundan emin ol.
+- hasDilemma true ise question boş olamaz; option1 tam olarak "Evet" ve option2
+  tam olarak "Hayır" olmalıdır. Uygun konu yoksa question, option1 ve option2 null olmalıdır.
 `.trim();
 
 export const FORTUNE_POLL_DILEMMA_JSON = `
