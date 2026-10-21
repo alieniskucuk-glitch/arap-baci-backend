@@ -11,31 +11,21 @@ export function emptyFalDilemma() {
 // trigger a second AI request and it keeps the public fortune text untouched.
 export const FORTUNE_POLL_DILEMMA_INSTRUCTIONS = `
 ANKET KONU KURALLARI:
-- Yorumda kullanıcının değerlendirebileceği somut bir gelişme veya karar konusu
-  gerçekten anlatılıyorsa hasDilemma true yap ve yalnızca bir anket taslağı
-  üret. Kullanıcının açıkça "kararsızım" demesi gerekmez.
-- İlişkide gelişme, belirsizlik veya dengesizlik; eski sevgiliyle yeniden
-  görüşme ihtimali; yolculuk veya taşınma ihtimali; kariyerde yeni fırsat ya da
-  proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
-  gelişme uygun konu olabilir. Bunlar örnektir; yorumdaki en belirgin tek
-  gelişmeyi seç.
-- Bir Anket sorusu hayat alanı + somut durum + uygulanabilir eylem içermelidir.
-  Bunlardan biri fal bağlamında desteklenmiyorsa daha uygun gerçek bir konu seç;
-  hiçbiri yoksa Anket oluşturma. "Yeni adım atmak", "ilişkimi güçlendirmek" ve
-  "fırsatı değerlendirmek" tek başına uygulanabilir karar değildir. Falda yeni
-  kariyer projesi anlatılıyorsa projeyi kabul etmeyi; ilişkide belirsizlik ve
-  mevcut ilişki açıkça anlatılıyorsa ilişkiyi sürdürmeyi sorabilirsin.
-- Yalnızca "Aşk", "Karar" veya "Değişim" gibi tema etiketleri yeterli değildir;
-  sorunun dayandığı gelişme yorumun kendisinde açıkça bulunmalıdır.
-- Yorumda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
+- Fal yorumunda Anket yapılabilecek gerçek bir gelişme veya belirsizlik varsa
+  hasDilemma true yap ve yalnızca bir anket taslağı üret. Açık bir ikilem ya da
+  kesinleşmiş olay zorunlu değildir; uygun konu olup olmadığına yorumun
+  bağlamına göre karar ver.
+- İlişki belirsizliği, aşk hayatındaki gelişmeler, kariyer fırsatları, iş
+  projeleri, yolculuk ihtimalleri veya geçmiş ilişkiler; yorumda gerçekten yer
+  alıyorsa uygun Anket konusu olabilir. Yorumdaki en belirgin tek gelişmeyi
+  seç.
+- Konuyu soruda mümkün olduğunca açık belirt. Falda gerçekten bulunan gelişmeyi
+  esas al; belirsiz fırsat sorularından kaçın. İlişki, kariyer veya yolculuk
+  bağlamı açıksa soruda belirt.
+- Falda bulunmayan kişi, olay, teklif veya ilişki uydurma. Bağlam belirgin
+  değilse rastgele bir hayat alanı seçme.
+- Yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
   hasDilemma false, question/option1/option2 null olsun.
-- Yorumda geçmeyen olay, kişi veya ilişki uydurma; eski sevgiliden söz
-  edilmiyorsa eski sevgili sorusu üretme. Kişisel bilgi kullanma.
-- Soruyu yazmadan önce gelişmenin hayat alanını yorumdan belirle ve soruda
-  açıkça belirt. Kariyer fırsatı için yalnız "fırsat" deme; "kariyerimdeki yeni
-  fırsatlar" de. İlişki gelişmesi için "aşk hayatım" veya "ilişkim" bağlamını;
-  yolculuk için "yolculuk fırsatını" kullan. Bağlam belirgin değilse rastgele
-  bir hayat alanı seçme.
 - Soru kısa, doğal Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı
   sorusu olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2
   tam olarak "Hayır" olsun.
@@ -49,235 +39,14 @@ export const FORTUNE_POLL_DILEMMA_JSON = `
     "option2": null
   }`;
 
-const GENERIC_QUESTION_TERMS = new Set([
-  "acaba",
-  "adim",
-  "at",
-  "atmak",
-  "atmal",
-  "degerlendir",
-  "et",
-  "firsat",
-  "gelisme",
-  "hayat",
-  "karsi",
-  "karsima",
-  "kabul",
-  "karar",
-  "konu",
-  "miyim",
-  "mi",
-  "mu",
-  "ne",
-  "olacak",
-  "olabilir",
-  "sec",
-  "sey",
-  "cik",
-  "cikabil",
-  "yeni",
-]);
-
-const LIFE_AREA_FAMILIES = [
-  ["ask", "duygusal", "iliski", "partner", "romantik", "sevgili"],
-  ["calisma", "is", "kariyer", "meslek"],
-  ["seyahat", "yolculuk"],
-  ["aile", "ev"],
-  ["egitim", "okul"],
-  ["finans", "para"],
-  ["saglik"],
-];
-
-const SITUATION_FAMILIES = [
-  ["belirsiz", "dengesiz", "kararsiz", "tutarsiz"],
-  ["proje", "gorev"],
-  ["teklif", "pozisyon", "terfi"],
-  ["yolculuk", "seyahat"],
-  ["tasin", "tasinma"],
-  ["iletisim", "kopuk", "sessiz", "mesaj", "konus", "uzaklas"],
-  ["guven", "ihanet", "aldat", "sadakat", "suphe"],
-  ["eski", "gecmis", "geri", "yeniden", "baris"],
-];
-
-const ACTION_ROOTS = [
-  "kabul",
-  "reddet",
-  "surdur",
-  "sonlandir",
-  "basla",
-  "basvur",
-  "degistir",
-  "tasin",
-  "git",
-  "katil",
-  "gorus",
-  "baris",
-  "iletisim",
-  "konus",
-  "dene",
-  "guven",
-  "devam",
-];
-
-const VAGUE_ACTION_ROOTS = [
-  "adim",
-  "at",
-  "degerlendir",
-  "guclendir",
-];
-
-function normalizedWords(value) {
-  return String(value || "")
-    .toLocaleLowerCase("tr-TR")
-    .replace(/ı/g, "i")
-    .replace(/ş/g, "s")
-    .replace(/ğ/g, "g")
-    .replace(/ü/g, "u")
-    .replace(/ö/g, "o")
-    .replace(/ç/g, "c")
-    .match(/[a-z]+/g) || [];
+// AI decides whether the source fortune contains an eligible topic. The
+// backend only checks that a true result is structurally safe to persist; it
+// must not replace the model's contextual decision with keyword lists.
+export function isSpecificFalDilemmaQuestion(question) {
+  return typeof question === "string" && question.trim().length > 0;
 }
 
-function wordStems(word) {
-  const suffixes = [
-    "lerimizden", "larimizdan", "lerinizden", "larinizdan",
-    "lerimiz", "larimiz", "leriniz", "lariniz", "lerinde", "larinda",
-    "lerindeki", "larindaki", "lerinden", "larindan", "lerimize",
-    "larimiza", "leriyle", "lariyla", "lerinin", "larinin", "lerimiz",
-    "larimiz", "lerinden", "larindan", "ler", "lar", "imiz", "imizde",
-    "imizden", "imizle", "imizda", "imizde", "imda", "imde", "imden",
-    "imle", "iniz", "inizde", "inizden", "inde", "inda", "indeki",
-    "indaki", "imdeki", "imdaki", "acak", "ecek", "mali", "meli", "den",
-    "dan", "de", "da", "ye", "ya", "yi", "yu", "i", "u", "um", "im",
-    "in",
-  ];
-  const stems = new Set([word]);
-  for (const suffix of suffixes) {
-    if (word.length > suffix.length + 2 && word.endsWith(suffix)) {
-      stems.add(word.slice(0, -suffix.length));
-    }
-  }
-  return stems;
-}
-
-function meaningfulStems(value) {
-  const stems = new Set();
-  for (const word of normalizedWords(value)) {
-    const wordStemSet = wordStems(word);
-    if ([...wordStemSet].some((stem) => GENERIC_QUESTION_TERMS.has(stem))) {
-      continue;
-    }
-    for (const stem of wordStemSet) {
-      if (stem.length >= 3 && !GENERIC_QUESTION_TERMS.has(stem)) {
-        stems.add(stem);
-      }
-    }
-  }
-  return stems;
-}
-
-function contextStems(value) {
-  const stems = new Set();
-  for (const word of normalizedWords(value)) {
-    for (const stem of wordStems(word)) {
-      if (stem.length >= 2) stems.add(stem);
-    }
-  }
-  return stems;
-}
-
-function containsContextFamily(value, family) {
-  const words = contextStems(value);
-  return family.some((term) =>
-    [...words].some((word) => word.startsWith(term) || term.startsWith(word)),
-  );
-}
-
-function sharesFamily(question, fortuneText, family) {
-  return (
-    containsContextFamily(question, family) &&
-    containsContextFamily(fortuneText, family)
-  );
-}
-
-function hasLifeArea(question, fortuneText) {
-  return LIFE_AREA_FAMILIES.some(
-    (family) =>
-      containsContextFamily(question, family) &&
-      (!fortuneText || containsContextFamily(fortuneText, family)),
-  );
-}
-
-function hasConcreteSituation(question, fortuneText) {
-  if (!fortuneText) {
-    return SITUATION_FAMILIES.some((family) =>
-      containsContextFamily(question, family),
-    );
-  }
-
-  const questionTerms = meaningfulStems(question);
-  const fortuneTerms = meaningfulStems(fortuneText);
-  const contextTerms = new Set(LIFE_AREA_FAMILIES.flat());
-  if (
-    [...questionTerms].some(
-      (term) => !contextTerms.has(term) && fortuneTerms.has(term),
-    )
-  ) {
-    return true;
-  }
-
-  return SITUATION_FAMILIES.some((family) =>
-    sharesFamily(question, fortuneText, family),
-  );
-}
-
-function hasUnsupportedSituationClaim(question, fortuneText) {
-  return (
-    !!fortuneText &&
-    SITUATION_FAMILIES.some(
-      (family) =>
-        containsContextFamily(question, family) &&
-        !containsContextFamily(fortuneText, family),
-    )
-  );
-}
-
-function hasSpecificSubject(question, fortuneText) {
-  const terms = meaningfulStems(question);
-  if (terms.size === 0) return false;
-  return (
-    hasLifeArea(question, fortuneText) &&
-    hasConcreteSituation(question, fortuneText)
-  );
-}
-
-function hasActionableDecision(question) {
-  const stems = contextStems(question);
-  if (
-    VAGUE_ACTION_ROOTS.some((root) =>
-      [...stems].some((stem) => stem.startsWith(root)),
-    )
-  ) {
-    return false;
-  }
-  return ACTION_ROOTS.some((root) =>
-    [...stems].some((stem) => stem.startsWith(root)),
-  );
-}
-
-// The model may return syntactically valid JSON with a vague action. Keep that
-// draft private by rejecting it before any route can persist it. When the
-// source fortune is available (coffee fortune), require a matching life area,
-// concrete situation, and actionable decision.
-export function isSpecificFalDilemmaQuestion(question, fortuneText = "") {
-  return (
-    hasSpecificSubject(question, fortuneText) &&
-    !hasUnsupportedSituationClaim(question, fortuneText) &&
-    hasActionableDecision(question)
-  );
-}
-
-export function parseFalDilemma(value, { fortuneText = "" } = {}) {
+export function parseFalDilemma(value, { fortuneText: _fortuneText = "" } = {}) {
   if (value?.hasDilemma !== true) {
     return emptyFalDilemma();
   }
@@ -290,10 +59,9 @@ export function parseFalDilemma(value, { fortuneText = "" } = {}) {
     typeof value.option2 === "string" ? value.option2.trim() : "";
 
   if (
-    !question ||
-    !option1 ||
-    !option2 ||
-    !isSpecificFalDilemmaQuestion(question, fortuneText)
+    !isSpecificFalDilemmaQuestion(question) ||
+    option1 !== "Evet" ||
+    option2 !== "Hayır"
   ) {
     return emptyFalDilemma();
   }

@@ -4,6 +4,7 @@ import {
   imagesToOpenAI
 } from "../utils/helpers.js";
 import {
+  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
   emptyFalDilemma,
   parseFalDilemma,
 } from "../utils/falDilemma.js";
@@ -430,36 +431,7 @@ themes boş dizi olsun.
 - Tema yoksa
 primaryTheme null olsun.
 
-ANKET KONU KURALLARI:
-
-- Fal metninde kullanıcının değerlendirebileceği somut bir gelişme veya karar
-  konusu gerçekten anlatılıyorsa hasDilemma true yap ve yalnızca bir anket
-  taslağı üret. Kullanıcının açıkça "kararsızım" demesi gerekmez.
-- İlişkide gelişme, belirsizlik veya dengesizlik; eski sevgiliyle yeniden
-  görüşme ihtimali; yolculuk veya taşınma ihtimali; kariyerde yeni fırsat ya da
-  proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
-  gelişme uygun konu olabilir. Bunlar örnektir; metindeki en belirgin tek
-  gelişmeyi seç.
-- Bir Anket sorusu hayat alanı + somut durum + uygulanabilir eylem içermelidir.
-  Bunlardan biri fal bağlamında desteklenmiyorsa daha uygun gerçek bir konu seç;
-  hiçbiri yoksa Anket oluşturma. "Yeni adım atmak", "ilişkimi güçlendirmek" ve
-  "fırsatı değerlendirmek" tek başına uygulanabilir karar değildir. Falda yeni
-  kariyer projesi anlatılıyorsa projeyi kabul etmeyi; ilişkide belirsizlik ve
-  mevcut ilişki açıkça anlatılıyorsa ilişkiyi sürdürmeyi sorabilirsin.
-- Yalnızca tema etiketlerinin "Aşk", "Karar" veya "Değişim" olması yeterli
-  değildir; sorunun dayandığı gelişme fal metninde açıkça bulunmalıdır.
-- Falda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
-  hasDilemma false, question/option1/option2 null olsun.
-- Fal metninde bulunmayan olay, kişi veya ilişki uydurma; metinde eski sevgili
-  geçmiyorsa eski sevgiliyle ilgili soru üretme.
-- Soruyu yazmadan önce gelişmenin hayat alanını fal metninden belirle ve soruda
-  açıkça belirt. Kariyer fırsatı için yalnız "fırsat" deme; "kariyerimdeki yeni
-  fırsatlar" de. İlişki gelişmesi için "aşk hayatım" veya "ilişkim" bağlamını;
-  yolculuk için "yolculuk fırsatını" kullan. Bağlam metinde belirgin değilse
-  rastgele bir hayat alanı seçme.
-- question kısa, doğal Türkçe ve Evet/Hayır ile yanıtlanabilecek bir kullanıcı
-  sorusu olsun. hasDilemma true olduğunda option1 tam olarak "Evet", option2
-  tam olarak "Hayır" olsun.
+${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
 - Fal metninde geçen isim, soyisim, telefon, e-posta veya başka özel bilgiyi
   question ya da seçeneklerde asla yazma; genel ifadeler kullan.
 

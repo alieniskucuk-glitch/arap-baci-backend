@@ -12,19 +12,17 @@ function draft(question) {
   };
 }
 
-test("belirgin ikilem iki seçenekli oylama taslağına dönüşür", () => {
+test("AI ilişki belirsizliği için geçerli soru döndürdüğünde taslak kabul edilir", () => {
   assert.deepEqual(
-    parseFalDilemma({
-      hasDilemma: true,
-      question: "Eski ilişkimle yeniden denemeli miyim?",
-      option1: "Yeniden dene",
-      option2: "Devam etme",
+    parseFalDilemma(draft("Aşk hayatımdaki belirsizlik yakında netleşir mi?"), {
+      fortuneText:
+        "Aşk hayatında bir süredir belirsizlik yaratan gelişmeler öne çıkıyor.",
     }),
     {
       hasDilemma: true,
-      question: "Eski ilişkimle yeniden denemeli miyim?",
-      option1: "Yeniden dene",
-      option2: "Devam etme",
+      question: "Aşk hayatımdaki belirsizlik yakında netleşir mi?",
+      option1: "Evet",
+      option2: "Hayır",
     },
   );
 });
@@ -47,17 +45,48 @@ test("ikilem yoksa veya taslak eksikse soru uydurulmaz", () => {
   );
 });
 
-test("somut karar içermeyen genel ilişki sorusu reddedilir", () => {
+test("AI kariyer fırsatı için geçerli soru döndürdüğünde taslak kabul edilir", () => {
   const fortuneText =
-    "Romantik ilişkilerinde önemli gelişmeler yaşanabilir. Ancak ilişkinin bazen dengesiz olabileceğine dair işaretler var.";
+    "Kariyerinde yeni bir fırsat ve dikkatle ele alman gereken bir proje gündeme gelebilir.";
 
   assert.deepEqual(
     parseFalDilemma(
-      draft(
-        "Aşk hayatımdaki belirsizliğe rağmen ilişkimi güçlendirmek için adım atmalı mıyım?",
-      ),
+      draft("Kariyerimdeki yeni fırsat benim için olumlu olur mu?"),
       { fortuneText },
     ),
+    {
+      hasDilemma: true,
+      question: "Kariyerimdeki yeni fırsat benim için olumlu olur mu?",
+      option1: "Evet",
+      option2: "Hayır",
+    },
+  );
+});
+
+test("önceden tanımlanmış eylem kökü olmayan soru sırf bu nedenle reddedilmez", () => {
+  assert.equal(
+    parseFalDilemma(
+      draft("Yaklaşan yolculuk hayatıma iyi gelir mi?"),
+      { fortuneText: "Yakında bir yolculuk ihtimali öne çıkıyor." },
+    ).hasDilemma,
+    true,
+  );
+});
+
+test("boş veya bozuk dilemma alanları reddedilir", () => {
+  assert.deepEqual(parseFalDilemma(draft("   ")), {
+    hasDilemma: false,
+    question: null,
+    option1: null,
+    option2: null,
+  });
+  assert.deepEqual(
+    parseFalDilemma({
+      hasDilemma: true,
+      question: "Kariyerimdeki fırsat olumlu olur mu?",
+      option1: "Olur",
+      option2: "Olmaz",
+    }),
     {
       hasDilemma: false,
       question: null,
@@ -65,41 +94,4 @@ test("somut karar içermeyen genel ilişki sorusu reddedilir", () => {
       option2: null,
     },
   );
-});
-
-test("kaynak falda desteklenen somut kararlar kabul edilir", () => {
-  const careerFortune =
-    "Kariyerinde yeni bir proje teklifi gündeme gelebilir ve bu projeyi dikkatle değerlendirmen önemli.";
-  const relationshipFortune =
-    "Romantik ilişkinin dengesiz ilerlediği bir dönemden geçiyorsun; mevcut ilişkiyi sürdürme konusu zihnini meşgul ediyor.";
-
-  assert.equal(
-    parseFalDilemma(
-      draft("Kariyerimdeki yeni proje teklifini kabul etmeli miyim?"),
-      { fortuneText: careerFortune },
-    ).hasDilemma,
-    true,
-  );
-  assert.equal(
-    parseFalDilemma(
-      draft("İlişkimdeki dengesizlik nedeniyle ilişkiyi sürdürmeli miyim?"),
-      { fortuneText: relationshipFortune },
-    ).hasDilemma,
-    true,
-  );
-});
-
-test("falda bulunmayan iletişim ve güven sorunları reddedilir", () => {
-  const fortuneText =
-    "Kariyerinde yeni bir proje teklifi gündeme gelebilir ve bu projeyi dikkatle değerlendirmen önemli.";
-
-  for (const question of [
-    "İlişkimdeki iletişim kopukluğunu çözmek için konuşmalı mıyım?",
-    "İlişkimdeki güven sorununa rağmen ilişkiye devam etmeli miyim?",
-  ]) {
-    assert.equal(
-      parseFalDilemma(draft(question), { fortuneText }).hasDilemma,
-      false,
-    );
-  }
 });
