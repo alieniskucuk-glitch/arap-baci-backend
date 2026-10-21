@@ -440,11 +440,12 @@ ANKET KONU KURALLARI:
   proje; iş veya özel hayatta dikkatle değerlendirilmesi gereken somut bir
   gelişme uygun konu olabilir. Bunlar örnektir; metindeki en belirgin tek
   gelişmeyi seç.
-- Örneğin romantik ilişkide önemli gelişmeler ve dengesizlik anlatılıyorsa
-  "Aşk hayatımdaki belirsizliğe rağmen yeni bir adım atmalı mıyım?" gibi bir
-  soru üret. Kariyerde yeni fırsatlar ve dikkatli değerlendirme anlatılıyorsa
-  "Kariyerimde karşıma çıkabilecek yeni fırsatları değerlendirmeli miyim?"
-  gibi bir soru üret.
+- Soru, falda geçen hayat alanını ve o alandaki somut gelişmeyi birlikte
+  söylemeli. "Karşıma çıkacak fırsatı değerlendirmeli miyim?" ve "Hayatımda
+  yeni bir adım atmalı mıyım?" gibi öznesi belirsiz sorular üretme. Örneğin
+  kariyerde yeni proje anlatılıyorsa "Kariyerimde karşıma çıkabilecek yeni
+  projeyi değerlendirmeli miyim?"; ilişkide belirsizlik anlatılıyorsa
+  "İlişkimdeki belirsizliğe rağmen yeni bir adım atmalı mıyım?" diye sor.
 - Yalnızca tema etiketlerinin "Aşk", "Karar" veya "Değişim" olması yeterli
   değildir; sorunun dayandığı gelişme fal metninde açıkça bulunmalıdır.
 - Falda yalnızca genel enerji, soyut dönüşüm, semboller veya ruh hali varsa
@@ -718,7 +719,9 @@ SADECE şu JSON formatında cevap ver:
       }
     }
 
-    const dilemma = parseFalDilemma(parsed.dilemma);
+    const dilemma = parseFalDilemma(parsed.dilemma, {
+      fortuneText: cleanFal,
+    });
     const hasDilemmaObject =
       parsed?.dilemma &&
       typeof parsed.dilemma === "object" &&
