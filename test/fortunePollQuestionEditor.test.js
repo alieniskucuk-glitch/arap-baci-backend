@@ -41,66 +41,81 @@ async function editWithMock({ fortuneText, initialQuestion, editedQuestion }) {
   return { result, request: mock.requests[0] };
 }
 
-test("editör kötü kariyer sorusunu falın somut kararına göre baştan yazar", async () => {
-  const initialQuestion = "İş hayatımdaki yeni değişimi değerlendirmeli miyim?";
-  const editedQuestion = "Kariyerimde farklı bir alana yönelmeli miyim?";
+test("editör yüzeysel yolculuk sorusunu senaryo ve karara dönüştürür", async () => {
+  const initialQuestion = "Yakın zamanda çıkabilecek bir yolculuğa gitmeli miyim?";
+  const editedQuestion =
+    "Falım yakında hayatımın akışını değiştirebilecek bir yolculuğa işaret ediyor. Böyle bir fırsat karşıma çıkarsa düzenimi bozup bu yolculuğa çıkmalı mıyım?";
   const { result, request } = await editWithMock({
     fortuneText:
-      "Kariyerinde uzun süredir bulunduğun çizgiden farklı bir yöne kayma isteği belirginleşiyor.",
+      "Yakında hayatımın akışını değiştirebilecek önemli bir yol görünüyor.",
     initialQuestion,
     editedQuestion,
   });
 
   assert.equal(result, editedQuestion);
   assert.equal(request.model, "gpt-5.4-mini");
-  assert.equal(request.max_output_tokens, 120);
+  assert.equal(request.max_output_tokens, 250);
   assert.equal(
     request.input[1].content[0].text,
-    `FAL YORUMU:\n\nKariyerinde uzun süredir bulunduğun çizgiden farklı bir yöne kayma isteği belirginleşiyor.\n\nİLK ANKET SORUSU:\n\n${initialQuestion}`,
+    `FAL YORUMU:\n\nYakında hayatımın akışını değiştirebilecek önemli bir yol görünüyor.\n\nİLK ANKET SORUSU:\n\n${initialQuestion}`,
   );
 });
 
-test("editör gelecek tahmini olan kariyer sorusunu kişisel karara dönüştürür", async () => {
+test("editör kariyer değişimini daha güçlü bir senaryo ve karara dönüştürür", async () => {
   const { result } = await editWithMock({
-    fortuneText: "Kariyerimde farklı bir yöne ilerleme isteği öne çıkıyor.",
-    initialQuestion:
-      "Yakın zamanda kariyerinde yeni bir yön seçme ihtiyacı belirginleşecek mi?",
-    editedQuestion: "Kariyerimde farklı bir alana yönelmeli miyim?",
+    fortuneText: "Kariyerimde yeni ve riskli bir fırsatın yaklaştığı görülüyor.",
+    initialQuestion: "İş hayatımdaki yeni değişimi değerlendirmeli miyim?",
+    editedQuestion:
+      "Falım kariyerimde yeni ve riskli bir fırsatın yaklaştığını söylüyor. Böyle bir teklif gelirse mevcut düzenimi bırakıp yeni bir başlangıç yapmalı mıyım?",
   });
 
-  assert.equal(result, "Kariyerimde farklı bir alana yönelmeli miyim?");
+  assert.equal(
+    result,
+    "Falım kariyerimde yeni ve riskli bir fırsatın yaklaştığını söylüyor. Böyle bir teklif gelirse mevcut düzenimi bırakıp yeni bir başlangıç yapmalı mıyım?",
+  );
 });
 
-test("editör iki olasılığı kariyer görüşmesi kararına indirir", async () => {
+test("editör geçmişten gelen kişiyi yeniden görüşme kararına dönüştürür", async () => {
   const { result } = await editWithMock({
-    fortuneText: "Kariyerimde yaklaşan bir iş görüşmesi dikkat çekiyor.",
-    initialQuestion:
-      "Yakın zamanda gelecek bir görüşme veya teklifi kabul etmeli miyim?",
-    editedQuestion: "Yaklaşan iş görüşmesine katılmalı mıyım?",
+    fortuneText: "Geçmişten biri yeniden gündeme gelebilir.",
+    initialQuestion: "Geçmişten biri hayatıma yeniden girer mi?",
+    editedQuestion:
+      "Falım geçmişten birinin yeniden hayatıma girmek istediğini gösteriyor. Eski sevgilim barışmak için geri dönerse ona ikinci bir şans vermeli miyim?",
   });
 
-  assert.equal(result, "Yaklaşan iş görüşmesine katılmalı mıyım?");
+  assert.equal(
+    result,
+    "Falım geçmişten birinin yeniden hayatıma girmek istediğini gösteriyor. Eski sevgilim barışmak için geri dönerse ona ikinci bir şans vermeli miyim?",
+  );
 });
 
-test("editör karar yöntemini gerçek tek karar nesnesine dönüştürür", async () => {
+test("editör yeni kişiyi net ve ilgi çekici bir karar sorusuna dönüştürür", async () => {
   const { result } = await editWithMock({
-    fortuneText: "Geçmişten gelen bir kişinin yeniden yaklaşma ihtimali öne çıkıyor.",
-    initialQuestion:
-      "Aşk hayatımda yaşadığım ikilemde kalbimin sesini dinleyerek birini seçmeli miyim?",
-    editedQuestion: "Geçmişten gelen kişiye yeniden şans vermeli miyim?",
+    fortuneText: "Aşk hayatımda yeni bir kişinin enerjisi belirginleşiyor.",
+    initialQuestion: "Aşk hayatımda yeni bir adım atmalı mıyım?",
+    editedQuestion:
+      "Falım aşk hayatıma yeni birinin girebileceğini söylüyor. Bu kişi beklediğim tipten çok farklı olsa bile ona bir şans vermeli miyim?",
   });
 
-  assert.equal(result, "Geçmişten gelen kişiye yeniden şans vermeli miyim?");
+  assert.equal(
+    result,
+    "Falım aşk hayatıma yeni birinin girebileceğini söylüyor. Bu kişi beklediğim tipten çok farklı olsa bile ona bir şans vermeli miyim?",
+  );
 });
 
-test("editör kariyer fırsatını falda anlatılan projeyi üstlenme kararına çevirir", async () => {
+test("editör ilk AI konusu zayıfsa falın daha güçlü kariyer konusunu seçebilir", async () => {
   const { result } = await editWithMock({
-    fortuneText: "Kariyerimde yeni bir proje ihtimali beliriyor.",
-    initialQuestion: "Kariyerimdeki fırsatı değerlendirmeli miyim?",
-    editedQuestion: "Karşıma çıkabilecek yeni projeyi üstlenmeli miyim?",
+    fortuneText:
+      "Kısa bir yol ihtimali görünse de kariyerimde belirleyici bir yeni görev öne çıkıyor.",
+    initialQuestion: "Yakın zamanda çıkabilecek bir yolculuğa gitmeli miyim?",
+    editedQuestion:
+      "Falım iş hayatımda önemli bir görev değişikliğinin yaklaştığını söylüyor. Yeni görevi üstlenirsem mevcut düzenimi değiştirmeyi göze almalı mıyım?",
   });
 
-  assert.equal(result, "Karşıma çıkabilecek yeni projeyi üstlenmeli miyim?");
+  assert.equal(
+    result,
+    "Falım iş hayatımda önemli bir görev değişikliğinin yaklaştığını söylüyor. Yeni görevi üstlenirsem mevcut düzenimi değiştirmeyi göze almalı mıyım?",
+  );
 });
 
 test("hasDilemma false ise ikinci AI çağrısı hiç yapılmaz", async () => {
@@ -141,6 +156,18 @@ test("AI hatasında ilk soru fallback olarak korunur", async () => {
   } finally {
     console.warn = originalWarn;
   }
+});
+
+test("editör iki veya üç kısa cümlelik Anket metnini geçerli kabul eder", async () => {
+  const longQuestion =
+    "Falım yeni bir yolculuğun hayatımda önemli bir değişim yaratabileceğini söylüyor. Bu fırsat karşıma çıkarsa günlük düzenimi bırakıp yola çıkmalı mıyım? Böyle bir kararı vermeye hazır mıyım?";
+  const { result } = await editWithMock({
+    fortuneText: "Hayatımın akışını değiştirebilecek güçlü bir yol görünüyor.",
+    initialQuestion: "Yolculuğa gitmeli miyim?",
+    editedQuestion: longQuestion,
+  });
+
+  assert.equal(result, longQuestion);
 });
 
 test("bozuk veya boş editör JSON'u ilk soruya fallback eder", async () => {
