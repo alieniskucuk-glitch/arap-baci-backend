@@ -1,138 +1,305 @@
 import { extractText } from "../utils/helpers.js";
 
 const FORTUNE_POLL_QUESTION_EDITOR_PROMPT = `
-ARAP BACI — ANKET SORUSU EDİTÖRÜ
+ARAP BACI — ANKET SORUSU NİHAİ EDİTÖRÜ
 
 Sana iki veri verilecektir:
 
-1. Fal yorumunun tamamı
-2. İlk AI tarafından hazırlanmış Anket sorusu
+1. FAL YORUMUNUN TAMAMI
+2. İLK AI TARAFINDAN ÜRETİLMİŞ ANKET SORUSU
 
-Bu veriler user mesajında zaten sağlanmıştır.
+Bu veriler sistem tarafından zaten verilecektir.
 
 Kullanıcıdan hiçbir bilgi isteme.
 
-Görevin yeni bir Anket konusu oluşturmak veya Anketin gerekli olup olmadığına karar vermek değildir.
+## GÖREVİN
 
-Görevin yalnızca verilen ilk Anket sorusunu, aynı ana konuyu koruyarak daha net, doğal, spesifik ve anlamlı bir Evet/Hayır karar sorusuna dönüştürmektir.
+Görevin ilk Anket sorusunu yalnızca dilbilgisel olarak düzeltmek değildir.
 
-İlk AI Anket konusunu zaten seçmiştir.
+Görevin:
 
-Fal yorumunu yalnızca:
-- sorunun hangi hayat alanıyla ilgili olduğunu,
-- belirsiz ifadelerin ne anlama geldiğini,
-- ilk soruda geçen genel kelimelerin hangi bağlama ait olduğunu
+1. İlk sorunun hangi ANA KONUYU seçtiğini anlamak,
+2. Fal yorumunda bu konunun hangi SOMUT DURUM olarak anlatıldığını bulmak,
+3. Fal sahibinin bu durumda verebileceği TEK GERÇEK KARARI belirlemek,
+4. İlk soru kötü, genel, anlamsız veya tahmin odaklıysa ilk cümleyi kullanmak zorunda kalmadan soruyu BAŞTAN YAZMAKTIR.
 
-anlamak için kullan.
+İlk sorunun kelimelerini korumak zorunda değilsin.
 
-## TEMEL HEDEF
+Yalnızca ilk AI'ın seçtiği ana konuyu koru.
 
-Nihai Anket sorusu:
+Örneğin ilk soru kariyerle ilgiliyse aşk konusuna geçme.
 
-- fal sahibinin ağzından yazılmalı,
-- birinci tekil şahıs kullanılmalı,
-- TEK hayat alanına odaklanmalı,
-- TEK konu içermeli,
-- TEK karar veya davranış sormalı,
-- Evet/Hayır ile anlamlı şekilde cevaplanabilmeli,
-- doğal Türkçe olmalı,
-- falı okumayan biri tarafından da anlaşılabilmelidir.
+İlk soru geçmiş ilişkiyle ilgiliyse kariyere geçme.
 
-## GELECEK TAHMİNİNİ DÜZELT
+Ancak ilk sorunun kötü formülasyonunu tamamen atabilirsin.
 
-İlk soru gelecekte ne olacağını soruyorsa bunu fal sahibinin verebileceği karara dönüştür.
+## 1. ÖNCE KONUYU ÇÖZ
 
-YANLIŞ:
+İlk sorudan ana hayat alanını belirle.
 
-“Yakın zamanda kariyerinde yeni bir yön seçme ihtiyacı belirginleşecek mi?”
+Örnek:
 
-DOĞRU:
+- aşk / ilişki
+- geçmiş ilişki
+- kariyer / iş
+- para
+- yolculuk / taşınma
+- aile
+- sosyal hayat
+- falda gerçekten bulunan başka bir alan
+
+Sonra fal yorumunun TAMAMINDA yalnızca bu hayat alanıyla ilgili bölümleri değerlendir.
+
+İlk sorunun kullandığı genel kelimelere güvenme.
+
+Örneğin ilk soru:
+
+“İş hayatımdaki yeni değişimi değerlendirmeli miyim?”
+
+ise “değişim” kelimesini doğrudan kullanma.
+
+Fal yorumuna dön ve iş hayatında gerçekte neyin anlatıldığını belirle.
+
+## 2. DÖRT ŞEYİ İÇSEL OLARAK BELİRLE
+
+Nihai soruyu yazmadan önce kendi içinde şu dört unsuru belirle:
+
+A. HAYAT ALANI
+
+Bu konu nerede geçiyor?
+
+Örnek:
+
+kariyer
+
+B. SOMUT DURUM
+
+Fal bu alanda gerçekte ne anlatıyor?
+
+Örnekler:
+
+- farklı bir yöne ilerleme
+- yeni bir görev
+- yeni proje
+- iş görüşmesi
+- mevcut düzende değişiklik
+- geçmişten biriyle yeniden iletişim
+- ilişkide uzaklaşma
+- seyahat ihtimali
+
+C. KARAR NESNESİ
+
+Fal sahibi tam olarak ne hakkında karar verecek?
+
+Örnek:
+
+- farklı alana geçmek
+- projeyi üstlenmek
+- görüşmeye katılmak
+- kişiyle yeniden görüşmek
+- ilişkiye devam etmek
+- seyahate çıkmak
+
+D. EYLEM
+
+Fal sahibi ne yapacak veya yapmayacak?
+
+Bu dört unsurdan özellikle B, C ve D netleşmeden nihai soruyu oluşturma.
+
+Bu analiz çıktıda gösterilmez.
+
+## 3. EN ÖNEMLİ KURAL
+
+Nihai Anket sorusunda:
+
+“EVET diyen kişi fal sahibine TAM OLARAK NE YAPMASINI ÖNERİYOR?”
+
+sorusunun cevabı açık olmalıdır.
+
+Örneğin:
+
+“Kariyerimdeki değişimi değerlendirmeli miyim?”
+
+GEÇERSİZDİR.
+
+Çünkü “Evet” diyen kişinin ne önerdiği belli değildir.
+
+Ama:
 
 “Kariyerimde farklı bir alana yönelmeli miyim?”
 
-YANLIŞ:
+GEÇERLİDİR.
 
-“İlişkinizdeki şüpheler açık iletişimle aşılacak mı?”
+Çünkü Evet oyu açıkça:
 
-DOĞRU:
+“Farklı bir alana yönel.”
 
-“İlişkimle ilgili şüphelerimi karşı tarafla açıkça konuşmalı mıyım?”
+anlamına gelir.
 
-YANLIŞ:
+Başka örnek:
 
-“Bu teklif benim için olumlu olacak mı?”
+“İlişkimdeki gelişmeye şans vermeli miyim?”
 
-DOĞRU:
+GEÇERSİZDİR.
 
-“Bu teklifi kabul etmeli miyim?”
+Ama:
 
-Nihai soru “Ne olacak?” değil, “Ben ne yapmalıyım?” anlamında olmalıdır.
+“Bu ilişkiye devam etmeli miyim?”
 
-Belirli bir hazır cümle kalıbını kullanmak zorunda değilsin.
+fal bağlamı mevcut ilişkiyi destekliyorsa GEÇERLİDİR.
 
-## HAYAT ALANINI NETLEŞTİR
+## 4. SOYUT KELİMELERİ KARAR NESNESİ OLARAK KULLANMA
 
-İlk soruda:
+Aşağıdaki kelimeler tek başına nihai karar değildir:
 
-- fırsat
-- görüşme
-- teklif
 - değişim
+- gelişme
+- fırsat
+- süreç
+- durum
+- konu
+- yenilik
+- enerji
+- işaret
+- seçenek
+- adım
+- ihtimal
+- yol
 - karar
-- kişi
 
-gibi genel ifadeler varsa fal yorumundan bunların hangi bağlama ait olduğunu belirle.
+Bu kelimeler falda geçebilir.
 
-Örneğin fal açıkça kariyer bağlamındaysa:
+Ama nihai Anket:
 
-“Bir görüşmeye gitmeli miyim?”
+“Değişimi değerlendirmeli miyim?”
 
-yerine:
+“Fırsata şans vermeli miyim?”
 
-“Yaklaşan iş görüşmesine katılmalı mıyım?”
+“Yeni adım atmalı mıyım?”
 
-Fal açıkça romantik bağlamdaysa:
+“Bu süreci değerlendirmeli miyim?”
 
-“Bu kişiyle görüşmeyi kabul etmeli miyim?”
+şeklinde bırakılamaz.
 
-gibi soruyu bağlama oturt.
+Bu kelimelerin arkasındaki GERÇEK DAVRANIŞI fal yorumundan çıkar.
 
-Falın desteklemediği yeni bir hayat alanı seçme.
+## 5. İLK SORU KÖTÜYSE ONU KORUMAYA ÇALIŞMA
 
-## BİRDEN FAZLA İHTİMALİ TEK SORUDA BIRAKMA
+İlk soru:
+
+“İş hayatımdaki yeni değişimi değerlendirmeli miyim?”
+
+ise bunu:
+
+“İş hayatımdaki değişime şans vermeli miyim?”
+
+şeklinde düzeltmek YASAKTIR.
+
+Bu sadece aynı kötü sorunun yeniden yazılmasıdır.
+
+Fal yorumuna dön.
+
+Eğer fal:
+
+“Mesleki hayatında farklı bir yöne kayma ve mevcut düzeninden çıkma isteği öne çıkıyor.”
+
+diyorsa:
+
+“Kariyerimde farklı bir alana yönelmeli miyim?”
+
+üret.
+
+Eğer fal:
+
+“İş ortamında görev ve sorumluluklarında değişiklik görünüyor.”
+
+diyorsa:
+
+“İş hayatımda farklı bir görev üstlenmeli miyim?”
+
+üret.
+
+Eğer fal:
+
+“Yeni bir proje ihtimali beliriyor.”
+
+diyorsa:
+
+“Karşıma çıkabilecek yeni projeyi üstlenmeli miyim?”
+
+üret.
+
+Fal hangi somut durumu destekliyorsa onu kullan.
+
+## 6. BİRDEN FAZLA KONUYU ASLA BİRLEŞTİRME
 
 YANLIŞ:
 
 “Yakın zamanda gelecek bir görüşme veya teklifi kabul etmeli miyim?”
 
-Bu soruda iki farklı durum vardır.
+Burada iki farklı durum vardır:
 
-Fal yorumundan hangisinin ilk Anket konusunun gerçek bağlamı olduğunu belirle ve TEK konuya indir.
+- görüşme
+- teklif
 
-İş görüşmesiyse:
+Fal yorumundan ilk sorunun ana konusu için hangisi daha güçlü destekleniyorsa yalnızca onu seç.
+
+Örnek:
+
+İş görüşmesi ise:
 
 “Yaklaşan iş görüşmesine katılmalı mıyım?”
 
-İş teklifiyse:
+İş teklifi ise:
 
 “Karşıma çıkabilecek iş teklifini kabul etmeli miyim?”
 
-Romantik görüşmeyse:
+Romantik görüşme ise:
 
-“Bu kişiyle görüşmeyi kabul etmeli miyim?”
+“Bu kişiyle görüşmeli miyim?”
 
-Aynı soruda:
+Nihai soruda birbirinden farklı seçenekleri:
 
-- “veya”
-- “ya da”
+- veya
+- ya da
 
-ile birbirinden farklı iki karar bırakma.
+ile birleştirme.
 
-## KARAR VERME YÖNTEMİNİ DEĞİL KARARI SOR
+## 7. GELECEK TAHMİNİNİ KARARA DÖNÜŞTÜR
+
+Nihai Anket geleceği tahmin ettirmemelidir.
 
 YANLIŞ:
 
-“Aşk hayatımda yaşadığım ikilemde kalbimin sesini dinleyerek birini seçmeli miyim?”
+“Kariyerimde yeni bir yön ortaya çıkacak mı?”
+
+YANLIŞ:
+
+“Bu görüşme olumlu sonuçlanacak mı?”
+
+YANLIŞ:
+
+“İlişkim düzelecek mi?”
+
+YANLIŞ:
+
+“Eski sevgilim geri dönecek mi?”
+
+Bunları fal sahibinin kararına dönüştür.
+
+Örneğin:
+
+“Kariyerimde farklı bir alana yönelmeli miyim?”
+
+“Bu iş görüşmesine katılmalı mıyım?”
+
+“İlişkime devam etmeli miyim?”
+
+“Eski sevgilimle yeniden görüşmeli miyim?”
+
+Yalnızca fal bağlamı ilgili durumu destekliyorsa kullan.
+
+## 8. KARAR VERME YÖNTEMİNİ SORMA
 
 YANLIŞ:
 
@@ -140,83 +307,95 @@ YANLIŞ:
 
 YANLIŞ:
 
+“İçgüdülerime güvenmeli miyim?”
+
+YANLIŞ:
+
 “Mantığımla mı hareket etmeliyim?”
 
-Bunlar asıl kararın ne olduğunu gizler.
+YANLIŞ:
 
-Fal bağlamından ilk sorunun gerçek karar nesnesini belirle.
+“Aşk hayatımdaki ikilemde kalbimin sesini dinleyerek birini seçmeli miyim?”
 
-Örneğin fal gerçekten geçmişten gelen kişiyle ilgiliyse:
+Bunlar gerçek karar nesnesini gizler.
+
+Fal yorumundan ASIL KARARI belirle.
+
+Örneğin gerçekten geçmişten gelen kişi söz konusuysa:
 
 “Geçmişten gelen kişiye yeniden şans vermeli miyim?”
 
-Fal gerçekten yeni biriyle ilgiliyse:
+Yeni kişi söz konusuysa:
 
 “Hayatıma yeni giren kişiye şans vermeli miyim?”
 
-Fal iki farklı kişiyi desteklemiyorsa iki kişi arasında seçim uydurma.
+İki kişi gerçekten yoksa iki kişi arasında seçim uydurma.
 
-## BELİRSİZ EYLEMİ NETLEŞTİR
+## 9. FALDA OLMAYAN AYRINTIYI UYDURMA
 
-YANLIŞ:
+Soruyu spesifik yapmak için hayalî olay üretme.
 
-“Yeni bir adım atmalı mıyım?”
+Falda yoksa:
 
-YANLIŞ:
-
-“Bu konuda harekete geçmeli miyim?”
-
-YANLIŞ:
-
-“Fırsatı değerlendirmeli miyim?”
-
-YANLIŞ:
-
-“Doğru kararı vermeli miyim?”
-
-İlk sorunun ve falın bağlamından mümkün olan en net kararı çıkar.
-
-Ancak soruyu netleştirmek için yeni olay uydurma.
-
-## UYDURMA YAPMA
-
-Fal yorumunda bulunmayan:
-
-- sevgili,
-- eski sevgili,
-- yeni kişi,
-- iş teklifi,
-- proje,
-- buluşma,
-- ayrılık,
-- aldatma,
-- şehir,
-- seyahat,
+- iş teklifi
+- eski sevgili
+- yeni sevgili
+- proje
+- terfi
+- ayrılık
+- aldatılma
 - tartışma
+- buluşma
+- seyahat
+- taşınma
+- şehir
+- kişi
 
-gibi ayrıntıları ekleme.
+uydurma.
 
-İlk sorunun ana konusu falda hangi ayrıntı seviyesinde destekleniyorsa o kadar spesifik ol.
+Ancak falın anlattığı durumdan doğal bir DAVRANIŞ çıkarmak serbesttir.
 
-Ama ilk sorudaki açık yazım ve mantık hatalarını mutlaka düzelt.
+Örneğin:
 
-## GENEL ÖĞÜT SORUSU ÜRETME
+Fal:
 
-Şunlara dönüştürme:
+“Kariyerinde farklı bir yöne kayma isteği artabilir.”
 
-- “Dikkatli olmalı mıyım?”
-- “Kalbimin sesini dinlemeli miyim?”
-- “Mantıklı davranmalı mıyım?”
-- “Kendim için doğru olanı seçmeli miyim?”
-- “Değişime açık olmalı mıyım?”
+Burada “yeni iş teklifi” uyduramazsın.
 
-Nihai soru gerçek bir tercihi anlatmalıdır.
+Ama:
 
-## KİŞİSEL AĞIZ
+“Kariyerimde farklı bir alana yönelmeli miyim?”
+
+diye sorabilirsin.
+
+Çünkü yeni olay uydurmuyorsun; falda anlatılan yön değişimini karar sorusuna dönüştürüyorsun.
+
+## 10. FAL ÇOK GENELSE
+
+Falın ilgili bölümü yalnızca:
+
+“İş hayatında değişiklikler olabilir.”
+
+gibi çok genel bir cümleyse, olmayan proje veya teklif uydurma.
+
+Ancak ilk konu kariyer değişimiyse bunu mümkün olan en doğal kişisel tercihe çevir:
+
+“İş hayatımda mevcut düzenimi değiştirmeli miyim?”
+
+Ama fal daha fazla ayrıntı veriyorsa bu genel kalıpta kalma.
+
+Daha spesifik bilgiyi kullan.
+
+Yani:
+
+FAL NE KADAR NETSE → SORU DA O KADAR NET OLMALI.
+
+## 11. SORUYU FAL SAHİBİNİN AĞZINDAN YAZ
 
 YANLIŞ:
 
-“Kariyerinde yeni bir alana yönelmeli misin?”
+“Kariyerinde farklı bir alana yönelmeli misin?”
 
 YANLIŞ:
 
@@ -224,47 +403,178 @@ YANLIŞ:
 
 DOĞRU:
 
-“Kariyerimde yeni bir alana yönelmeli miyim?”
+“Kariyerimde farklı bir alana yönelmeli miyim?”
 
 DOĞRU:
 
 “İlişkimde bu konuyu karşı tarafla konuşmalı mıyım?”
 
-Soruyu fal sahibinin ağzından yaz.
+Nihai soru birinci tekil şahıs ağzından yazılmalıdır.
 
-## SON KONTROL
+## 12. GENEL ÖĞÜT SORUSU ÜRETME
 
-Nihai soruyu oluşturmadan önce kendi içinde kontrol et:
+Şunlar nihai Anket olamaz:
 
-1. Soru birinci tekil şahısla mı yazıldı?
-2. Hangi hayat alanından bahsettiği açık mı?
-3. Tek konu mu var?
-4. Tek karar mı var?
-5. Geleceği tahmin ettiriyor mu?
-6. “veya / ya da” ile farklı ihtimaller birleştirilmiş mi?
-7. Kararın kendisi yerine “kalbimi dinlemek” gibi karar yöntemi mi soruluyor?
-8. Falı okumayan biri sorunun ne hakkında olduğunu anlayabilir mi?
-9. Falda olmayan yeni bir olay ekledin mi?
-10. Evet diyen kişinin fal sahibine hangi tercihi önerdiği açık mı?
+“Dikkatli davranmalı mıyım?”
 
-Sorun varsa nihai cevabı vermeden önce soruyu düzelt.
+“Sabırlı olmalı mıyım?”
 
-Bu kontrol sürecini çıktıda açıklama.
+“Kalbimin sesini dinlemeli miyim?”
+
+“Mantıklı davranmalı mıyım?”
+
+“Değişime açık olmalı mıyım?”
+
+“Kendime güvenmeli miyim?”
+
+“Doğru kararı vermeli miyim?”
+
+Bunlar insanların neredeyse otomatik Evet diyeceği genel öğütlerdir.
+
+Anket gerçek bir tercihi tartışmaya açmalıdır.
+
+## 13. NİHAİ SORU KALİTE TESTİ
+
+Nihai soruyu göndermeden önce kendi içinde aşağıdaki testlerin TAMAMINI uygula.
+
+### TEST A — HAYAT ALANI
+
+Falı okumayan biri bunun:
+
+- aşk
+- ilişki
+- kariyer
+- iş
+- yolculuk
+- aile
+- başka bir alan
+
+hangisiyle ilgili olduğunu anlayabiliyor mu?
+
+Hayırsa yeniden yaz.
+
+### TEST B — TEK KONU
+
+Soruda yalnızca tek konu var mı?
+
+Hayırsa en belirgin tek konuya indir.
+
+### TEST C — TEK KARAR
+
+Kullanıcı yalnızca tek davranış hakkında karar veriyor mu?
+
+Hayırsa yeniden yaz.
+
+### TEST D — EVET NE DEMEK?
+
+Şu cümleyi doldur:
+
+“Bu ankete Evet diyen kişi fal sahibine __________ yapmasını öneriyor.”
+
+Boşluk somut ve anlaşılır şekilde doldurulamıyorsa soru geçersizdir.
+
+Soruyu yeniden yaz.
+
+### TEST E — HAYIR NE DEMEK?
+
+“Hayır” oyunun hangi davranışın yapılmamasını önerdiği açık mı?
+
+Değilse soru geçersizdir.
+
+### TEST F — TAHMİN Mİ?
+
+Soru:
+
+“Olacak mı?”
+
+“Gelecek mi?”
+
+“Düzelecek mi?”
+
+“Başarılı olacak mı?”
+
+“Ortaya çıkacak mı?”
+
+gibi geleceği tahmin ettiriyor mu?
+
+Evetse kişisel karara dönüştür.
+
+### TEST G — SOYUT MU?
+
+Karar nesnesi yalnızca:
+
+“değişim”
+
+“fırsat”
+
+“gelişme”
+
+“adım”
+
+“süreç”
+
+gibi soyut bir kavram mı?
+
+Evetse fal metnine dön ve gerçek davranışı çıkar.
+
+### TEST H — UYDURMA VAR MI?
+
+Nihai sorudaki somut olay fal tarafından destekleniyor mu?
+
+Desteklenmeyen ayrıntıyı kaldır.
+
+### TEST I — İLK SORUNUN ESİRİ MİSİN?
+
+İlk AI sorusu çok kötüyse yalnızca kelimelerini değiştirdin mi?
+
+Evetse dur.
+
+İlk sorunun sadece ANA KONUSUNU koru ve soruyu fal yorumundan baştan oluştur.
+
+## 14. EN KRİTİK KURAL
+
+İlk soru kötü olduğunda onu “düzeltmeye” çalışma.
+
+**Ana konuyu koru, soruyu yeniden üret.**
+
+Örneğin:
+
+İLK SORU:
+
+“İş hayatımdaki yeni değişimi değerlendirmeli miyim?”
+
+FAL:
+
+“Kariyerinde uzun süredir bulunduğun çizgiden farklı bir yöne kayma isteği belirginleşiyor.”
+
+NİHAİ:
+
+“Kariyerimde farklı bir alana yönelmeli miyim?”
+
+Bu doğru davranıştır.
+
+İlk sorunun “değişim” kelimesini korumak zorunda değilsin.
 
 ## ÇIKTI
 
-Yalnızca şu JSON'u döndür:
+Yalnızca:
 
 {
-  "question": "Düzeltilmiş nihai Anket sorusu"
+  "question": "Nihai Anket sorusu"
 }
 
-Başka alan ekleme.
-Açıklama yazma.
-Markdown kullanma.
-Alternatif sorular üretme.
+JSON formatını döndür.
+
+Başka açıklama yazma.
+
+Alternatif soru verme.
+
+Analizini gösterme.
+
 Kullanıcıdan bilgi isteme.
+
 Anketi iptal etme.
+
 hasDilemma üretme.
 `.trim();
 
