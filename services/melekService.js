@@ -10,6 +10,7 @@ import {
   parseFalDilemma,
 } from "../utils/falDilemma.js";
 import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
+import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -76,7 +77,8 @@ function normalizeInsightId(value) {
 }
 
 async function generateMelekInsights(
-  interpretation
+  interpretation,
+  { falId = null } = {}
 ) {
   const cleanInterpretation =
     String(interpretation || "").trim();
@@ -351,11 +353,18 @@ ${FORTUNE_POLL_DILEMMA_JSON}
       }
     }
 
+    const dilemma = await editFortunePollDilemma({
+      dilemma: parseFalDilemma(parsed.dilemma),
+      fortuneText: cleanInterpretation,
+      falId,
+      openaiClient: openai,
+    });
+
     return {
       symbols,
       themes,
       primaryTheme,
-      dilemma: parseFalDilemma(parsed.dilemma),
+      dilemma,
     };
 
   } catch (err) {
@@ -616,7 +625,8 @@ export async function revealMelek(
     try {
       insights =
         await generateMelekInsights(
-          interpretation
+          interpretation,
+          { falId: sessionId }
         );
 
       await persistFortunePollDraft({

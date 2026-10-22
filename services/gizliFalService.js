@@ -10,6 +10,7 @@ import {
   parseFalDilemma,
 } from "../utils/falDilemma.js";
 import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
+import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
 
 const COLLECTION = "secretFortunes";
 
@@ -252,7 +253,8 @@ function statusResponse(
 ========================= */
 
 async function generateResult(
-  data
+  data,
+  { falId = null } = {}
 ) {
   const creatorCards =
     cardsFromSelection(
@@ -420,6 +422,7 @@ ${JSON.stringify(
   const parsed =
     JSON.parse(raw);
 
+  const initialDilemma = parseFalDilemma(parsed?.dilemma);
   const result = {
     sharedCard: {
       name:
@@ -491,8 +494,15 @@ ${JSON.stringify(
         ""
       ).trim(),
 
-    dilemma: parseFalDilemma(parsed?.dilemma),
+    dilemma: initialDilemma,
   };
+
+  result.dilemma = await editFortunePollDilemma({
+    dilemma: result.dilemma,
+    fortuneText: result.jointInterpretation,
+    falId,
+    openaiClient: openai,
+  });
 
   if (
     !result
@@ -720,7 +730,8 @@ async function finalizeSession(
   try {
     result =
       await generateResult(
-        data
+        data,
+        { falId: `gizli:${sessionId}` }
       );
 
   } catch (err) {

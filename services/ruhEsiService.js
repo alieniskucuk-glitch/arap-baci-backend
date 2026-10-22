@@ -8,6 +8,7 @@ import {
   parseFalDilemma,
 } from "../utils/falDilemma.js";
 import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
+import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -40,7 +41,7 @@ function normalizeInsightId(value) {
    Hata verirse mevcut falı etkilemez.
 ========================= */
 
-async function generateRuhEsiInsights(result) {
+async function generateRuhEsiInsights(result, { falId = null } = {}) {
   const cleanResult =
     String(result || "").trim();
 
@@ -365,11 +366,18 @@ ${FORTUNE_POLL_DILEMMA_JSON}
       }
     }
 
+    const dilemma = await editFortunePollDilemma({
+      dilemma: parseFalDilemma(parsed.dilemma),
+      fortuneText: cleanResult,
+      falId,
+      openaiClient: openai,
+    });
+
     return {
       symbols,
       themes,
       primaryTheme,
-      dilemma: parseFalDilemma(parsed.dilemma),
+      dilemma,
     };
 
   } catch (err) {
@@ -678,7 +686,8 @@ Daha güçlü ve etkileyici yorum yaz.
         ),
 
         generateRuhEsiInsights(
-          parsed.result
+          parsed.result,
+          { falId }
         ),
       ]);
 

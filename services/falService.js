@@ -8,6 +8,7 @@ import {
   emptyFalDilemma,
   parseFalDilemma,
 } from "../utils/falDilemma.js";
+import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
 
 /* =========================
    PROMPTS (KORUNDU)
@@ -691,8 +692,14 @@ SADECE şu JSON formatında cevap ver:
       }
     }
 
-    const dilemma = parseFalDilemma(parsed.dilemma, {
+    const parsedDilemma = parseFalDilemma(parsed.dilemma, {
       fortuneText: cleanFal,
+    });
+    const dilemma = await editFortunePollDilemma({
+      dilemma: parsedDilemma,
+      fortuneText: cleanFal,
+      falId,
+      openaiClient: openai,
     });
     const hasDilemmaObject =
       parsed?.dilemma &&

@@ -8,6 +8,7 @@ import {
   parseFalDilemma,
 } from "../utils/falDilemma.js";
 import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
+import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -47,7 +48,8 @@ function normalizeInsightId(value) {
 
 async function generateRuyaInsights(
   dream,
-  interpretation
+  interpretation,
+  { falId = null } = {}
 ) {
   const cleanDream =
     String(dream || "").trim();
@@ -415,11 +417,18 @@ ${FORTUNE_POLL_DILEMMA_JSON}
       }
     }
 
+    const dilemma = await editFortunePollDilemma({
+      dilemma: parseFalDilemma(parsed.dilemma),
+      fortuneText: cleanInterpretation,
+      falId,
+      openaiClient: openai,
+    });
+
     return {
       symbols,
       themes,
       primaryTheme,
-      dilemma: parseFalDilemma(parsed.dilemma),
+      dilemma,
     };
 
   } catch (err) {
@@ -598,7 +607,8 @@ En az yaklaşık
 
           generateRuyaInsights(
             dream,
-            result
+            result,
+            { falId }
           ),
         ]);
 
