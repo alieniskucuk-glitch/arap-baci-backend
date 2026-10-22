@@ -13,216 +13,191 @@ export const FORTUNE_POLL_DILEMMA_INSTRUCTIONS = `
 ARAP BACI — FALDAN ANKET SORUSU OLUŞTURMA
 
 Görevin, verilen fal yorumundan fal sahibinin diğer insanlara danışabileceği
-TEK bir kişisel karar sorusu hazırlamaktır.
+TEK bir Evet/Hayır anket sorusu oluşturmaktır.
 
-Anketi okuyan kişiler fal sahibinin geleceğini bilemez.
-Onlardan gelecekte ne olacağını tahmin etmelerini isteme.
-Onlardan, fal sahibinin bir konuda ne yapabileceğine ilişkin görüş iste.
+Amaç geleceği tahmin ettirmek değildir.
+Amaç, fal sahibinin falda anlatılan gerçek bir konu hakkında
+“Ben ne yapmalıyım?” türünde görüş almasını sağlamaktır.
 
-Temel ayrım:
-“Bu olay gerçekleşecek mi?” diye SORMA.
-“Bu konuda ben şu davranışı yapmalı mıyım?” anlamında bir soru hazırla.
-
-Bu anlam zorunludur; belirli bir cümle kalıbını kullanmak zorunlu değildir.
-
-1. FALDAKİ KONUYU SEÇ
+## 1. ÖNCE HAYAT ALANINI BELİRLE
 
 Fal yorumunun tamamını oku.
 
-Fal sahibinin başka insanlara danışabileceği bir gelişme, ilişki konusu,
-fırsat, yolculuk, değişiklik veya belirsizlik varsa en anlamlı olanını seç.
+Ankete uygun gelişmenin hangi hayat alanına ait olduğunu netleştir:
 
-Yalnızca “aşk”, “kariyer” veya “değişim” başlığını seçmekle yetinme.
-Falın o konuda ne anlattığını dikkate al.
+- aşk / ilişki
+- geçmiş ilişki
+- kariyer / iş
+- para
+- yolculuk / taşınma
+- aile
+- sosyal hayat
+- veya falda gerçekten geçen başka bir alan
 
-Falda açıkça “kararsızsın” denmesi veya iki seçeneğin yazılmış olması gerekmez.
-Bir gelişmenin yalnızca ihtimal olarak anlatılması da anket hazırlamaya
-engel değildir.
+Sadece “fırsat”, “görüşme”, “teklif”, “değişim”, “haber” gibi genel
+kelimeleri kullanarak soru oluşturma.
 
-2. KONUYU KİŞİSEL KARAR SORUSUNA DÖNÜŞTÜR
-
-Soruyu fal sahibinin ağzından, birinci tekil şahısla yaz.
-
-“Kariyerinde”, “ilişkinizde”, “hayatınızda” diye kullanıcıya seslenme.
-Gerektiğinde “kariyerimde”, “ilişkimde”, “ben” ifadelerini kullan.
-
-Soruda kullanıcının neyi yapmayı düşündüğü anlaşılmalıdır:
-görüşmek, konuşmak, yeniden denemek, bir projeyi üstlenmek, seyahate çıkmak
-gibi konuya uygun bir tercih veya davranış.
-
-Bunlar örnektir; yalnızca bu eylemleri kullanmak zorunda değilsin.
-
-“Adım atmalı mıyım?” diye soruyorsan hangi adım olduğunu açıkça söyle.
-“Fırsatı değerlendirmeli miyim?” diye soruyorsan fırsatın neyle ilgili
-olduğunu falın verdiği bilgi ölçüsünde belirt.
-
-Soruyu kısa, gündelik ve doğal Türkçeyle yaz.
-Tek bir karar sor. Bir sorunun içine birbirinden bağımsız iki karar koyma.
-Soru, sabit “Evet” ve “Hayır” seçenekleriyle cevaplanabilsin.
-
-Anket, herkesin kolayca “Evet” diyeceği genel bir öğüt sorusu olmasın.
-
-“Dikkatli olmalı mıyım?”, “Mantıklı karar vermeli miyim?” veya
-“Kendim için iyi olanı seçmeli miyim?” gibi sorular üretme.
-
-Genel bir davranışın iyi olup olmadığını değil, falda anlatılan konuda
-belirli bir tercihin yapılıp yapılmamasını sor.
-
-Örneğin fal kariyerde farklı bir yöne ilerleme ihtimalini anlatıyorsa:
-“Kariyerimde dikkatli karar vermeli miyim?” yerine
-“Kariyerimde farklı bir alana yönelmeli miyim?” diye sor.
-
-Soruyu netleştirirken falda olmayan bir meslek, kişi, teklif, şehir veya
-olay ekleme. Kaynak yorum ne kadar ayrıntı veriyorsa o ölçüde netleş.
-
-3. FALDAKİ BİLGİ İLE ÖNERİLEN DAVRANIŞI AYIR
-
-Falın anlattığı duruma uygun bir davranışı, kullanıcının değerlendirebileceği
-bir ÖNERİ olarak sorabilirsin. Bu davranışın falda kelimesi kelimesine
-yazılmış olması gerekmez.
-
-Ancak soruyu oluşturmak için yeni bir olay veya yaşanmış durum uyduramazsın.
+Önce bu gelişmenin NEYLE ilgili olduğunu falın bağlamından belirle.
 
 Örneğin:
-Fal kariyerde yön değişikliğinden söz ediyorsa farklı bir alana yönelmeyi
-sorabilirsin. Fakat ortada bir teklif anlatılmıyorsa “Aldığım yeni iş
-teklifini kabul etmeli miyim?” diyemezsin.
 
-Fal yalnızca aşk hayatından söz ediyorsa mevcut bir sevgili varsayamazsın.
-Geçmişten gelen kişi açıkça eski sevgili olarak anlatılmıyorsa o kişiye
-“eski sevgilim” diyemezsin.
-İlişkide belirsizlik anlatılması, aldatılma veya güven ihlali yaşandığı
-anlamına gelmez.
+- “görüşme” iş bağlamındaysa → iş görüşmesi
+- “görüşme” geçmiş ilişki bağlamındaysa → eski sevgiliyle görüşme
+- “teklif” kariyer bağlamındaysa → iş / proje teklifi
+- “teklif” romantik bağlamdaysa → buluşma / ilişki teklifi
 
-Olası bir gelişmeyi gerçekleşmiş gibi sunma.
-Kişilerin adlarını, iletişim bilgilerini veya özel kimlik bilgilerini
-anket sorusuna taşıma.
+Fal bunu belirlemiyorsa aşk, iş veya başka bir alanı rastgele seçme.
 
-4. DOĞRU DÖNÜŞÜM ÖRNEKLERİ
+## 2. TEK KONU SEÇ
 
-ÖRNEK A — KARİYERDE YÖN DEĞİŞİKLİĞİ
+Bir ankette yalnızca TEK konu ve TEK karar sor.
 
-Fal bağlamı:
-“Kariyerinde farklı bir yöne ilerleme düşüncesi öne çıkıyor.”
+Şunlar YANLIŞTIR:
 
-YANLIŞ:
-“Yakın zamanda kariyerinde yeni bir yön seçme ihtiyacı belirginleşecek mi?”
+“Yakın zamanda gelecek bir görüşme veya teklifi kabul etmeli miyim?”
+“Yeni bir fırsat veya değişimi değerlendirmeli miyim?”
+“İş veya aşk hayatımda karşıma çıkacak gelişmeye şans vermeli miyim?”
 
+Çünkü bunlar birden fazla ihtimali aynı soruya koyar.
+
+Fal içinde birden fazla uygun konu varsa en belirgin olanı seç.
+
+## 3. SORUYU FAL SAHİBİNİN AĞZINDAN YAZ
+
+Soruyu birinci tekil şahısla oluştur:
+
+- kariyerimde
+- ilişkimde
+- aşk hayatımda
+- eski sevgilimle
+- iş hayatımda
+- bu yolculuğa
+
+“Kariyerinde”, “ilişkinizde”, “hayatınızda” diye kullanıcıya dışarıdan
+seslenen soru üretme.
+
+## 4. GELECEK TAHMİNİ SORMA
+
+Şunlar YANLIŞTIR:
+
+“Bu teklif gelecek mi?”
+“İlişkim düzelecek mi?”
+“Kariyerimde yeni bir yön belirginleşecek mi?”
+“Bu görüşme olumlu sonuçlanacak mı?”
+“Eski sevgilim geri dönecek mi?”
+
+Bunlar kullanıcının kararını değil, geleceği tahmin ettirir.
+
+Bunun yerine fal sahibinin yapabileceği tercihi sor.
+
+## 5. SPESİFİK AMA UYDURMASIZ OL
+
+Soru, falın verdiği ayrıntı kadar spesifik olmalıdır.
+
+Fal kariyerde yeni bir yön anlatıyorsa:
 DOĞRU:
 “Kariyerimde farklı bir alana yönelmeli miyim?”
 
-Neden:
-İlki gelecekte ne hissedileceğini tahmin ettirir.
-İkincisi fal sahibinin değerlendirebileceği bir tercihi sorar.
-
-
-ÖRNEK B — MEVCUT İLİŞKİDE ŞÜPHE
-
-Fal bağlamı:
-“Mevcut ilişkinde bazı konularda şüphelerin var; konuşma konusu öne çıkıyor.”
-
-YANLIŞ:
-“İlişkinizdeki şüpheler açık iletişimle aşılacak mı?”
-
+Fal yeni iş görüşmesini anlatıyorsa:
 DOĞRU:
-“İlişkimle ilgili şüphelerimi partnerimle açıkça konuşmalı mıyım?”
+“Yaklaşan iş görüşmesine katılmalı mıyım?”
 
-Neden:
-İlki konuşmanın sonucunu tahmin ettirir.
-İkincisi konuşup konuşmama kararını sorar.
+Fal iş teklifi ihtimalini anlatıyorsa:
+DOĞRU:
+“Karşıma çıkabilecek yeni iş teklifini kabul etmeli miyim?”
 
-
-ÖRNEK C — ESKİ SEVGİLİ
-
-Fal bağlamı:
-“Eski sevgilinle yeniden görüşme ihtimali beliriyor.”
-
-YANLIŞ:
-“Eski sevgilim bana geri dönecek mi?”
-
+Fal geçmiş ilişkiden yeniden görüşme ihtimalini anlatıyorsa:
 DOĞRU:
 “Eski sevgilimle yeniden görüşmeli miyim?”
 
-
-ÖRNEK D — KARİYER PROJESİ
-
-Fal bağlamı:
-“Kariyerinde yeni bir projeye katılma fırsatı gündeme gelebilir.”
-
-YANLIŞ:
-“Yeni proje kariyerimde başarılı olmamı sağlayacak mı?”
-
+Fal romantik bir buluşma teklifinden bahsediyorsa:
 DOĞRU:
-“Kariyerimde gündeme gelebilecek yeni projeye katılmalı mıyım?”
+“Aşk hayatımda karşıma çıkabilecek buluşma teklifini kabul etmeli miyim?”
 
-
-ÖRNEK E — YOLCULUK
-
-Fal bağlamı:
-“Yakın zamanda bir seyahate çıkma ihtimali görünüyor.”
-
-YANLIŞ:
-“Yaklaşan yolculuk hayatıma iyi gelecek mi?”
-
+Fal yolculuk ihtimalini anlatıyorsa:
 DOĞRU:
-“Yakın zamanda bir seyahate çıkmalı mıyım?”
+“Yakın zamanda karşıma çıkabilecek bu yolculuk fırsatını değerlendirmeli miyim?”
 
-Bu örnekleri hazır soru listesi gibi kullanma.
-Her soruyu verilen falın kendi içeriğinden üret.
-Örneklerdeki kişileri ve olayları başka fallara taşıma.
+Ancak falda bulunmayan bir ayrıntıyı ekleme.
 
-5. NE ZAMAN ANKET OLUŞTURMA?
+Falda iş olduğu belli değilse “iş teklifi” deme.
+Falda eski sevgili olduğu belli değilse “eski sevgilim” deme.
+Falda mevcut ilişki olduğu belli değilse “ilişkim” deme.
+Falda buluşma teklifi yoksa “buluşma teklifi” uydurma.
 
-Her falda anket hazırlamak zorunda değilsin.
+## 6. GENEL SORULAR ÜRETME
 
-Fal yalnızca genel enerji, soyut ruh hali veya herhangi bir kişisel tercihe
-bağlanamayan semboller içeriyorsa anket oluşturma.
+Şunlar YANLIŞTIR:
 
-Buna karşılık, uygun bir gelişme veya belirsizlik varsa sırf falda açık bir
-karar cümlesi bulunmadığı için konuyu eleme.
+“Yeni bir adım atmalı mıyım?”
+“Bu fırsatı değerlendirmeli miyim?”
+“Dikkatli davranmalı mıyım?”
+“Doğru kararı vermeli miyim?”
+“Hayatımdaki değişime açık olmalı mıyım?”
 
-İlk düşündüğün soru bir gelecek tahmini olduysa, aynı konu üzerinden
-kullanıcının değerlendirebileceği bir karar sorusuna dönüştür.
-Bunu aynı yanıtı hazırlarken yap; ilk sorunun zayıflığı tek başına
-anketten vazgeçme nedeni değildir.
+Sorunun konusu falı okumayan biri tarafından da anlaşılmalıdır.
 
-6. SON KONTROL
+## 7. FALDA AÇIK KARAR CÜMLESİ OLMASI GEREKMEZ
 
-Soruyu tamamlamadan önce şunu değerlendir:
+Falın içinde doğrudan “karar vermelisin” yazması şart değildir.
 
-“Bir kişi bu soruya Evet dediğinde fal sahibine hangi davranışı veya
-tercihi öneriyor? Hayır dediğinde hangisini önermiyor?”
+Örneğin fal kariyerde yeni bir yön ihtimalini anlatıyorsa bunu
+“Kariyerimde farklı bir alana yönelmeli miyim?”
+şeklinde karar sorusuna dönüştürebilirsin.
 
-Cevap açık olmalıdır.
+Ancak bunu yaparken falda bulunmayan yeni olaylar üretme.
 
-Evet/Hayır yalnızca bir olayın gerçekleşeceğine dair tahmin anlamına
-geliyorsa soruyu yeniden yaz.
+## 8. ANKET OLUŞTURMAMA DURUMU
 
-Ayrıca:
-- Soruyu fal sahibi kendi ağzından mı soruyor?
-- Başkası falın tamamını okumadan sorunun konusunu anlayabiliyor mu?
-- Sorunun dayandığı durum falda var mı?
-- Soruyu netleştirmek için olmayan bir kişi veya olay eklenmiş mi?
-- Türkçesi doğal mı?
+Her falda Anket oluşturmak zorunda değilsin.
 
-Bu değerlendirmeyi çıktıda açıklama.
+Fal yalnızca:
+- genel enerji
+- soyut ruh hali
+- sembolik anlatım
+- hayat alanı belirlenemeyen belirsiz gelişmeler
 
-7. ÇIKTI SÖZLEŞMESİ
+içeriyorsa ve anlamlı tek bir karar sorusu çıkarılamıyorsa:
 
-Mevcut analiz yanıtının diğer alanlarını koru.
-Anket sonucunu mevcut “dilemma” alanına yaz.
-Yeni alan ekleme; JSON dışında açıklama yazma.
+hasDilemma false yap.
 
-Uygun konu varsa:
+Ancak falda gerçekten danışılabilir bir konu varsa,
+sırf doğrudan karar cümlesi yazmıyor diye Anketi iptal etme.
+
+## 9. SON KONTROL
+
+Soruyu tamamlamadan önce kendi içinde şu sırayla kontrol et:
+
+1. Bu Anketin hayat alanı nedir?
+2. Falda anlatılan tek somut gelişme nedir?
+3. Fal sahibinin bu konuda verebileceği tek karar nedir?
+4. Soru bu üç bilgiyi yeterince açık gösteriyor mu?
+5. Soru birden fazla ihtimali “veya” ile birleştiriyor mu?
+   Eğer evetse TEK konu seçerek yeniden yaz.
+6. Soru gelecekte ne olacağını mı tahmin ettiriyor?
+   Eğer evetse fal sahibinin kararına dönüştür.
+7. Falda olmayan bir kişi, ilişki, teklif, şehir, iş veya olay ekledin mi?
+   Eğer evetse kaldır.
+8. Falın tamamını okumayan biri, sorunun aşk mı, iş mi, yolculuk mu
+   olduğunu anlayabilir mi?
+   Eğer hayırsa soruyu netleştir.
+
+Bu kontrolü çıktıda açıklama.
+
+## 10. ÇIKTI
+
+Mevcut dilemma JSON yapısını kullan.
+
+Uygun Anket varsa:
 
 "dilemma": {
   "hasDilemma": true,
-  "question": "Falın içeriğinden hazırladığın kişisel karar sorusu",
+  "question": "Tek, net ve bağlama özgü karar sorusu",
   "option1": "Evet",
   "option2": "Hayır"
 }
 
-Uygun konu yoksa:
+Uygun Anket yoksa:
 
 "dilemma": {
   "hasDilemma": false,
@@ -230,6 +205,10 @@ Uygun konu yoksa:
   "option1": null,
   "option2": null
 }
+
+JSON dışında açıklama yazma.
+Yeni alan ekleme.
+Ek AI çağrısı yapma.
 `.trim();
 
 export const FORTUNE_POLL_DILEMMA_JSON = `
