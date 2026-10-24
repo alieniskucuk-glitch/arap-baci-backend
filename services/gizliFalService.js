@@ -4,13 +4,10 @@ import { db, admin } from "../config/firebase.js";
 import { decreaseCoin } from "../utils/coinManager.js";
 import { getTarotById } from "../utils/tarotDeck.js";
 import {
-  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
-  FORTUNE_POLL_DILEMMA_JSON,
   emptyFalDilemma,
-  parseFalDilemma,
 } from "../utils/falDilemma.js";
 import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
-import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
+import { runFortunePollPipeline } from "./fortunePollPipeline.js";
 
 const COLLECTION = "secretFortunes";
 
@@ -305,7 +302,6 @@ Kurallar:
 - Teknik analiz sürecinden bahsetme.
 - Markdown veya ek açıklama yazma.
 
-${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
 
 SADECE JSON döndür:
 
@@ -322,7 +318,7 @@ SADECE JSON döndür:
   "creatorInterpretation": "1. kişinin seçtiği 3 karta dayalı yorumu",
   "inviteeInterpretation": "2. kişinin seçtiği 3 karta dayalı yorumu",
   "jointInterpretation": "İki kişi arasındaki ortak ve detaylı fal yorumu",
-${FORTUNE_POLL_DILEMMA_JSON}
+  "poll": null
 }
 `.trim(),
           },
@@ -422,7 +418,7 @@ ${JSON.stringify(
   const parsed =
     JSON.parse(raw);
 
-  const initialDilemma = parseFalDilemma(parsed?.dilemma);
+  const initialDilemma = emptyFalDilemma();
   const result = {
     sharedCard: {
       name:
@@ -497,8 +493,7 @@ ${JSON.stringify(
     dilemma: initialDilemma,
   };
 
-  result.dilemma = await editFortunePollDilemma({
-    dilemma: result.dilemma,
+  result.dilemma = await runFortunePollPipeline({
     fortuneText: result.jointInterpretation,
     falId,
     openaiClient: openai,

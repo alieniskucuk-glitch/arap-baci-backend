@@ -3,12 +3,8 @@ import {
   extractText,
   imagesToOpenAI
 } from "../utils/helpers.js";
-import {
-  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
-  emptyFalDilemma,
-  parseFalDilemma,
-} from "../utils/falDilemma.js";
-import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
+import { emptyFalDilemma } from "../utils/falDilemma.js";
+import { runFortunePollPipeline } from "./fortunePollPipeline.js";
 
 /* =========================
    PROMPTS (KORUNDU)
@@ -432,7 +428,6 @@ themes boş dizi olsun.
 - Tema yoksa
 primaryTheme null olsun.
 
-${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
 - Fal metninde geçen isim, soyisim, telefon, e-posta veya başka özel bilgiyi
   question ya da seçeneklerde asla yazma; genel ifadeler kullan.
 
@@ -454,13 +449,7 @@ SADECE şu JSON formatında cevap ver:
     "Haber",
     "Değişim"
   ],
-  "primaryTheme": "Haber",
-  "dilemma": {
-    "hasDilemma": false,
-    "question": null,
-    "option1": null,
-    "option2": null
-  }
+  "primaryTheme": "Haber"
 }
 `,
           },
@@ -692,11 +681,7 @@ SADECE şu JSON formatında cevap ver:
       }
     }
 
-    const parsedDilemma = parseFalDilemma(parsed.dilemma, {
-      fortuneText: cleanFal,
-    });
-    const dilemma = await editFortunePollDilemma({
-      dilemma: parsedDilemma,
+    const dilemma = await runFortunePollPipeline({
       fortuneText: cleanFal,
       falId,
       openaiClient: openai,

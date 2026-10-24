@@ -3,12 +3,9 @@ import crypto from "crypto";
 import { decreaseCoin } from "../utils/coinManager.js";
 import {
   emptyFalDilemma,
-  FORTUNE_POLL_DILEMMA_INSTRUCTIONS,
-  FORTUNE_POLL_DILEMMA_JSON,
-  parseFalDilemma,
 } from "../utils/falDilemma.js";
 import { persistFortunePollDraft } from "../utils/fortunePollDraft.js";
-import { editFortunePollDilemma } from "./fortunePollQuestionEditor.js";
+import { runFortunePollPipeline } from "./fortunePollPipeline.js";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -167,7 +164,6 @@ en baskın tek tema olmalı.
 - Tema yoksa themes boş dizi olsun.
 - Tema yoksa primaryTheme null olsun.
 
-${FORTUNE_POLL_DILEMMA_INSTRUCTIONS}
 
 Açıklama yazma.
 Markdown yazma.
@@ -188,7 +184,7 @@ SADECE şu JSON formatında cevap ver:
     "Karar"
   ],
   "primaryTheme": "Değişim",
-${FORTUNE_POLL_DILEMMA_JSON}
+  "poll": null
 }
 `.trim();
 
@@ -417,8 +413,7 @@ ${FORTUNE_POLL_DILEMMA_JSON}
       }
     }
 
-    const dilemma = await editFortunePollDilemma({
-      dilemma: parseFalDilemma(parsed.dilemma),
+    const dilemma = await runFortunePollPipeline({
       fortuneText: cleanInterpretation,
       falId,
       openaiClient: openai,
