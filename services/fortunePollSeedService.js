@@ -275,31 +275,25 @@ Başka örnek:
 \`signal\`:
 “iş hayatında değişim ve mevcut düzenden farklı bir yola geçme temasının belirginleşmesi”
 
-# 12. decisionPotential
+# 12. subject ve decisionFrame
 
-\`decisionPotential\`, bu konunun neden sosyal karar Anketine dönüşebileceğini TARAFSIZ biçimde açıklar.
+Her candidate yalnızca TEK \`subject\` içermelidir. “mevcut ilişki veya yeni kişi”, “iş görüşmesi veya iş teklifi” ve “eski sevgili ya da yeni kişi” yazma; bunlar ayrı candidate olmalıdır.
 
-Nihai soru yazma.
-
-Nihai senaryo yazma.
+\`decisionFrame\`, seçilen subject için TEK davranış yönünü kısa biçimde açıklar. Soru yazma, iki seçenekli karşılaştırma kurma ve \`veya\`, \`ya da\`, \`yoksa\` kullanma.
 
 Örnek:
 
-\`topic\`:
-“geçmiş romantik bağın yeniden gündeme gelmesi”
+\`subject\`: “yeni kariyer yönü”
 
-\`decisionPotential\`:
-“geçmişteki bağa yeniden alan açma veya geçmişte bırakma konusunda sosyal karar potansiyeli taşıyor”
+\`decisionFrame\`: “farklı bir kariyer yönünü deneme kararı”
 
 Başka örnek:
 
-\`topic\`:
-“kariyerde farklı yön”
+\`subject\`: “geçmiş romantik bağ”
 
-\`decisionPotential\`:
-“mevcut düzen ile yeni kariyer yönü arasında kişisel tercih oluşturabilecek bir tema”
+\`decisionFrame\`: “geçmiş romantik bağa yeniden şans verme kararı”
 
-Bu alan ikinci AI'ı tek bir hikâyeye kilitlememelidir.
+AI 1 soru veya yaratıcı hikâye yazmaz; yalnız temiz, tek-subject'li ham malzeme üretir.
 
 # 13. specificity
 
@@ -434,8 +428,8 @@ Evetse gereksiz yere reddetme.
 4. En güçlü aday gerçekten \`c1\` mi?
 5. Adaylar birbirinden gerçekten farklı mı?
 6. Zayıf adayları sayı doldurmak için ekledim mi?
-7. \`topic\` soru biçimine dönüştü mü?
-8. \`decisionPotential\` nihai soru veya hikâyeye dönüştü mü?
+7. \`subject\` tek bir gerçek hayat konusunu anlatıyor mu?
+8. \`decisionFrame\` tek bir davranış yönünü anlatıyor mu?
 9. Falın vermediği kesin ayrıntı ekledim mi?
 10. \`specificity\` doğru mu?
 11. \`strength\` doğru mu?
@@ -457,9 +451,10 @@ En az bir Anket tohumu varsa:
     {
       "candidateId": "c1",
       "lifeArea": "kariyer",
+      "subject": "yeni kariyer yönü",
       "topic": "mevcut kariyer düzeninden farklı bir yöne geçme ihtimali",
       "signal": "iş hayatında değişim ve farklı yön temasının belirgin şekilde öne çıkması",
-      "decisionPotential": "mevcut düzen ile yeni kariyer yönü arasında kişisel tercih oluşturabilecek bir tema",
+      "decisionFrame": "farklı bir kariyer yönünü deneme kararı",
       "specificity": "moderate",
       "strength": "high"
     }
@@ -522,6 +517,10 @@ function text(value) {
   return typeof value === "string" ? value.trim() : "";
 }
 
+function hasAlternativeChoice(value) {
+  return /\b(?:veya|yoksa)\b|\bya\s+da\b/ui.test(value);
+}
+
 export function parseFortunePollSeed(value) {
   if (value?.hasPollSeed === false && Array.isArray(value?.candidates) && value.candidates.length === 0) return EMPTY;
   if (value?.hasPollSeed !== true || !Array.isArray(value.candidates) || value.candidates.length < 1 || value.candidates.length > 3) throw new Error("Invalid fortune poll seed output");
@@ -530,13 +529,14 @@ export function parseFortunePollSeed(value) {
     const normalized = {
       candidateId,
       lifeArea: text(candidate?.lifeArea),
+      subject: text(candidate?.subject),
       topic: text(candidate?.topic),
       signal: text(candidate?.signal),
-      decisionPotential: text(candidate?.decisionPotential),
+      decisionFrame: text(candidate?.decisionFrame),
       specificity: text(candidate?.specificity),
       strength: text(candidate?.strength),
     };
-    if (candidateId !== IDS[index] || !normalized.lifeArea || !normalized.topic || !normalized.signal || !normalized.decisionPotential || !SPECIFICITY.has(normalized.specificity) || !STRENGTH.has(normalized.strength)) throw new Error("Invalid fortune poll seed candidate");
+    if (candidateId !== IDS[index] || !normalized.lifeArea || !normalized.subject || !normalized.topic || !normalized.signal || !normalized.decisionFrame || hasAlternativeChoice(normalized.subject) || hasAlternativeChoice(normalized.decisionFrame) || !SPECIFICITY.has(normalized.specificity) || !STRENGTH.has(normalized.strength)) throw new Error("Invalid fortune poll seed candidate");
     return normalized;
   });
   return { hasPollSeed: true, candidates };

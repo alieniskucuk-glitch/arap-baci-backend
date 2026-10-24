@@ -4,12 +4,15 @@ import { discoverFortunePollSeeds } from "./fortunePollSeedService.js";
 import { writeFortunePollQuestion } from "./fortunePollQuestionWriter.js";
 import { editFortunePollQuestion } from "./fortunePollQuestionEditor.js";
 
-function logStageFailure(falId, stage, error) {
-  console.error("FORTUNE_POLL_PIPELINE_STAGE_ERROR", {
+function logStageEvent(falId, stage, { attempt, status, error } = {}) {
+  const metadata = {
     falId: String(falId || "").trim() || null,
     stage,
-    ...safeAiError(error),
-  });
+    ...(attempt ? { attempt } : {}),
+    ...(status ? { status } : {}),
+  };
+  if (error) Object.assign(metadata, safeAiError(error));
+  console.error("FORTUNE_POLL_PIPELINE_STAGE_EVENT", metadata);
 }
 
 export async function runFortunePollPipeline({
@@ -35,26 +38,42 @@ export async function runFortunePollPipeline({
         openaiClient,
       });
     } catch (error) {
-      logStageFailure(falId, "POLL_WRITER_ERROR", error);
+      logStageEvent(falId, "POLL_WRITER_ERROR", { error });
       return emptyFalDilemma();
     }
 
-    const editor = await editFortunePollQuestion({
-      fortuneText,
-      seed,
-      writer,
-      falId,
-      openaiClient,
-    });
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        const editor = await editFortunePollQuestion({
+          fortuneText,
+          seed,
+          writer,
+          openaiClient,
+          retry: attempt === 2,
+        });
 
-    return {
-      hasDilemma: true,
-      question: editor.question,
-      option1: "Evet",
-      option2: "Hayır",
-    };
+        if (editor.status === "pass") {
+          return {
+            hasDilemma: true,
+            question: editor.question,
+            option1: "Evet",
+            option2: "Hayır",
+          };
+        }
+
+        logStageEvent(falId, "POLL_EDITOR_REJECT", { attempt, status: "reject" });
+      } catch (error) {
+        logStageEvent(falId, "POLL_EDITOR_ERROR", { attempt, error });
+      }
+
+      if (attempt === 1) {
+        logStageEvent(falId, "POLL_EDITOR_RETRY", { attempt, status: "retry" });
+      }
+    }
+
+    return emptyFalDilemma();
   } catch (error) {
-    logStageFailure(falId, "POLL_SEED_ERROR", error);
+    logStageEvent(falId, "POLL_SEED_ERROR", { error });
     return emptyFalDilemma();
   }
 }

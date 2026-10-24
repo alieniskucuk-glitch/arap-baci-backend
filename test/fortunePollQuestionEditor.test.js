@@ -11,9 +11,10 @@ const seed = {
   candidates: [{
     candidateId: "c1",
     lifeArea: "kariyer",
+    subject: "yeni kariyer projesi",
     topic: "yeni proje",
     signal: "iş hayatında yeni proje işareti",
-    decisionPotential: "yeni projeyi üstlenme tercihi",
+    decisionFrame: "yeni kariyer projesini üstlenme kararı",
     specificity: "specific",
     strength: "high",
   }],
@@ -21,6 +22,9 @@ const seed = {
 
 const writer = {
   selectedCandidateId: "c1",
+  subject: "yeni kariyer projesi",
+  scenarioBasis: "iş hayatında yeni kariyer projesinin öne çıkması",
+  decisionAction: "yeni kariyer projesini üstlenmek",
   question: "Kariyerimde karşıma çıkabilecek yeni projeyi üstlenmeli miyim?",
 };
 
@@ -37,7 +41,10 @@ function createClient(output) {
 
 test("AI3 seçilen aday kimliğini ve nihai soruyu döndürür", async () => {
   const mock = createClient({
+    status: "pass",
     selectedCandidateId: "c1",
+    subject: writer.subject,
+    decisionAction: writer.decisionAction,
     question: "Yeni kariyer projesi karşıma çıkarsa mevcut düzenimi değiştirip onu üstlenmeli miyim?",
   });
   const result = await editFortunePollQuestion({
@@ -45,27 +52,24 @@ test("AI3 seçilen aday kimliğini ve nihai soruyu döndürür", async () => {
     falId: "safe-fal-id", openaiClient: mock.client,
   });
   assert.deepEqual(result, {
+    status: "pass",
     selectedCandidateId: "c1",
+    subject: writer.subject,
+    decisionAction: writer.decisionAction,
     question: "Yeni kariyer projesi karşıma çıkarsa mevcut düzenimi değiştirip onu üstlenmeli miyim?",
-    usedFallback: false,
   });
   assert.equal(mock.requests[0].model, "gpt-5.4-mini");
-  assert.equal(mock.requests[0].max_output_tokens, 350);
+  assert.equal(mock.requests[0].max_output_tokens, 450);
 });
 
-test("AI3 aday kimliğini değiştirirse AI2 taslağı fallback olarak korunur", async () => {
-  const mock = createClient({ selectedCandidateId: "c2", question: "Başka aday sorusu" });
-  const originalWarn = console.warn;
-  console.warn = () => {};
-  try {
-    const result = await editFortunePollQuestion({
+test("AI3 aday kimliğini değiştirirse structural failure verir", async () => {
+  const mock = createClient({ status: "pass", selectedCandidateId: "c2", subject: writer.subject, decisionAction: writer.decisionAction, question: "Başka aday sorusu" });
+  await assert.rejects(
+    editFortunePollQuestion({
       fortuneText: "İş hayatında yeni bir proje öne çıkıyor.", seed, writer,
-      falId: "safe-fal-id", openaiClient: mock.client,
-    });
-    assert.deepEqual(result, { ...writer, usedFallback: true });
-  } finally {
-    console.warn = originalWarn;
-  }
+      openaiClient: mock.client,
+    }),
+  );
 });
 
 test("AI3 girdisi falı, tohumları ve seçilmiş taslağı içerir", () => {

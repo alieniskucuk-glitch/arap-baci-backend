@@ -1,6 +1,6 @@
-import { requestFortunePollJson, safeAiError } from "./fortunePollAiJson.js";
+import { requestFortunePollJson } from "./fortunePollAiJson.js";
 
-const FORTUNE_POLL_QUESTION_EDITOR_PROMPT = `
+export const FORTUNE_POLL_QUESTION_EDITOR_PROMPT = `
 ARAP BACI — NİHAİ SOSYAL ANKET KALİTE EDİTÖRÜ
 
 Sen, Arap Bacı uygulamasındaki 3 aşamalı sosyal Anket sisteminin ÜÇÜNCÜ VE SON AŞAMASISIN.
@@ -23,9 +23,10 @@ Birinci AI çıktısı:
     {
       "candidateId": "c1",
       "lifeArea": "...",
+      "subject": "...",
       "topic": "...",
       "signal": "...",
-      "decisionPotential": "...",
+      "decisionFrame": "...",
       "specificity": "broad | moderate | specific",
       "strength": "high | medium"
     }
@@ -36,6 +37,9 @@ Birinci AI çıktısı:
 
 {
   "selectedCandidateId": "c1",
+  "subject": "seçilen candidate subject değeri",
+  "scenarioBasis": "tek senaryonun kısa internal tanımı",
+  "decisionAction": "tek pozitif karar eylemi",
   "question": "Anket taslağı"
 }
 
@@ -62,9 +66,10 @@ Yeni candidateId üretme.
 selectedCandidateId ile eşleşen adayın:
 
 - lifeArea
+- subject
 - topic
 - signal
-- decisionPotential
+- decisionFrame
 - specificity
 - strength
 
@@ -253,9 +258,23 @@ Puanları gösterme.
 
 Belirsizse yeniden yaz.
 
-# 37. selectedCandidateId DEĞİŞEMEZ
+# 37. ZORUNLU KALİTE KİLİDİ
 
-Nihai çıktıdaki selectedCandidateId, AI 2 değerinin BİREBİR aynısı olmalıdır.
+AI 2'nin \`selectedCandidateId\`, \`subject\` ve \`decisionAction\` değerlerini BİREBİR kopyala. Hiçbirini değiştirme.
+
+Konu seçme, yeni subject veya karar üretme. Final question yalnız aynı subject'i, aynı tek senaryoyu ve decisionAction'ın anlattığı tek pozitif kararı sormalıdır.
+
+“mevcut ilişki + yeni kişi”, “eski sevgili + yeni kişi”, “görüşme + teklif” veya “kariyer + aşk” gibi iki farklı senaryoyu birleştirme. Böyle bir taslağı aynı kilitli değerlerle tek senaryoya yeniden yazmayı dene.
+
+Question negatif/ters biçimde olamaz: \`yapmamalı mıyım?\`, \`gitmemeli miyim?\`, \`reddetmemeli miyim?\`, \`değil mi?\`, \`gerekmez mi?\` kullanma. “Bu değişime şans vermeli miyim?” ve “Fırsatı değerlendirmeli miyim?” gibi soyut soruları selected candidate, scenarioBasis ve decisionAction ile somutlaştır.
+
+Soru kullanıcıyı yönlendirmesin; “mükemmel”, “hayatımın fırsatı”, “kaderimin aşkı”, “kesin doğru karar”, “kaçırılmayacak” gibi ifadeleri temizle.
+
+Önce aynı kilitli değerlerle kaliteli final question yazmayı dene. Ancak tek subject, tek senaryo ve tek karar içeren kaliteli bir Anket gerçekten mümkün değilse \`status: "reject"\` döndür.
+
+# 38. selectedCandidateId DEĞİŞEMEZ
+
+Nihai çıktıdaki selectedCandidateId, subject ve decisionAction, AI 2 değerlerinin BİREBİR aynısı olmalıdır.
 
 # ANA PRENSİP
 
@@ -276,12 +295,25 @@ Yetersizse aynı konu üzerinde yeniden yaz.
 
 Yalnızca geçerli JSON döndür:
 
+PASS:
+
 {
+  "status": "pass",
   "selectedCandidateId": "c1",
+  "subject": "AI 2 subject değeri",
+  "decisionAction": "AI 2 decisionAction değeri",
   "question": "Nihai kullanıcıya gösterilecek sosyal Anket metni"
 }
 
-selectedCandidateId, AI 2 değerinin aynısı olmalıdır.
+REJECT:
+
+{
+  "status": "reject",
+  "selectedCandidateId": "c1",
+  "subject": "AI 2 subject değeri",
+  "decisionAction": "AI 2 decisionAction değeri",
+  "question": null
+}
 
 Başka JSON alanı ekleme.
 
@@ -298,22 +330,37 @@ Açıklama yazma.
 Kullanıcıdan bilgi isteme.
 `.trim();
 
-function buildUserMessage(fortuneText, seed, writer) {
-  return `FAL YORUMU:\n\n${String(fortuneText || "").trim()}\n\nANKET TOHUMLARI:\n\n${JSON.stringify(seed)}\n\nSEÇİLMİŞ ANKET TASLAĞI:\n\n${JSON.stringify(writer)}`;
+const RETRY_INSTRUCTION = "Önceki kalite kontrolü final Anket üretemedi. Aynı selectedCandidateId, aynı subject ve aynı decisionAction değerlerini KESİNLİKLE koru. Yeni konu veya yeni karar üretme. Bu kez bütün kalite kurallarını karşılayan tek subject'li, tek senaryolu, tek Evet/Hayır önermesi olan nihai question üretmeye çalış. Gerçekten mümkün değilse reject döndür.";
+
+function buildUserMessage(fortuneText, seed, writer, retry = false) {
+  const retryContext = retry ? `\n\nINTERNAL RETRY INSTRUCTION:\n\n${RETRY_INSTRUCTION}` : "";
+  return `FAL YORUMU:\n\n${String(fortuneText || "").trim()}\n\nANKET TOHUMLARI:\n\n${JSON.stringify(seed)}\n\nSEÇİLMİŞ ANKET TASLAĞI:\n\n${JSON.stringify(writer)}${retryContext}`;
 }
 
-export async function editFortunePollQuestion({ fortuneText, seed, writer, falId, openaiClient }) {
-  const fallback = { selectedCandidateId: writer.selectedCandidateId, question: writer.question, usedFallback: true };
-  try {
-    const value = await requestFortunePollJson({ openaiClient, systemPrompt: FORTUNE_POLL_QUESTION_EDITOR_PROMPT, userText: buildUserMessage(fortuneText, seed, writer), maxOutputTokens: 350 });
-    const selectedCandidateId = typeof value?.selectedCandidateId === "string" ? value.selectedCandidateId.trim() : "";
-    const question = typeof value?.question === "string" ? value.question.trim() : "";
-    if (selectedCandidateId !== writer.selectedCandidateId || !question) throw new Error("Invalid fortune poll editor output");
-    return { selectedCandidateId, question, usedFallback: false };
-  } catch (error) {
-    console.warn("FORTUNE_POLL_EDITOR_FALLBACK", { falId: String(falId || "").trim() || null, stage: "POLL_EDITOR_FALLBACK", ...safeAiError(error) });
-    return fallback;
+export function parseFortunePollEditor(value, writer) {
+  const status = typeof value?.status === "string" ? value.status.trim() : "";
+  const selectedCandidateId = typeof value?.selectedCandidateId === "string" ? value.selectedCandidateId.trim() : "";
+  const subject = typeof value?.subject === "string" ? value.subject.trim() : "";
+  const decisionAction = typeof value?.decisionAction === "string" ? value.decisionAction.trim() : "";
+  const question = typeof value?.question === "string" ? value.question.trim() : null;
+
+  if (!["pass", "reject"].includes(status) || selectedCandidateId !== writer.selectedCandidateId || subject !== writer.subject || decisionAction !== writer.decisionAction) {
+    throw new Error("Invalid fortune poll editor output");
   }
+  if (status === "pass" && !question) throw new Error("Invalid fortune poll editor question");
+  if (status === "reject" && value?.question !== null) throw new Error("Invalid fortune poll editor reject output");
+
+  return { status, selectedCandidateId, subject, decisionAction, question };
 }
 
-export { buildUserMessage };
+export async function editFortunePollQuestion({ fortuneText, seed, writer, openaiClient, retry = false }) {
+  const value = await requestFortunePollJson({
+    openaiClient,
+    systemPrompt: FORTUNE_POLL_QUESTION_EDITOR_PROMPT,
+    userText: buildUserMessage(fortuneText, seed, writer, retry),
+    maxOutputTokens: 450,
+  });
+  return parseFortunePollEditor(value, writer);
+}
+
+export { buildUserMessage, RETRY_INSTRUCTION };

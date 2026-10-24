@@ -22,9 +22,10 @@ Birinci AI çıktısı:
     {
       "candidateId": "c1",
       "lifeArea": "...",
+      "subject": "...",
       "topic": "...",
       "signal": "...",
-      "decisionPotential": "...",
+      "decisionFrame": "...",
       "specificity": "broad | moderate | specific",
       "strength": "high | medium"
     }
@@ -73,9 +74,10 @@ Ama candidates dışında yeni hayat alanı oluşturma.
 # 3. ADAY VERİLERİNİ HAM MALZEME OLARAK KULLAN
 
 \`lifeArea\`
+\`subject\`
 \`topic\`
 \`signal\`
-\`decisionPotential\`
+\`decisionFrame\`
 \`specificity\`
 \`strength\`
 
@@ -125,29 +127,21 @@ Sosyal senaryo kur.
 
 geçmiş romantik bağ
 → yeniden iletişim
-→ yeniden görüşme
-→ ikinci şans / barışma ihtimali
+→ yeniden görüşme ihtimali
 
 kariyer değişimi
-→ yeni iş
-→ yeni görev
-→ yeni proje
-→ farklı kariyer yönü
+→ farklı kariyer yönü ihtimali
 
 yolculuk
 → rutinin bozulması
-→ yeni deneyim
-→ yeni insanlar / fırsatlar
+→ yeni deneyim ihtimali
 
 yeni romantik başlangıç
 → yeni kişi
-→ güçlü çekim
-→ ilişki ihtimali
+→ ciddi yakınlaşma ihtimali
 
 haber
-→ görüşme
-→ teklif
-→ karar gerektiren seçenek
+→ karar gerektiren somut gündem
 
 Falın genel bağlamına en doğal olanı seç.
 
@@ -158,7 +152,7 @@ Kaynağı en fazla doğal bir mantıksal adım ileri taşı.
 UYGUN:
 
 geçmiş romantik bağ
-→ yeniden görüşme veya barışma ihtimali
+→ yeniden görüşme ihtimali
 
 UYGUN DEĞİL:
 
@@ -169,7 +163,7 @@ geçmiş romantik bağ
 UYGUN:
 
 kariyerde değişim
-→ yeni iş veya farklı kariyer yönü
+→ farklı kariyer yönü
 
 UYGUN DEĞİL:
 
@@ -332,7 +326,21 @@ net olmalıdır.
 
 Falı görmeyen kişi hayat alanını, olası durumu ve kararı yaklaşık 5 saniyede anlayabilmelidir.
 
-# 30. SON KALİTE KONTROLÜ
+# 30. SUBJECT, SENARYO VE KARAR KİLİDİ
+
+Seçtiğin candidate'ın \`subject\` değerini aynen döndür. Subject'i değiştirme, genişletme veya başka candidate'a ait kişi, olay ya da karar ekleme.
+
+\`scenarioBasis\`, yalnız seçilen candidate için TEK senaryoyu kısa biçimde açıklar. “mevcut ilişkinin ciddileşmesi veya yeni kişinin gelmesi” gibi iki senaryoyu birleştirme.
+
+\`decisionAction\`, Evet oyunun önerdiği TEK ve POZİTİF eylemdir. “şans vermek veya temkinli kalmak”, “yeni işe geçmek ya da mevcut işte kalmak”, “ilişkiye devam etmemek” veya “teklifi reddetmek” yazma.
+
+Soru tek Evet/Hayır önermesi olmalıdır. “veya”, “yoksa” ile alternatif karar sunma; negatif/ters soru biçimleri (\`yapmamalı mıyım?\`, \`gitmemeli miyim?\`, \`reddetmemeli miyim?\`, \`değil mi?\`, \`gerekmez mi?\`) kullanma.
+
+Birden fazla fiil, aynı tek kararın doğal parçalarıysa uygundur: “Onu tanımaya devam edip ilişkiye gerçek bir şans vermeli miyim?” Bağımsız büyük kararları birleştirme.
+
+Yaratıcı genişletme en fazla bir mantıksal adım olabilir; selected subject'i veya temel olay sınıfını değiştiremez.
+
+# 31. SON KALİTE KONTROLÜ
 
 Nihai cevabı vermeden önce kontrol et:
 
@@ -353,12 +361,15 @@ Nihai cevabı vermeden önce kontrol et:
 
 Sorun varsa yeniden yaz.
 
-# 31. ÇIKTI
+# 32. ÇIKTI
 
 Yalnızca geçerli JSON döndür:
 
 {
   "selectedCandidateId": "c1",
+  "subject": "seçilen candidate subject değeri",
+  "scenarioBasis": "tek senaryonun kısa internal tanımı",
+  "decisionAction": "tek pozitif karar eylemi",
   "question": "Nihai sosyal Anket taslağı"
 }
 
@@ -381,9 +392,13 @@ Kullanıcıdan bilgi isteme.
 
 export function parseFortunePollWriter(value, seed) {
   const selectedCandidateId = typeof value?.selectedCandidateId === "string" ? value.selectedCandidateId.trim() : "";
+  const subject = typeof value?.subject === "string" ? value.subject.trim() : "";
+  const scenarioBasis = typeof value?.scenarioBasis === "string" ? value.scenarioBasis.trim() : "";
+  const decisionAction = typeof value?.decisionAction === "string" ? value.decisionAction.trim() : "";
   const question = typeof value?.question === "string" ? value.question.trim() : "";
-  if (!selectedCandidateId || !question || !seed?.candidates?.some((candidate) => candidate.candidateId === selectedCandidateId)) throw new Error("Invalid fortune poll writer output");
-  return { selectedCandidateId, question };
+  const selectedCandidate = seed?.candidates?.find((candidate) => candidate.candidateId === selectedCandidateId);
+  if (!selectedCandidateId || !subject || !scenarioBasis || !decisionAction || !question || !selectedCandidate || subject !== selectedCandidate.subject) throw new Error("Invalid fortune poll writer output");
+  return { selectedCandidateId, subject, scenarioBasis, decisionAction, question };
 }
 
 export async function writeFortunePollQuestion({ fortuneText, seed, falId: _falId, openaiClient }) {
