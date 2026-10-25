@@ -272,7 +272,19 @@ Soru kullanıcıyı yönlendirmesin; “mükemmel”, “hayatımın fırsatı�
 
 Önce aynı kilitli değerlerle kaliteli final question yazmayı dene. Ancak tek subject, tek senaryo ve tek karar içeren kaliteli bir Anket gerçekten mümkün değilse \`status: "reject"\` döndür.
 
-# 38. selectedCandidateId DEĞİŞEMEZ
+# 38. SOMUT DAVRANIŞA DÖNÜŞTÜRME KURALI
+
+Nihai Anket teknik olarak doğru olsa bile karar kısmı gerçek hayatta ne yapılacağını açıkça anlatmıyorsa final kabul etme.
+
+“bir adım atmak”, “enerji vermek”, “harekete geçmek”, “süreci değerlendirmek”, “ilişkiye emek vermek”, “bir fırsata şans vermek”, “değişime açık olmak”, “yeni başlangıca yönelmek”, “bir şeyi denemek” ve “kalbinin sesini dinlemek” gibi soyut eylemleri tek başına bırakma.
+
+Fal ve selected candidate bağlamı gerçek davranışı destekliyorsa bunu nihai soruda açıkça söyle. Örneğin “bir adım atmak” yerine, açık iletişim gerçekten destekleniyorsa “karşı tarafla açıkça konuşup ilişkiye yeniden şans vermek” daha somuttur. Yeni proje ihtimali destekleniyorsa “fırsatı değerlendirmek” yerine “bu projeyi üstlenmek” daha somuttur.
+
+Somutluk uğruna falda veya selected candidate bağlamında bulunmayan yeni olay uydurma. Yalnız yeniden yakınlaşma varsa sebepsiz “ona mesaj atmak” deme; açık iletişim, konuşma veya yeniden yakınlaşma destekleniyorsa “karşı tarafla açıkça konuşmak” doğal olabilir.
+
+Nihai soruyu göndermeden önce şunu kontrol et: “Bu Ankete Evet diyen kişi fal sahibine gerçek hayatta TAM OLARAK ne yapmasını öneriyor?” Cevap hâlâ yalnız “adım atmasını”, “enerji vermesini”, “fırsatı değerlendirmesini” veya “değişime açık olmasını” söylüyorsa final değildir. Aynı selectedCandidateId, subject ve decisionAction sınırlarında en açık uygulanabilir davranışı yaz.
+
+# 39. selectedCandidateId DEĞİŞEMEZ
 
 Nihai çıktıdaki selectedCandidateId, subject ve decisionAction, AI 2 değerlerinin BİREBİR aynısı olmalıdır.
 

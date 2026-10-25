@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  FORTUNE_POLL_QUESTION_EDITOR_PROMPT,
   buildUserMessage,
   editFortunePollQuestion,
 } from "../services/fortunePollQuestionEditor.js";
@@ -77,4 +78,46 @@ test("AI3 girdisi falı, tohumları ve seçilmiş taslağı içerir", () => {
     buildUserMessage("Fal metni", seed, writer),
     `FAL YORUMU:\n\nFal metni\n\nANKET TOHUMLARI:\n\n${JSON.stringify(seed)}\n\nSEÇİLMİŞ ANKET TASLAĞI:\n\n${JSON.stringify(writer)}`,
   );
+});
+
+test("AI3 soyut ilişki kararını somut davranışa dönüştürme kuralını taşır", async () => {
+  const relationshipSeed = {
+    hasPollSeed: true,
+    candidates: [{
+      candidateId: "c1",
+      lifeArea: "mevcut ilişki",
+      subject: "mevcut romantik bağ",
+      topic: "durağan bağda yeniden yakınlaşma",
+      signal: "açık iletişim ve yeniden yakınlaşma fırsatı",
+      decisionFrame: "ilişkiye yeniden şans verme kararı",
+      specificity: "specific",
+      strength: "high",
+    }],
+  };
+  const relationshipWriter = {
+    selectedCandidateId: "c1",
+    subject: "mevcut romantik bağ",
+    scenarioBasis: "durağan ilişkide yeniden yakınlaşma ve açık iletişim fırsatı",
+    decisionAction: "ilişkiye yeniden şans vermek",
+    question: "Falımda uzun süredir durağan kalan mevcut romantik bağımda yeniden bir yakınlaşma ve açık iletişim fırsatı görünüyor. Böyle bir durumda, bu ilişkiye yeniden enerji verip bir adım daha atmalı mıyım?",
+  };
+  const finalQuestion = "Falımda uzun süredir durağan kalan mevcut romantik bağımda yeniden bir yakınlaşma ve açık iletişim fırsatı görünüyor. Bu ilişkiyi yeniden canlandırmak için karşı tarafla açıkça konuşup ilişkiye yeniden şans vermeli miyim?";
+  const mock = createClient({
+    status: "pass",
+    selectedCandidateId: "c1",
+    subject: relationshipWriter.subject,
+    decisionAction: relationshipWriter.decisionAction,
+    question: finalQuestion,
+  });
+
+  const result = await editFortunePollQuestion({
+    fortuneText: relationshipWriter.question,
+    seed: relationshipSeed,
+    writer: relationshipWriter,
+    openaiClient: mock.client,
+  });
+
+  assert.equal(result.question, finalQuestion);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /SOMUT DAVRANIŞA DÖNÜŞTÜRME KURALI/);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /gerçek hayatta TAM OLARAK ne yapmasını öneriyor/);
 });
