@@ -121,3 +121,46 @@ test("AI3 soyut ilişki kararını somut davranışa dönüştürme kuralını t
   assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /SOMUT DAVRANIŞA DÖNÜŞTÜRME KURALI/);
   assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /gerçek hayatta TAM OLARAK ne yapmasını öneriyor/);
 });
+
+test("AI3 yapay ve tekrarlı ilişki metnini doğal anlam akışına dönüştürme kuralını taşır", async () => {
+  const relationshipSeed = {
+    hasPollSeed: true,
+    candidates: [{
+      candidateId: "c1",
+      lifeArea: "mevcut ilişki",
+      subject: "mevcut romantik bağ",
+      topic: "mesafe ve iletişim kopukluğuna rağmen yeniden yakınlaşma",
+      signal: "açık iletişim ve yeniden yakınlaşma ihtimali",
+      decisionFrame: "ilişkiye yeniden şans verme kararı",
+      specificity: "specific",
+      strength: "high",
+    }],
+  };
+  const relationshipWriter = {
+    selectedCandidateId: "c1",
+    subject: "mevcut romantik bağ",
+    scenarioBasis: "mesafe ve iletişim kopukluğuna rağmen yeniden yakınlaşma ihtimali",
+    decisionAction: "ilişkiye yeniden şans vermek",
+    question: "Fincanım, aramızdaki mesafe ve iletişim kopukluğu açık konuşarak aşılabilecek bir dönemi gösteriyor; ben de ilişkiyi sürdürmek için karşı tarafla açıkça konuşup ilişkiye yeniden şans vermeli miyim?",
+  };
+  const finalQuestion = "Fincanım, aramızdaki mesafe ve iletişim kopukluğuna rağmen yeniden yakınlaşma ihtimali olduğunu gösteriyor. Karşı tarafla açıkça konuşup bu ilişkiye yeniden şans vermeli miyim?";
+  const mock = createClient({
+    status: "pass",
+    selectedCandidateId: "c1",
+    subject: relationshipWriter.subject,
+    decisionAction: relationshipWriter.decisionAction,
+    question: finalQuestion,
+  });
+
+  const result = await editFortunePollQuestion({
+    fortuneText: relationshipWriter.question,
+    seed: relationshipSeed,
+    writer: relationshipWriter,
+    openaiClient: mock.client,
+  });
+
+  assert.equal(result.question, finalQuestion);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /ANLAM AKIŞI VE TEKRAR KONTROLÜ/);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /Noktalı virgülle iki düşünceyi zorla birleştirme/);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /İlk cümlede anlatılan durum, son cümlede sorulan karara doğal olarak yol açıyor mu/);
+});

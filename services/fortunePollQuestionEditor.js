@@ -284,7 +284,23 @@ Somutluk uğruna falda veya selected candidate bağlamında bulunmayan yeni olay
 
 Nihai soruyu göndermeden önce şunu kontrol et: “Bu Ankete Evet diyen kişi fal sahibine gerçek hayatta TAM OLARAK ne yapmasını öneriyor?” Cevap hâlâ yalnız “adım atmasını”, “enerji vermesini”, “fırsatı değerlendirmesini” veya “değişime açık olmasını” söylüyorsa final değildir. Aynı selectedCandidateId, subject ve decisionAction sınırlarında en açık uygulanabilir davranışı yaz.
 
-# 39. selectedCandidateId DEĞİŞEMEZ
+# 39. ANLAM AKIŞI VE TEKRAR KONTROLÜ
+
+Nihai Anket yalnız yapısal olarak doğru olmakla yetmez; anlamı doğal ve kesintisiz akmalıdır. Aynı fikir girişte, açıklamada ve karar sorusunda farklı kelimelerle gereksiz tekrar edilmemelidir. Aynı davranış veya anlam iki kez anlatılıyorsa gereksiz tekrarı kaldır.
+
+İlk cümle yalnız senaryoyu, gerekirse kısa bağlamı veya gerilimi anlatmalıdır. Son cümle yalnız tek kararı sormalıdır. İlk cümle kararın cevabını önceden yerleştirmesin ve iki cümle aynı görevi yapmasın.
+
+Kendi içinde şu testi yap: “İlk cümlede anlatılan durum, son cümlede sorulan karara doğal olarak yol açıyor mu?” Sebebi belli olmayan sonuç, bağlantısız cümleler, aynı olayın farklı biçimlerde tekrarı veya falın durumu ile karar arasındaki mantıksal kopukluk varsa yeniden yaz.
+
+“ilişki / ilişki / ilişki”, “açık iletişim / açıkça konuşmak”, “yeni başlangıç / yeniden başlamak”, “fırsat / fırsatı değerlendirmek”, “yakınlaşma / yakınlaşmaya şans vermek” ve “değişim / değişiklik yapmak” gibi yakın tekrarlar metni yapay veya ağırlaştırıyorsa daha doğal karşılık kullan ya da cümleyi yeniden kur. Tekrar her zaman hata değildir.
+
+“aşılabilecek bir dönemi gösteriyor”, “gündeme gelebilecek bir enerji bulunuyor”, “değerlendirilmesi gereken bir süreç oluşuyor” ve “bir karar alanının ortaya çıkabileceğini gösteriyor” gibi yapay fal dilini finalde bırakma. “yeniden yakınlaşma ihtimali görünüyor”, “iş hayatımda yeni bir yön açılabilir” veya “geçmişten biri yeniden gündeme gelebilir” gibi doğal Türkçe kullan.
+
+Noktalı virgülle iki düşünceyi zorla birleştirme. Daha doğal ise senaryoyu ve karar sorusunu iki ayrı cümleye ayır.
+
+Son dil kalite testi: aynı fikir veya davranış iki kez söyleniyor mu; ilk cümle kararı önceden cevaplıyor mu; ilk cümle ile son soru arasında neden-sonuç bağı var mı; metin doğal Türkçe gibi mi; gereksiz uzun, dolambaçlı veya tekrar eden yapı var mı; senaryo ile kararın görevleri ayrılmış mı; sesli okununca takılma ya da anlam bozukluğu hissi oluşuyor mu? Herhangi biri sorunluysa final vermeden yeniden yaz.
+
+# 40. selectedCandidateId DEĞİŞEMEZ
 
 Nihai çıktıdaki selectedCandidateId, subject ve decisionAction, AI 2 değerlerinin BİREBİR aynısı olmalıdır.
 
