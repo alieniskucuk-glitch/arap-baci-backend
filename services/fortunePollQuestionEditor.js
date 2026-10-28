@@ -300,7 +300,23 @@ Noktalı virgülle iki düşünceyi zorla birleştirme. Daha doğal ise senaryoy
 
 Son dil kalite testi: aynı fikir veya davranış iki kez söyleniyor mu; ilk cümle kararı önceden cevaplıyor mu; ilk cümle ile son soru arasında neden-sonuç bağı var mı; metin doğal Türkçe gibi mi; gereksiz uzun, dolambaçlı veya tekrar eden yapı var mı; senaryo ile kararın görevleri ayrılmış mı; sesli okununca takılma ya da anlam bozukluğu hissi oluşuyor mu? Herhangi biri sorunluysa final vermeden yeniden yaz.
 
-# 40. selectedCandidateId DEĞİŞEMEZ
+# 40. SUBJECT VE REFERANS TUTARLILIĞI ZORUNLUDUR
+
+AI 2'nin \`subject\` değeri yalnız JSON alanında korunmuş sayılmaz. Nihai Anket metninin tamamı aynı subject hakkında olmalıdır: giriş cümlesi, senaryo ve karar sorusu aynı kişi, ilişki, iş, fırsat veya olayı anlatmalıdır.
+
+Subject'i genelleştirme, başka bir hayat alanına genişletme, daha belirsiz bir kavrama dönüştürme veya başka bir subject'e kaydırma. \`aşk hayatım\`, \`iş hayatım\`, \`kariyerim\`, \`sosyal hayatım\`, \`maddi hayatım\` ve \`ilişkilerim\` çoğu zaman yalnız hayat alanıdır; AI 2'nin daha spesifik subject değerinin yerini tek başına alamaz.
+
+Örneğin subject \`mevcut ilişki\` ise girişte yalnız \`aşk hayatımda hareketli bir dönem\` diyerek belirsizleşme; mevcut ilişkiyi doğal bir biçimde açıkça kur. Subject \`geçmiş romantik bağ\` ise \`ona\` demeden önce geçmişteki romantik bağın veya kişinin referansını açıkça ver. Subject \`yeni romantik kişi\` ise mevcut ilişki çağrıştıran \`ilişkim\` ifadesine kayma. Subject \`yeni kariyer yönü\` ise yalnız \`iş hayatımda hareketli bir dönem\` deyip karar verilen yeni yönü bağlamsız bırakma.
+
+Nihai question içinde \`bu ilişki\`, \`bu kişi\`, \`bu fırsat\`, \`bu teklif\`, \`bu yol\`, \`bu değişim\`, \`bu proje\`, \`bu yakınlaşma\`, \`ona\` veya \`onunla\` kullanılıyorsa bunların referansını önceki cümlede açıkça kur. Okuyucu falı görmeden yalnız Anket metnini okuduğunda “Bu ne?” veya “Bu ilişki hangisi?” diye sormamalıdır.
+
+İlk cümlede kimden veya hangi durumdan söz edildiğini, son cümlede kullanıcının ne hakkında karar verdiğini kontrol et. Bunlar aynı subject değilse final verme; aynı \`selectedCandidateId\`, \`subject\` ve \`decisionAction\` değerleriyle yeniden yaz. İlk cümle genel fal özeti değil, seçilen subject üzerinde olabilecek senaryoyu anlatmalıdır; son cümle aynı subject üzerindeki tek kararı sormalıdır.
+
+Subject her cümlede birebir tekrar edilmek zorunda değildir; ancak doğal referans zinciri açık olmalıdır. Subject netliğini artırırken yeni olay, kişi veya ilişki uydurma. Subject'i netleştirmek, subject'i değiştirmek değildir: \`mevcut ilişki\` doğal cümlede \`mevcut ilişkim\` olabilir; \`yeni bir ilişki\` veya \`aşk hayatımda yeni biri\` olamaz.
+
+Son subject/anlam bütünlüğü testi: final metindeki subject AI 2 subject'i ile aynı mı; ilk cümlede selected subject açıkça veya doğal referansla kuruluyor mu; son cümledeki \`bu\`, \`ona\`, \`onunla\` veya \`karşı taraf\` ifadelerinin açık referansı var mı; giriş genel hayat alanına kaçmış mı; senaryo ile karar farklı kişilere veya olaylara mı ait; okuyucu yalnız Anketi okuyunca ne hakkında oy verdiğini anlayabiliyor mu? Bu testlerden biri başarısızsa yeniden yaz.
+
+# 41. selectedCandidateId DEĞİŞEMEZ
 
 Nihai çıktıdaki selectedCandidateId, subject ve decisionAction, AI 2 değerlerinin BİREBİR aynısı olmalıdır.
 

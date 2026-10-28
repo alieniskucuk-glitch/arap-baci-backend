@@ -164,3 +164,49 @@ test("AI3 yapay ve tekrarlı ilişki metnini doğal anlam akışına dönüştü
   assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /Noktalı virgülle iki düşünceyi zorla birleştirme/);
   assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /İlk cümlede anlatılan durum, son cümlede sorulan karara doğal olarak yol açıyor mu/);
 });
+
+test("AI3 mevcut ilişki subject'ini genel aşk hayatına dönüştürmeden açık referansla kurar", async () => {
+  const relationshipSeed = {
+    hasPollSeed: true,
+    candidates: [{
+      candidateId: "c1",
+      lifeArea: "aşk",
+      subject: "mevcut ilişki",
+      topic: "inişli çıkışlı ilişki dinamiği ve toparlanma ihtimali",
+      signal: "duyguları açıkça ifade ederek yeniden yakınlaşma ihtimali",
+      decisionFrame: "mevcut ilişkiye yeniden şans verme kararı",
+      specificity: "specific",
+      strength: "high",
+    }],
+  };
+  const relationshipWriter = {
+    selectedCandidateId: "c1",
+    subject: "mevcut ilişki",
+    scenarioBasis: "inişli çıkışlı ilişki dinamiği ve toparlanma ihtimali",
+    decisionAction: "mevcut ilişkiye yeniden şans vermek",
+    question: "Aşk hayatımda inişli çıkışlı ama toparlanmaya açık bir dönem görünüyor. Duygularımı açıkça ifade edip bu ilişkiye gerçekten bir şans vermeli miyim?",
+  };
+  const finalQuestion = "Mevcut ilişkimde inişli çıkışlı ama toparlanmaya açık bir dönem görünüyor. Duygularımı açıkça ifade edip bu ilişkiye gerçekten bir şans vermeli miyim?";
+  const mock = createClient({
+    status: "pass",
+    selectedCandidateId: "c1",
+    subject: relationshipWriter.subject,
+    decisionAction: relationshipWriter.decisionAction,
+    question: finalQuestion,
+  });
+
+  const result = await editFortunePollQuestion({
+    fortuneText: relationshipWriter.question,
+    seed: relationshipSeed,
+    writer: relationshipWriter,
+    openaiClient: mock.client,
+  });
+
+  assert.equal(result.question, finalQuestion);
+  assert.equal(result.subject, "mevcut ilişki");
+  assert.match(result.question, /^Mevcut ilişkimde /);
+  assert.doesNotMatch(result.question, /^Aşk hayatımda /);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /SUBJECT VE REFERANS TUTARLILIĞI ZORUNLUDUR/);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /Bu ilişki hangisi/);
+  assert.match(FORTUNE_POLL_QUESTION_EDITOR_PROMPT, /genel hayat alanına kaçmış mı/);
+});
